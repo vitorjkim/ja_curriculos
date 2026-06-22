@@ -1,4 +1,25 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Helper para obter baseURL da API de forma consistente
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    return 'http://localhost:3001/api';
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return 'http://localhost:3001/api';
+  }
+  
+  if (!trimmed.endsWith('/api')) {
+    return `${trimmed}/api`;
+  }
+  
+  return trimmed;
+}
+
+const API_BASE_URL = getAPIBaseURL();
 
 const getAuthToken = () => {
   return localStorage.getItem('curriculoja_token');

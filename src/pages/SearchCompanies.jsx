@@ -7,6 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+// Helper para obter baseURL da API de forma consistente
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    return 'http://localhost:3001/api';
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return 'http://localhost:3001/api';
+  }
+  
+  if (!trimmed.endsWith('/api')) {
+    return `${trimmed}/api`;
+  }
+  
+  return trimmed;
+}
+
 const SearchCompanies = () => {
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
@@ -35,7 +56,7 @@ const SearchCompanies = () => {
         for (const comp of companyMap) {
           if (!comp.profileImage) {
             try {
-              const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users/company/${comp.id}`);
+              const resp = await fetch(`${getAPIBaseURL()}/users/company/${comp.id}`);
               if (resp.ok) {
                 const data = await resp.json();
                 const img = data?.company?.profile_image || null;

@@ -1,5 +1,35 @@
 // Configuração da API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Garantir que API_BASE_URL é sempre uma URL absoluta completa
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    // Fallback para desenvolvimento local
+    return 'http://localhost:3001/api';
+  }
+  
+  // Remover trailing slash se existir
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  // Validar se é URL absoluta (começa com http:// ou https://)
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    console.error(
+      '❌ VITE_API_URL deve ser uma URL absoluta (ex: https://seu-backend.up.railway.app/api), ' +
+      'mas foi recebido:', apiUrl
+    );
+    // Fallback para localhost como último recurso
+    return 'http://localhost:3001/api';
+  }
+  
+  // Garantir que termina com /api se necessário
+  if (!trimmed.endsWith('/api')) {
+    return `${trimmed}/api`;
+  }
+  
+  return trimmed;
+}
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Função helper para obter token
 const getAuthToken = () => {

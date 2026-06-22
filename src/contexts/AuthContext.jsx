@@ -1,6 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import ApiService, { authAPI } from '../lib/api';
 
+// Helper para obter baseURL da API de forma consistente
+const getAPIBaseURL = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    return 'http://localhost:3001/api';
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return 'http://localhost:3001/api';
+  }
+  
+  if (!trimmed.endsWith('/api')) {
+    return `${trimmed}/api`;
+  }
+  
+  return trimmed;
+};
+
+const API_BASE_URL = getAPIBaseURL();
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -382,7 +405,7 @@ export const AuthProvider = ({ children }) => {
       const normalizedPlan = planType.toLowerCase();
       
       // Chamar backend para persistir
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/upgrade`, {
+      await fetch(`${API_BASE_URL}/auth/upgrade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
