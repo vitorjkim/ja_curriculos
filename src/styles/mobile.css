@@ -1,0 +1,263 @@
+/* Mobile-specific responsive utilities */
+
+/* Container responsivo */
+.mobile-container {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Espaçamentos responsivos */
+.mobile-spacing {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+.mobile-margin {
+  @apply m-4 sm:m-6 lg:m-8;
+}
+
+/* Grid responsivo */
+.mobile-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+}
+
+.mobile-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6;
+}
+
+/* Flex responsivo */
+.mobile-flex {
+  @apply flex flex-col sm:flex-row gap-4 sm:gap-6;
+}
+
+.mobile-flex-center {
+  @apply flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6;
+}
+
+/* Texto responsivo */
+.mobile-text-xl {
+  @apply text-lg sm:text-xl lg:text-2xl;
+}
+
+.mobile-text-2xl {
+  @apply text-xl sm:text-2xl lg:text-3xl;
+}
+
+.mobile-text-3xl {
+  @apply text-2xl sm:text-3xl lg:text-4xl;
+}
+
+.mobile-heading {
+  @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold;
+}
+
+/* Botões responsivos */
+.mobile-btn {
+  @apply w-full sm:w-auto px-4 py-3 sm:px-6 sm:py-2 text-sm sm:text-base;
+}
+
+.mobile-btn-group {
+  @apply flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto;
+}
+
+/* Cards responsivos */
+.mobile-card {
+  @apply rounded-lg sm:rounded-xl p-4 sm:p-6 lg:p-8;
+}
+
+.mobile-card-compact {
+  @apply rounded-lg p-3 sm:p-4 lg:p-6;
+}
+
+/* Formulários responsivos */
+.mobile-form {
+  @apply space-y-4 sm:space-y-6;
+}
+
+.mobile-form-group {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6;
+}
+
+.mobile-input {
+  @apply w-full px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base rounded-lg;
+}
+
+/* Modais responsivos */
+.mobile-modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+}
+
+.mobile-modal-content {
+  @apply bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
+}
+
+/* Navegação responsiva */
+.mobile-nav {
+  @apply flex flex-col sm:flex-row items-center gap-2 sm:gap-4;
+}
+
+.mobile-nav-item {
+  @apply w-full sm:w-auto text-center sm:text-left;
+}
+
+/* Tabelas responsivas */
+.mobile-table-container {
+  @apply overflow-x-auto -mx-4 sm:mx-0;
+}
+
+.mobile-table {
+  @apply min-w-full text-sm;
+}
+
+.mobile-table-cell {
+  @apply px-2 py-3 sm:px-4 sm:py-4 text-xs sm:text-sm;
+}
+
+/* Imagens responsivas */
+.mobile-avatar {
+  @apply w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24;
+}
+
+.mobile-logo {
+  @apply h-8 sm:h-10 md:h-12 w-auto;
+}
+
+/* Upload área */
+.mobile-upload {
+  @apply min-h-[200px] sm:min-h-[250px] md:min-h-[300px] p-6 sm:p-8;
+}
+
+/* Sidebar responsivo */
+.mobile-sidebar {
+  @apply w-full sm:w-64 lg:w-72;
+}
+
+/* Ocultar/mostrar em mobile */
+.mobile-hidden {
+  @apply hidden sm:block;
+}
+
+.mobile-only {
+  @apply block sm:hidden;
+}
+
+.tablet-hidden {
+  @apply hidden md:block;
+}
+
+.tablet-only {
+  @apply block md:hidden;
+}
+
+.desktop-hidden {
+  @apply hidden lg:block;
+}
+
+.desktop-only {
+  @apply block lg:hidden;
+}
+
+/* Estilos específicos para touch */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .clickable-area {
+    padding: 12px;
+    margin: -6px;
+  }
+  
+  /* Melhor scroll em mobile */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Texto selecionável em mobile */
+  .mobile-select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Prevenir zoom em inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Animações reduzidas em mobile */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-animation-reduced * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .mobile-crisp {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Landscape orientation em mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-landscape-adjust {
+    min-height: 100vh;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+/* Componentes específicos */
+.mobile-resume-preview {
+  @apply transform scale-75 sm:scale-90 md:scale-100 origin-top-left;
+  width: 133.33%; /* Compensar o scale */
+}
+
+@media (max-width: 640px) {
+  .mobile-resume-preview {
+    @apply scale-50;
+    width: 200%;
+  }
+}
+
+/* Notificações responsivas */
+.mobile-toast {
+  @apply fixed bottom-4 left-4 right-4 sm:bottom-6 sm:right-6 sm:left-auto sm:w-96;
+}
+
+/* Loading states */
+.mobile-loading {
+  @apply flex items-center justify-center min-h-[200px] sm:min-h-[300px];
+}
+
+/* Breadcrumbs responsivos */
+.mobile-breadcrumb {
+  @apply flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm;
+}
+
+/* Utility para overflow em mobile */
+.mobile-overflow-safe {
+  @apply overflow-hidden sm:overflow-visible;
+}
+
+/* Padding para notch em iPhones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .mobile-safe-area {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

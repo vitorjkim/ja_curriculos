@@ -1,0 +1,1244 @@
+/* Montserrat Arabic - fonte local */
+@font-face {
+  font-family: 'Montserrat Arabic';
+  src: url('/fonts/Montserrat-Arabic Regular 400.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat Arabic';
+  src: url('/fonts/Montserrat-Arabic Medium 500.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat Arabic';
+  src: url('/fonts/Montserrat-Arabic SemiBold 600.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat Arabic';
+  src: url('/fonts/Montserrat-Arabic Bold 700.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat Arabic';
+  src: url('/fonts/Montserrat-Arabic Light 300.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Animações personalizadas para Step cards */
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.3) rotate(-5deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.1) rotate(2deg);
+  }
+  70% {
+    transform: translateY(5px) scale(0.95) rotate(-1deg);
+  }
+  85% {
+    transform: translateY(-2px) scale(1.02) rotate(0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Utilitários para truncar texto */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Componentes responsivos específicos */
+.mobile-container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.mobile-spacing {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-spacing {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-spacing {
+    padding: 2rem;
+  }
+}
+
+.mobile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mobile-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-flex {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+}
+
+.mobile-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-btn {
+    width: auto;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+.mobile-card {
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-card {
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-card {
+    padding: 2rem;
+  }
+}
+
+.mobile-text {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-text {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-text {
+    font-size: 1.125rem;
+  }
+}
+
+.mobile-heading {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+@media (min-width: 640px) {
+  .mobile-heading {
+    font-size: 1.875rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-heading {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-heading {
+    font-size: 3rem;
+  }
+}
+
+/* Estilos para listas em conteúdo rico (descrições de vagas, etc.) */
+.prose ul,
+.rich-content ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.prose ol,
+.rich-content ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.prose li,
+.rich-content li {
+  margin-bottom: 0.25rem !important;
+  display: list-item !important;
+}
+
+.prose ul li::marker,
+.rich-content ul li::marker {
+  color: #6b7280;
+}
+
+.prose ol li::marker,
+.rich-content ol li::marker {
+  color: #6b7280;
+}
+
+/* Editor RichTextarea - garantir que listas apareçam no editor */
+[contenteditable] ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+[contenteditable] ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+[contenteditable] li {
+  display: list-item !important;
+  margin-bottom: 0.25rem !important;
+}
+
+:root {
+  --color1: #3b82f6;
+  --color2: #2563eb;
+  --color3: #1d4ed8;
+  --color4: #1e40af;
+  --color5: #1e3a8a;
+}
+
+/* Utilitários de cor do site (tons de azul) */
+.text-primary {
+  color: var(--color1) !important;
+}
+.bg-primary {
+  background-color: var(--color1) !important;
+}
+.avatar-solid {
+  background-color: var(--color1);
+}
+.bio-accent {
+  border-left: 3px solid var(--color1);
+  padding-left: 1rem;
+  background: rgba(49,33,194,0.03);
+  border-radius: 0.5rem;
+}
+
+body {
+  font-family: 'Montserrat Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: white;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================= */
+/* Template-driven aesthetics */
+/* ========================= */
+
+/* Modern: Poppins/Nunito vibe, glassy cards, subtle animations */
+.template-modern {
+  --template-font: 'Montserrat Arabic', 'Poppins', 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+.template-modern h1, .template-modern .card-title, .template-modern .resume-card-title {
+  letter-spacing: -0.02em;
+}
+.template-modern .modern-hover {
+  transition: all 250ms ease;
+}
+.template-modern .modern-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.18);
+}
+.template-modern .modern-icon {
+  color: #14b8a6; /* teal-500 */
+}
+
+/* Default (pós-swap moderno): dark UI */
+.template-default input[type="text"],
+.template-default input[type="email"],
+.template-default input[type="date"],
+.template-default input[type="tel"],
+.template-default input:not([type]),
+.template-default select,
+.template-default textarea {
+  background-color: #0d1117 !important; /* GitHub canvas default */
+  color: #c9d1d9 !important; /* GitHub fg default */
+  border-color: #30363d !important; /* GitHub border default */
+  border-width: 1px !important;
+}
+.template-default input::placeholder,
+.template-default textarea::placeholder { color: #8b949e !important; }
+.template-default input:focus,
+.template-default select:focus,
+.template-default textarea:focus {
+  border-color: #1f6feb !important; /* GitHub accent */
+  --tw-ring-color: rgba(31, 111, 235, 0.25) !important;
+  --tw-ring-offset-color: #0d1117 !important;
+}
+.template-default .classic-outline {
+  background-color: #161b22 !important; /* GitHub canvas-subtle */
+  border-color: #30363d !important; /* unify border color */
+  box-shadow: inset 0 0 0 1px #30363d;
+}
+.template-default .minimal-quiet {
+  background-color: #0d1117 !important;
+  border-color: #30363d;
+}
+.template-default .text-gray-700 { color: #d1d5db !important; } /* gray-300 for dark bg */
+.template-default .text-gray-600 { color: #cbd5e1 !important; } /* slate-300 */
+.template-default .placeholder-gray-400 { color: #8b949e !important; }
+
+/* Dark default: subtle hero glow wrapper for header */
+.template-default .hero-glow {
+  background: radial-gradient(600px 400px at 50% -50%, rgba(56,139,253,0.15), transparent);
+  border-radius: 1.5rem;
+}
+
+/* Dark default: labels a bit lighter for readability */
+.template-default label { color: #e6edf3; }
+
+/* Dark default: input hover and radii */
+.template-default input:hover, .template-default select:hover, .template-default textarea:hover {
+  border-color: #8b949e !important;
+}
+.template-default input, .template-default select, .template-default textarea {
+  border-radius: 0.75rem !important; /* rounded-xl */
+}
+
+/* Dark default: primary button focus ring */
+.template-default button[type="submit"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13,17,23,1), 0 0 0 5px rgba(31,111,235,0.55);
+}
+
+/* Dark default: add button micro adjustments */
+.template-default .btn-add { border-radius: 0.75rem !important; }
+.template-default .btn-add {
+  background: none !important;
+  background-color: #21262d !important; /* GitHub btn bg */
+  color: #c9d1d9 !important;
+  border: 1px solid #30363d !important;
+  box-shadow: none !important;
+}
+.template-default .btn-add:hover {
+  background-color: #30363d !important; /* base dark hover */
+  transform: translateY(0) !important; /* disable lift on dark */
+  box-shadow: none !important;        /* reset global hover shadow */
+}
+
+/* Per-accent subtle hover effects (match border color) */
+.template-default .btn-add-red:hover {
+  background-color: rgba(248, 113, 113, 0.08) !important; /* #f87171 */
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15) !important;
+}
+.template-default .btn-add-orange:hover {
+  background-color: rgba(251, 146, 60, 0.08) !important; /* #fb923c */
+  border-color: #fb923c !important;
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.15) !important;
+}
+.template-default .btn-add-purple:hover {
+  background-color: rgba(168, 85, 247, 0.08) !important; /* #a855f7 */
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15) !important;
+}
+.template-default .btn-add-green:hover {
+  background-color: rgba(34, 197, 94, 0.08) !important; /* #22c55e */
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16) !important;
+}
+.template-default .btn-add-blue:hover {
+  background-color: rgba(59, 130, 246, 0.08) !important; /* #3b82f6 */
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+}
+.template-default .btn-add-yellow:hover {
+  background-color: rgba(234, 179, 8, 0.12) !important; /* #eab308 needs a bit more to show */
+  border-color: #eab308 !important;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2) !important;
+}
+
+/* Dark default: colorize Add buttons via border/text/icon per section accent */
+.template-default .btn-add-red { border-color: #f87171 !important; color: #fca5a5 !important; }
+.template-default .btn-add-red svg { color: #f87171 !important; }
+.template-default .btn-add-orange { border-color: #fb923c !important; color: #fdba74 !important; }
+.template-default .btn-add-orange svg { color: #fb923c !important; }
+.template-default .btn-add-purple { border-color: #a855f7 !important; color: #c4b5fd !important; }
+.template-default .btn-add-purple svg { color: #a855f7 !important; }
+.template-default .btn-add-green { border-color: #22c55e !important; color: #86efac !important; }
+.template-default .btn-add-green svg { color: #22c55e !important; }
+.template-default .btn-add-blue { border-color: #3b82f6 !important; color: #93c5fd !important; }
+.template-default .btn-add-blue svg { color: #3b82f6 !important; }
+.template-default .btn-add-yellow { border-color: #eab308 !important; color: #fde68a !important; }
+.template-default .btn-add-yellow svg { color: #eab308 !important; }
+
+/* Dark default: internal item titles forced to white for contrast */
+.template-default .item-title { color: #ffffff !important; }
+
+/* Dark default: empty state accent styling */
+.template-default .empty-state { color: #c9d1d9; }
+.template-default .empty-state .hint { color: #8b949e; }
+.template-default .empty-state.red svg { color: #f87171 !important; }
+.template-default .empty-state.orange svg { color: #fb923c !important; }
+.template-default .empty-state.purple svg { color: #a855f7 !important; }
+.template-default .empty-state.green svg { color: #22c55e !important; }
+.template-default .empty-state.blue svg { color: #3b82f6 !important; }
+.template-default .empty-state.yellow svg { color: #eab308 !important; }
+
+/* Dark default: delete buttons (ghost) – avoid white, use subtle accent on hover */
+.template-default .delete-btn { 
+  color: #c9d1d9 !important; 
+}
+.template-default .delete-btn:hover {
+  background-color: #21262d !important;
+}
+.template-default .delete-btn svg { color: #8b949e !important; }
+.template-default .delete-btn-red:hover { background-color: rgba(248, 113, 113, 0.08) !important; }
+.template-default .delete-btn-orange:hover { background-color: rgba(251, 146, 60, 0.08) !important; }
+.template-default .delete-btn-purple:hover { background-color: rgba(168, 85, 247, 0.08) !important; }
+.template-default .delete-btn-green:hover { background-color: rgba(34, 197, 94, 0.08) !important; }
+.template-default .delete-btn-blue:hover { background-color: rgba(59, 130, 246, 0.08) !important; }
+.template-default .delete-btn-yellow:hover { background-color: rgba(234, 179, 8, 0.12) !important; }
+.template-default .delete-btn-red svg { color: #f87171 !important; }
+.template-default .delete-btn-orange svg { color: #fb923c !important; }
+.template-default .delete-btn-purple svg { color: #a855f7 !important; }
+.template-default .delete-btn-green svg { color: #22c55e !important; }
+.template-default .delete-btn-blue svg { color: #3b82f6 !important; }
+.template-default .delete-btn-yellow svg { color: #eab308 !important; }
+
+/* Modern (light) template: delete buttons – avoid stark white, use subtle accent tint on hover */
+.template-modern .delete-btn { color: #475569 !important; } /* slate-600 */
+.template-modern .delete-btn:hover { background-color: rgba(15, 23, 42, 0.04) !important; } /* slight slate tint */
+.template-modern .delete-btn svg { color: #64748b !important; } /* slate-500 */
+.template-modern .delete-btn-red:hover { background-color: rgba(248, 113, 113, 0.12) !important; }
+.template-modern .delete-btn-orange:hover { background-color: rgba(251, 146, 60, 0.12) !important; }
+.template-modern .delete-btn-purple:hover { background-color: rgba(168, 85, 247, 0.12) !important; }
+.template-modern .delete-btn-green:hover { background-color: rgba(34, 197, 94, 0.12) !important; }
+.template-modern .delete-btn-blue:hover { background-color: rgba(59, 130, 246, 0.12) !important; }
+.template-modern .delete-btn-yellow:hover { background-color: rgba(234, 179, 8, 0.18) !important; }
+.template-modern .delete-btn-red svg { color: #ef4444 !important; }
+.template-modern .delete-btn-orange svg { color: #f59e0b !important; }
+.template-modern .delete-btn-purple svg { color: #a855f7 !important; }
+.template-modern .delete-btn-green svg { color: #16a34a !important; }
+.template-modern .delete-btn-blue svg { color: #2563eb !important; }
+.template-modern .delete-btn-yellow svg { color: #eab308 !important; }
+
+/* Template-scoped button radius utility (ensures correct rounding) */
+.template-default .btn-radius { border-radius: 1rem !important; }
+.template-modern .btn-radius { border-radius: 1rem !important; }
+.template-classic .btn-radius { border-radius: 1rem !important; }
+.template-minimal .btn-radius { border-radius: 0.375rem !important; }
+
+/* Photo uploader buttons (template-scoped, stable look) */
+.template-default .photo-upload-btn { background-color: #0d1117 !important; border: 1px solid #30363d !important; color: #e5e7eb !important; }
+.template-default .photo-upload-btn:hover { background-color: #161b22 !important; }
+.template-default .photo-remove-btn { color: #cbd5e1 !important; }
+.template-default .photo-remove-btn:hover { background-color: #161b22 !important; }
+
+.template-modern .photo-upload-btn { background-color: #ffffff !important; border: 1px solid rgba(0,0,0,0.10) !important; color: #334155 !important; }
+.template-modern .photo-upload-btn:hover { background-color: #ffffff !important; box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 2px 8px rgba(15,23,42,0.06) !important; }
+.template-modern .photo-remove-btn { color: #64748b !important; }
+.template-modern .photo-remove-btn:hover { background-color: rgba(15,23,42,0.05) !important; }
+
+/* Remove action emphasized in red for default + modern */
+.template-default .photo-remove-btn, .template-modern .photo-remove-btn { color: #ef4444 !important; }
+.template-default .photo-remove-btn svg, .template-modern .photo-remove-btn svg { color: #ef4444 !important; }
+.template-default .photo-remove-btn:hover, .template-modern .photo-remove-btn:hover { background-color: rgba(239, 68, 68, 0.10) !important; }
+
+.template-classic .photo-upload-btn { background-color: #292524 !important; border: 1px solid #44403c !important; color: #ffffff !important; }
+.template-classic .photo-upload-btn:hover { background-color: #1c1917 !important; }
+.template-classic .photo-remove-btn { color: #44403c !important; }
+.template-classic .photo-remove-btn:hover { background-color: #f5f5f4 !important; }
+
+.template-minimal .photo-upload-btn { background-color: #000000 !important; border: 1px solid #000000 !important; color: #ffffff !important; }
+.template-minimal .photo-upload-btn:hover { background-color: #111111 !important; }
+.template-minimal .photo-remove-btn { color: #111111 !important; }
+.template-minimal .photo-remove-btn:hover { background-color: #f3f4f6 !important; }
+
+/* Accent color for selected shape toggle (default + modern) */
+.template-default .toggle-accent-yellow, .template-modern .toggle-accent-yellow { background-color: #eab308 !important; border-color: #eab308 !important; color: #111827 !important; }
+.template-default .toggle-accent-teal,   .template-modern .toggle-accent-teal   { background-color: #14b8a6 !important; border-color: #14b8a6 !important; color: #ffffff !important; }
+.template-default .toggle-accent-blue,   .template-modern .toggle-accent-blue   { background-color: #2563eb !important; border-color: #2563eb !important; color: #ffffff !important; }
+.template-default .toggle-accent-green,  .template-modern .toggle-accent-green  { background-color: #16a34a !important; border-color: #16a34a !important; color: #ffffff !important; }
+.template-default .toggle-accent-purple, .template-modern .toggle-accent-purple { background-color: #9333ea !important; border-color: #9333ea !important; color: #ffffff !important; }
+.template-default .toggle-accent-red,    .template-modern .toggle-accent-red    { background-color: #ef4444 !important; border-color: #ef4444 !important; color: #ffffff !important; }
+.template-default .toggle-accent-orange, .template-modern .toggle-accent-orange { background-color: #f97316 !important; border-color: #f97316 !important; color: #111827 !important; }
+.template-default .toggle-accent-gray,   .template-modern .toggle-accent-gray   { background-color: #6b7280 !important; border-color: #6b7280 !important; color: #ffffff !important; }
+
+/* Classic: serif headings, thin borders, symmetric structure */
+.template-classic {
+  --template-font-heading: 'Merriweather', Georgia, 'Times New Roman', serif;
+}
+.template-classic h1, .template-classic .card-title, .template-classic .resume-card-title {
+  font-family: var(--template-font-heading);
+  letter-spacing: 0.005em;
+}
+.template-classic .classic-divider {
+  border-top: 1px solid rgba(41, 37, 36, 0.15); /* stone-800/15 */
+}
+.template-classic .classic-outline {
+  /* Classic panels: neutral stone borders instead of colorful accents */
+  border-color: #e7e5e4 !important; /* stone-200 */
+  box-shadow: inset 0 0 0 1px rgba(41, 37, 36, 0.12);
+}
+
+/* Classic template: solid, sober action buttons (no gradients/shadows) */
+.template-classic .btn-add {
+  background: none !important;
+  background-color: #292524 !important; /* stone-800 */
+  color: #ffffff !important;
+  box-shadow: none !important;
+  border: 1px solid #44403c !important; /* stone-700 */
+}
+.template-classic .btn-add:hover {
+  background-color: #1c1917 !important; /* stone-900 */
+  transform: translateY(-1px);
+  box-shadow: none !important;
+}
+.template-classic .btn-add:active {
+  transform: translateY(0);
+  box-shadow: none !important;
+}
+
+/* Classic template: neutralize colored borders on fields */
+.template-classic input[type="text"],
+.template-classic input[type="email"],
+.template-classic input[type="date"],
+.template-classic input[type="tel"],
+.template-classic input:not([type]),
+.template-classic select,
+.template-classic textarea {
+  border-color: #e7e5e4 !important; /* stone-200 */
+}
+
+.template-classic input:focus,
+.template-classic select:focus,
+.template-classic textarea:focus {
+  border-color: #57534e !important; /* stone-600 */
+  /* Tailwind ring override */
+  --tw-ring-color: rgba(214, 211, 209, 0.7) !important; /* stone-300 */
+  --tw-ring-offset-color: #fafaf9 !important; /* stone-50 */
+}
+
+/* Minimal: ultra clean, fewer borders, crisp typography */
+.template-minimal {
+  --template-font: 'Montserrat Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+.template-minimal .minimal-quiet {
+  border-color: #e5e7eb; /* gray-200 */
+}
+.template-minimal .minimal-shadow {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Minimal template: neutral fields (B&W only) */
+.template-minimal input[type="text"],
+.template-minimal input[type="email"],
+.template-minimal input[type="date"],
+.template-minimal input[type="tel"],
+.template-minimal input:not([type]),
+.template-minimal select,
+.template-minimal textarea {
+  border-color: #e5e7eb !important; /* gray-200 */
+  border-width: 1px !important;
+}
+
+.template-minimal input:focus,
+.template-minimal select:focus,
+.template-minimal textarea:focus {
+  border-color: #111827 !important; /* gray-900 (almost black) */
+  --tw-ring-color: rgba(0,0,0,0.08) !important; /* subtle black ring */
+  --tw-ring-offset-color: #ffffff !important; /* white */
+}
+
+/* Minimal template: solid black add button (no gradients/shadows) */
+.template-minimal .btn-add {
+  background: none !important;
+  background-color: #292524 !important; /* stone-800 (match classic) */
+  color: #ffffff !important;
+  box-shadow: none !important;
+  border: 1px solid #44403c !important; /* stone-700 */
+}
+.template-minimal .btn-add:hover {
+  background-color: #1c1917 !important; /* stone-900 */
+  transform: translateY(-1px);
+  box-shadow: none !important;
+}
+.template-minimal .btn-add:active {
+  transform: translateY(0);
+  box-shadow: none !important;
+}
+
+/* Minimal template: override add buttons that use the generic modern-hover class */
+.template-minimal .modern-hover {
+  background: none !important;
+  background-color: #292524 !important; /* stone-800 */
+  color: #ffffff !important;
+  border: 1px solid #44403c !important; /* stone-700 */
+  box-shadow: none !important;
+}
+.template-minimal button[type="submit"] {
+  border-radius: 0 !important; /* square corners for primary action */
+}
+.template-minimal .modern-hover:hover {
+  background-color: #1c1917 !important; /* stone-900 */
+  transform: translateY(-1px);
+}
+.template-minimal .modern-hover:active {
+  transform: translateY(0);
+}
+
+/* Animações minimalistas para botões */
+@keyframes gentle-fade {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtle-glow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1); }
+  50% { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15); }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Classes para transições suaves */
+.btn-modern {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-modern:hover {
+  transform: translateY(-2px);
+}
+
+.btn-subtle-shadow {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-subtle-shadow:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Animação suave para ícones */
+.icon-smooth {
+  transition: transform 0.2s ease;
+}
+
+.icon-smooth:hover {
+  transform: translateX(2px);
+}
+
+/* Responsividade para animações */
+@media (prefers-reduced-motion: reduce) {
+  .btn-modern,
+  .btn-subtle-shadow,
+  .icon-smooth {
+    transition: none;
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .btn-modern:hover {
+    transform: none;
+  }
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--color1) 0%, var(--color2) 25%, var(--color3) 50%, var(--color4) 75%, var(--color5) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color1), var(--color3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color1), var(--color3));
+  transition: all 0.3s ease;
+  border-radius: 0.5rem; /* 8px - padrão rounded-lg do Tailwind */
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--color2), var(--color4));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(49, 33, 194, 0.3);
+}
+
+/* Botão secundário de ação (Adicionar) padronizado */
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: all 0.2s ease;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #f87171); /* default red */
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.15);
+  border: none;
+}
+/* Variantes de cor */
+.btn-add-red { background: linear-gradient(135deg, #ef4444, #f87171); }
+.btn-add-red:hover { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+.btn-add-orange { background: linear-gradient(135deg, #f97316, #fb923c); }
+.btn-add-orange:hover { background: linear-gradient(135deg, #ea580c, #f97316); }
+
+.btn-add-purple { background: linear-gradient(135deg, #9333ea, #a855f7); }
+.btn-add-purple:hover { background: linear-gradient(135deg, #7e22ce, #9333ea); }
+
+.btn-add-green { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.btn-add-green:hover { background: linear-gradient(135deg, #15803d, #16a34a); }
+
+.btn-add-blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.btn-add-blue:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+
+.btn-add-yellow { background: linear-gradient(135deg, #ca8a04, #eab308); color:#1f1f1f; }
+.btn-add-yellow:hover { background: linear-gradient(135deg, #a16207, #ca8a04); }
+
+.btn-add:hover {
+  box-shadow: 0 6px 18px -2px rgba(0,0,0,0.25);
+  transform: translateY(-2px);
+}
+.btn-add:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px -2px rgba(220,38,38,0.4);
+}
+.btn-add svg { width: 16px; height: 16px; }
+
+/* Classe utilitária para garantir bordas arredondadas */
+.btn-rounded {
+  border-radius: 0.5rem !important;
+}
+
+/* Classes para linha limitada de texto */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+label span.required-star {
+  color: #ef4444; /* Cor vermelha para o asterisco */
+  margin-left: 2px;
+}
+
+/* Estilo personalizado para select dropdown */
+select {
+  background-image: none;
+}
+
+select option {
+  padding: 12px 16px;
+  background-color: white;
+  color: #374151;
+  border: none;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+select option:hover {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+/* Cores dinâmicas para opções baseadas no contexto do card */
+select.blue-context option {
+  background-color: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+select.blue-context option:checked,
+select.blue-context option:focus {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+select.green-context option {
+  background-color: #dcfce7 !important;
+  color: #16a34a !important;
+}
+
+select.green-context option:checked,
+select.green-context option:focus {
+  background-color: #22c55e !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+select.yellow-context option {
+  background-color: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+select.yellow-context option:checked,
+select.yellow-context option:focus {
+  background-color: #f59e0b !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+select.purple-context option {
+  background-color: #f3e8ff !important;
+  color: #9333ea !important;
+}
+
+select.purple-context option:checked,
+select.purple-context option:focus {
+  background-color: #a855f7 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+select.orange-context option {
+  background-color: #fed7aa !important;
+  color: #ea580c !important;
+}
+
+select.orange-context option:checked,
+select.orange-context option:focus {
+  background-color: #f97316 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+select.red-context option {
+  background-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
+select.red-context option:checked,
+select.red-context option:focus {
+  background-color: #ef4444 !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Melhorar o visual geral do dropdown */
+select:focus {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Estilo quando o select está aberto */
+select:focus option {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 1px 4px;
+}
+
+/* Animação suave para transição */
+select option {
+  transition: all 0.15s ease-in-out;
+}
+
+/* Estilos para Combobox */
+.combobox-dropdown {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.combobox-option {
+  transition: all 0.15s ease-in-out;
+}
+
+.combobox-option:hover {
+  transform: translateX(2px);
+}
+
+/* Scrollbar customizado para combobox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Garantir que o dropdown do combobox apareça por cima */
+.relative {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Garantir que os cards não cortem dropdowns */
+[class*="rounded-2xl"] {
+  overflow: visible !important;
+}
+
+/* Container específico para combobox */
+.combobox-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Line clamp para textos longos */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Removendo animações desnecessárias */
+
+.combobox-scrollbar::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.combobox-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+
+.combobox-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+
+/* Mobile-First Responsive Classes */
+@media (max-width: 768px) {
+  /* Container responsivo */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Botões em mobile */
+  .btn-primary,
+  .btn-add,
+  .btn-modern {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Cards responsivos */
+  .card-hover {
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+  }
+  
+  /* Navegação móvel */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    z-index: 50;
+  }
+  
+  /* Formulários em mobile */
+  input, select, textarea {
+    font-size: 16px !important; /* Previne zoom no iOS */
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+  }
+  
+  /* Grid responsivo */
+  .mobile-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  /* Texto responsivo */
+  h1 { font-size: 2rem !important; }
+  h2 { font-size: 1.5rem !important; }
+  h3 { font-size: 1.25rem !important; }
+  
+  /* Modais em mobile */
+  .modal-content {
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Tabelas responsivas */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-responsive table {
+    min-width: 600px;
+  }
+  
+  /* Flexbox stack em mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  /* Upload area responsiva */
+  .upload-area {
+    min-height: 200px !important;
+    padding: 2rem 1rem !important;
+  }
+  
+  /* Preview de currículo em mobile */
+  .resume-preview {
+    transform: scale(0.8);
+    transform-origin: top left;
+    width: 125%;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Ainda menor para smartphones */
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  /* Botões ainda menores */
+  .btn-primary,
+  .btn-add {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Cards mais compactos */
+  .card-compact {
+    padding: 1rem !important;
+  }
+  
+  /* Spacing reduzido */
+  .mobile-spacing-sm {
+    margin: 0.5rem 0 !important;
+    padding: 0.5rem !important;
+  }
+  
+  /* Texto ainda menor */
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.125rem !important; }
+  
+  /* Flexbox mais compacto */
+  .mobile-flex-compact {
+    gap: 0.5rem !important;
+  }
+}
+
+/* Utilities específicas para mobile */
+.mobile-hidden {
+  display: none;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .mobile-flex {
+    display: flex !important;
+  }
+  
+  .mobile-grid {
+    display: grid !important;
+  }
+}
+
+/* Touch targets para mobile */
+@media (max-width: 768px) {
+  button, 
+  .btn-primary,
+  .btn-add,
+  .btn-modern,
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px; /* Apple HIG recommendation */
+    min-width: 44px;
+  }
+  
+  /* Links clicáveis maiores */
+  .clickable-area {
+    padding: 0.75rem;
+    margin: -0.25rem;
+  }
+}
+
+/* Scrollbar customizado para mobile */
+@media (max-width: 768px) {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .print-page {
+    page-break-after: always;
+  }
+}

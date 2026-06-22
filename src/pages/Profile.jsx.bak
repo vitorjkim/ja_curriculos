@@ -1,0 +1,356 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet';
+import { User, Mail, Phone, School, BookOpen, Camera, Edit, Save, X, FileText, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { usersAPI } from '@/lib/api';
+
+const Profile = () => {
+  const { user } = useAuth();
+  const params = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({ name: '', email: '', phone: '', school: '', course: '', avatar: null, cpf: '' });
+  const [stats, setStats] = useState({ resumes: 0, applications: 0 });
+  const [publicResumes, setPublicResumes] = useState([]);
+  const [schoolInfo, setSchoolInfo] = useState(null);
+
+  useEffect(() => {
+    const loadTarget = async () => {
+      try {
+        if (params.id) {
+          const data = await usersAPI.get(params.id);
+          if (data && data.user) {
+            const u = data.user;
+            setProfileData({
+              name: u.name || '',
+              email: u.email || '',
+              phone: u.phone || '',
+              school: u.schoolName || '',
+              course: '',
+              avatar: u.profileImage || null,
+              cpf: u.cpf || ''
+            });
+            if (data.student) {
+              setSchoolInfo({ school_name: 'Vinculado', school_id: data.student.id });
+            }
+          }
+        } else if (user) {
+          setProfileData({
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            school: user.school || '',
+            course: user.course || '',
+            avatar: user.profileImage || null,
+            cpf: user.cpf || ''
+          });
+          loadSchoolInfo();
+        }
+
+        loadUserStats();
+        loadPublicResumes();
+      } catch (e) {
+        console.error('Erro ao carregar perfil alvo:', e);
+      }
+    };
+    loadTarget();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, params.id]);
+
+  const loadUserStats = async () => {
+    try {
+      setStats({ resumes: 3, applications: 5 });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const loadPublicResumes = async () => {
+    try {
+      setPublicResumes([
+        { id: 1, title: 'Desenvolvedor Front-end', views: 150 },
+        { id: 2, title: 'Analista de Sistemas', views: 98 },
+        { id: 3, title: 'Designer UX/UI', views: 203 }
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar currículos públicos:', error);
+    }
+  };
+
+  const loadSchoolInfo = async () => {
+    try {
+      const token = localStorage.getItem('curriculoja_token');
+      if (!token) return;
+      const r = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users/me/school`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const j = await r.json();
+      if (j.school) setSchoolInfo(j.school);
+    } catch (e) {
+      console.error('Erro ao carregar escola do aluno:', e);
+    }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const newAvatar = e.target.result;
+        try {
+          // Se estivermos visualizando outro usuário, não tentar enviar avatar em nome dele
+          if (!params.id && user) await usersAPI.uploadAvatar(user.id, newAvatar);
+
+          setProfileData(prev => ({ ...prev, avatar: newAvatar }));
+          if (!params.id && user) localStorage.setItem(`avatar_${user.id}`, newAvatar);
+
+          window.dispatchEvent(new CustomEvent('avatarUpdated', { detail: { avatar: newAvatar } }));
+          toast({ title: 'Avatar atualizado!', description: 'Sua foto foi salva com sucesso.' });
+        } catch (error) {
+          console.error('Erro ao salvar avatar:', error);
+          toast({ title: 'Erro', description: 'Não foi possível salvar a foto.', variant: 'destructive' });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsEditing(false);
+
+      // If editing another user (school viewing student), call update on that user
+      if (params.id && user && user.type === 'school') {
+        const payload = {
+          name: profileData.name,
+          phone: profileData.phone,
+          cpf: profileData.cpf || undefined
+        };
+        await usersAPI.update(params.id, payload);
+        toast({ title: 'Perfil do aluno atualizado', description: 'As informações foram salvas.' });
+        navigate(`/alunos/${params.id}`);
+        return;
+      }
+
+      // For own profile, persist avatar locally (avatar upload handled on selection)
+      if (profileData.avatar && user) {
+        localStorage.setItem(`avatar_${user.id}`, profileData.avatar);
+        window.dispatchEvent(new CustomEvent('avatarUpdated', { detail: { avatar: profileData.avatar } }));
+      }
+
+      toast({ title: 'Perfil atualizado!', description: 'Suas informações foram salvas com sucesso.' });
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast({ title: 'Erro', description: 'Houve um problema ao salvar as informações.', variant: 'destructive' });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    if (user) {
+      const savedAvatar = localStorage.getItem(`avatar_${user.id}`);
+      setProfileData({ name: user.name || '', email: user.email || '', phone: user.phone || '', school: user.school || '', course: user.course || '', avatar: savedAvatar || user.avatar || null, cpf: user.cpf || '' });
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Helmet>
+        <title>Meu Perfil - CurriculoJá</title>
+      </Helmet>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header do Perfil */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            {/* Avatar */}
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-4xl font-bold text-white overflow-hidden shadow-lg">
+                {profileData.avatar ? (
+                  <img src={profileData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  (profileData.name || user.name || 'U').charAt(0).toUpperCase()
+                )}
+              </div>
+
+              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <Camera className="w-8 h-8 text-white" />
+                <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+              </div>
+            </div>
+
+            {/* Informações Básicas */}
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  {isEditing ? (
+                    <Input value={profileData.name} onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))} className="text-2xl font-bold mb-2" placeholder="Seu nome" />
+                  ) : (
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{profileData.name || 'Nome não informado'}</h1>
+                  )}
+
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <Mail className="w-5 h-5 mr-2" />
+                    {isEditing ? (
+                      <Input type="email" value={profileData.email} onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))} placeholder="Seu email" disabled className="bg-gray-100" />
+                    ) : (
+                      <span>{profileData.email}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="w-5 h-5 mr-2" />
+                    {isEditing ? (
+                      <Input value={profileData.phone} onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))} placeholder="Seu telefone" />
+                    ) : (
+                      <span>{profileData.phone || 'Telefone não informado'}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700"><Save className="w-4 h-4 mr-2" />Salvar</Button>
+                      <Button onClick={handleCancel} variant="outline" className="border-gray-300"><X className="w-4 h-4 mr-2" />Cancelar</Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700"><Edit className="w-4 h-4 mr-2" />Editar Perfil</Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Informações Acadêmicas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center text-gray-600">
+                  <School className="w-5 h-5 mr-2" />
+                  {isEditing ? (
+                    <Input value={profileData.school} onChange={(e) => setProfileData(prev => ({ ...prev, school: e.target.value }))} placeholder="Sua instituição de ensino" />
+                  ) : (
+                    <span>{profileData.school || 'Instituição não informada'}</span>
+                  )}
+                </div>
+
+                <div className="flex items-center text-gray-600">
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  {isEditing ? (
+                    <Input value={profileData.course} onChange={(e) => setProfileData(prev => ({ ...prev, course: e.target.value }))} placeholder="Seu curso" />
+                  ) : (
+                    <span>{profileData.course || 'Curso não informado'}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Card da Escola (se aluno vinculado) */}
+        {user.type === 'candidate' && schoolInfo && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-blue-100">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl">{ (schoolInfo.school_name || 'E').charAt(0).toUpperCase() }</div>
+              <div className="flex-1 grid md:grid-cols-3 gap-4">
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Escola</div>
+                  <div className="text-sm font-medium text-gray-900">{schoolInfo.school_name || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</div>
+                  <div className="text-sm text-gray-800">{schoolInfo.school_type || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Diretor</div>
+                  <div className="text-sm text-gray-800">{schoolInfo.school_director || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cidade</div>
+                  <div className="text-sm text-gray-800">{schoolInfo.school_city || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</div>
+                  <div className="text-sm text-gray-800">{schoolInfo.school_state || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contato</div>
+                  <div className="text-sm text-gray-800">{schoolInfo.school_contact_phone || '—'}</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Estatísticas */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Currículos</h3>
+                <p className="text-3xl font-bold text-blue-600">{stats.resumes}</p>
+                <p className="text-sm text-gray-600">currículos criados</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg"><FileText className="w-8 h-8 text-blue-600" /></div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Candidaturas</h3>
+                <p className="text-3xl font-bold text-green-600">{stats.applications}</p>
+                <p className="text-sm text-gray-600">vagas aplicadas</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg"><User className="w-8 h-8 text-green-600" /></div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Currículos Públicos */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">Meus Currículos Públicos</h3>
+
+          {publicResumes.length > 0 ? (
+            <div className="space-y-4">
+              {publicResumes.map((resume) => (
+                <div key={resume.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-4"><FileText className="w-5 h-5 text-blue-600" /></div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{resume.title}</h4>
+                      <p className="text-sm text-gray-600 flex items-center"><Eye className="w-4 h-4 mr-1" />{resume.views} visualizações</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">Ver Currículo</Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhum currículo público ainda</h4>
+              <p className="text-gray-600 mb-6">Crie seu primeiro currículo e torne-o público para que empresas possam encontrá-lo.</p>
+              <Button className="bg-blue-600 hover:bg-blue-700">Criar Primeiro Currículo</Button>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

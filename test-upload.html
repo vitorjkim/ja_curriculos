@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Upload</title>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
+    <button onclick="testUpload()">Testar Upload</button>
+    
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Selecione um arquivo');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('resumeFile', file);
+            formData.append('extractedText', 'Texto extraído do arquivo');
+            formData.append('parsedData', JSON.stringify({
+                name: 'Teste',
+                email: 'teste@teste.com',
+                phone: '123456789'
+            }));
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/resumes/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjNGU0ZDM3Mi02NjgwLTQ1MGMtYThjYi1jYmUxNGM1NTBkYmQiLCJlbWFpbCI6InZpdG9yZW9qb2FxdWltQGdtYWlsLmNvbSIsInR5cGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3NTU0NjEzMDYsImV4cCI6MTc1NjA2NjEwNn0.j9z0wX_LdxrbXL1RBvrml-LQ3O3y4xIXDSgVTcITi3g'
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                console.log('Response:', result);
+                alert('Response: ' + JSON.stringify(result));
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
