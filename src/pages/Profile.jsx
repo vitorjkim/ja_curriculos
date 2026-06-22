@@ -641,10 +641,224 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Avatar - escola pode editar; empresa/admin apenas visualiza */}
-        {/* REMOVIDO - Integrado ao card de Informações Pessoais */}
+          {/* Avatar - escola pode editar; empresa/admin apenas visualiza */}
+          {/* REMOVIDO - Integrado ao card de Informações Pessoais */}
 
-      <div className="space-y-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left column: avatar + stats */}
+            <div className="col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center text-center">
+                    <div className={`w-32 h-32 overflow-hidden ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-md'} bg-white/40 flex items-center justify-center`}>
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12 text-slate-500" />
+                      )}
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold">{profile.name || '—'}</h3>
+                    <p className="text-sm text-slate-600">{profile.class_name || ''}</p>
+
+                    {/* Avatar controls when allowed */}
+                    {((user && user.type === 'candidate' && !id) || (user && user.type === 'school' && id)) && (
+                      <div className="mt-3 w-full">
+                        <input type="file" accept="image/*" onChange={onSelectAvatar} className="hidden" id="avatar-input" />
+                        <label htmlFor="avatar-input" className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-md text-sm">
+                          <ImagePlus className="w-4 h-4" /> Escolher imagem
+                        </label>
+                        <div className="mt-2 flex gap-2">
+                          <button onClick={() => handleSetShape('circle')} className={`px-2 py-1 text-sm rounded ${avatarShape==='circle'?'bg-blue-600 text-white':'bg-slate-100'}`}>Círculo</button>
+                          <button onClick={() => handleSetShape('square')} className={`px-2 py-1 text-sm rounded ${avatarShape==='square'?'bg-blue-600 text-white':'bg-slate-100'}`}>Quadrado</button>
+                        </div>
+                        {cropImage && (
+                          <div className="mt-3">
+                            <ImageCropper src={cropImage} onCrop={(dataUrl) => { setNewAvatar(dataUrl); setCropImage(null); }} />
+                            <div className="flex gap-2 mt-2">
+                              <Button onClick={() => setCropImage(null)}>Cancelar</Button>
+                              <Button onClick={onUploadAvatar} disabled={avatarUploading}>{avatarUploading ? 'Enviando...' : 'Salvar foto'}</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-slate-50 p-3 rounded">Currículos: <strong>{stats.resumes}</strong></div>
+                    <div className="bg-slate-50 p-3 rounded">Candidaturas: <strong>{stats.applications}</strong></div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Perfil Views */}
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle>Visualizações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">Total: <strong>{views.count}</strong></p>
+                  <div className="mt-2 space-y-1">
+                    {views.companies.slice(0,5).map((c,i)=> (
+                      <div key={i} className="text-sm text-slate-600">{c.name || c.company_name || 'Empresa'}</div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Middle + Right: profile sections and posts */}
+            <div className="col-span-1 md:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados Pessoais</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input value={profile.name} onChange={e => setProfile(prev=>({...prev, name: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={profile.email} disabled />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input value={profile.phone} onChange={e=> setProfile(prev=>({...prev, phone: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div>
+                      <Label>CPF</Label>
+                      <Input value={profile.cpf} onChange={e=> setProfile(prev=>({...prev, cpf: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Sobre</Label>
+                      <Textarea value={profile.life_status} onChange={e => setProfile(prev=>({...prev, life_status: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex gap-2">
+                    {!isEditing ? (
+                      <Button onClick={() => setIsEditing(true)}>Editar perfil</Button>
+                    ) : (
+                      <>
+                        <Button onClick={handleSave}>Salvar</Button>
+                        <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Resume sections (education, experiences, projects, etc.) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seções do Currículo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {['education','experiences','projects','courses','languages'].map(section => (
+                      <div key={section} className="border rounded p-3">
+                        <div className="flex justify-between items-center">
+                          <strong className="capitalize">{section}</strong>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => toggleSection(section)}>{expandedSections[section] ? 'Dobrar' : 'Expandir'}</Button>
+                            <Button size="sm" onClick={() => toggleEditSection(section)}>{editingSections[section] ? 'Salvar' : 'Editar'}</Button>
+                          </div>
+                        </div>
+                        {expandedSections[section] && (
+                          <div className="mt-2">
+                            {(profileSections[section] || []).map(item => (
+                              <div key={item.id} className="p-2 border-b last:border-b-0">
+                                <div className="flex justify-between">
+                                  <div>
+                                    <div className="text-sm font-medium">{item.title || item.name || item.company || '—'}</div>
+                                    <div className="text-xs text-slate-500">{item.period || ''}</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => removeItem(section, item.id)} variant="destructive">Remover</Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="mt-2">
+                              <Button onClick={() => addItem(section)}>Adicionar</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {profileSectionsDirty.size > 0 && (
+                      <div className="mt-2">
+                        <Button onClick={saveAllDirtySections}>Salvar mudanças</Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Posts feed */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Publicações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex gap-2">
+                        <input value={postCaption} onChange={e=>setPostCaption(e.target.value)} placeholder="O que você quer compartilhar?" className="flex-1 p-2 border rounded" />
+                        <Button onClick={() => setShowPostForm(s => !s)}>{showPostForm ? 'Fechar' : 'Nova'}</Button>
+                      </div>
+                      {showPostForm && (
+                        <div className="mt-2">
+                          <div className="flex gap-2">
+                            <input type="file" accept="image/*" multiple onChange={onSelectImage} />
+                          </div>
+                          <div className="mt-2 flex gap-2">
+                            <Button onClick={onPublish} disabled={creatingPost}>{creatingPost ? 'Publicando...' : 'Publicar'}</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {posts.map(post => (
+                      <div key={post.id} className="border rounded p-3">
+                        <div className="flex justify-between">
+                          <div>
+                            <div className="font-medium">{post.author_name || profile.name}</div>
+                            <div className="text-xs text-slate-500">{new Date(post.created_at || post.created || Date.now()).toLocaleString()}</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => onToggleLike(post.id)}><Heart className="w-4 h-4"/></Button>
+                            {user && post.author_id === user.id && (
+                              <Button size="sm" variant="destructive" onClick={() => onDeletePost(post.id, post.author_id)}><Trash2 className="w-4 h-4"/></Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p>{post.caption || post.text || ''}</p>
+                          <div className="mt-2 grid grid-cols-3 gap-2">
+                            {(post.images || []).map((img, i) => (
+                              <img key={i} src={img} alt={`img-${i}`} className="w-full h-24 object-cover rounded" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+  );
 };
 
 export default Profile;
