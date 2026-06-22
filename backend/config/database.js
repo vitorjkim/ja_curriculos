@@ -9,28 +9,43 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
-const pool = process.env.DATABASE_URL
-  ? new Pool({
+// Prioridade de configuração:
+// 1. DATABASE_URL (Railway padrão e outros provedores)
+// 2. Variáveis PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD (Railway individual)
+// 3. Variáveis DB_* (configuração local legada)
+const isProduction = process.env.NODE_ENV === 'production';
+
+function getPoolConfig() {
+  if (process.env.DATABASE_URL) {
+    return {
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    })
-  : new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
-      database: process.env.DB_NAME || 'curriculoja',
-      user: process.env.DB_USER || 'postgres',
-      // Somente defina a senha se for uma string válida
-      password: typeof process.env.DB_PASSWORD === 'string' && process.env.DB_PASSWORD.length > 0
-        ? process.env.DB_PASSWORD
-        : undefined,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    });
+    };
+  }
+
+  const host     = process.env.PGHOST     || process.env.DB_HOST     || 'localhost';
+  const port     = process.env.PGPORT     || process.env.DB_PORT     || 5432;
+  const database = process.env.PGDATABASE || process.env.POSTGRES_DB || process.env.DB_NAME || 'curriculoja';
+  const user     = process.env.PGUSER     || process.env.DB_USER     || 'postgres';
+  const rawPw    = process.env.PGPASSWORD || process.env.DB_PASSWORD;
+  const password = typeof rawPw === 'string' && rawPw.length > 0 ? rawPw : undefined;
+
+  return {
+    host,
+    port: Number(port),
+    database,
+    user,
+    password,
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
+  };
+}
+
+const pool = new Pool({
+  ...getPoolConfig(),
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
 // Teste de conexão
 pool.on('connect', () => {
