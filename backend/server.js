@@ -59,11 +59,24 @@ app.use(helmet({
 }));
 
 // CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000'
-];
+// Construir lista de origens permitidas:
+// 1. Se houver ALLOWED_ORIGINS, usar aquelas
+// 2. Senão, usar FRONTEND_URL se definida (para Railway/Vercel)
+// 3. Senão, usar defaults locais
+let allowedOrigins = [];
+
+if (process.env.ALLOWED_ORIGINS) {
+  allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+} else if (process.env.FRONTEND_URL) {
+  allowedOrigins = [process.env.FRONTEND_URL];
+} else {
+  // Fallback para desenvolvimento local
+  allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000'
+  ];
+}
 
 app.use(cors({
   origin: function (origin, callback) {

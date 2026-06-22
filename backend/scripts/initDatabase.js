@@ -247,20 +247,6 @@ const createTables = async () => {
         CREATE INDEX IF NOT EXISTS idx_profile_views_student ON student_profile_views(student_id);
       `);
 
-      // Likes em comentários de alunos
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS student_comment_likes (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          comment_id UUID NOT NULL REFERENCES student_post_comments(id) ON DELETE CASCADE,
-          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(comment_id, user_id)
-        )
-      `);
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS idx_student_comment_likes_comment ON student_comment_likes(comment_id);
-      `);
-
     // ========== POSTS DAS ESCOLAS ==========
     await client.query(`
       CREATE TABLE IF NOT EXISTS school_posts (
@@ -341,6 +327,21 @@ const createTables = async () => {
         parent_id UUID NULL REFERENCES student_post_comments(id) ON DELETE CASCADE
       )
     `);
+
+    // Likes em comentários de alunos (criado APÓS student_post_comments)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS student_comment_likes (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        comment_id UUID NOT NULL REFERENCES student_post_comments(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(comment_id, user_id)
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_student_comment_likes_comment ON student_comment_likes(comment_id);
+    `);
+    
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_student_posts_candidate ON student_posts(candidate_id);
       CREATE INDEX IF NOT EXISTS idx_student_posts_created ON student_posts(created_at);
