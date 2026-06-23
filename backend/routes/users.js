@@ -302,7 +302,8 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
       users: result.rows.map(user => ({
         id: user.id,
         email: user.email,
-        name: user.name,
+        // Mostrar nome amigável: priorizar `name`, depois `company_name`, depois `school_name`
+        name: user.name || user.company_name || user.school_name || null,
         companyName: user.company_name,
         schoolName: user.school_name,
         schoolType: user.school_type,
