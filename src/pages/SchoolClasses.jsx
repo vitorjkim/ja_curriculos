@@ -64,11 +64,26 @@ const SchoolClasses = () => {
     }
   },[user]);
 
+  // Helper para obter baseURL com validação rigorosa
+  const getAPIBaseURL = () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+      throw new Error('❌ ERRO: VITE_API_URL não configurada');
+    }
+    const trimmed = apiUrl.trim().replace(/\/$/, '');
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      throw new Error('❌ ERRO: VITE_API_URL deve ser URL absoluta');
+    }
+    let finalUrl = trimmed;
+    if (!finalUrl.endsWith('/api')) finalUrl = `${finalUrl}/api`;
+    return finalUrl;
+  };
+
   // Carregar taxonomia de áreas/subáreas
   useEffect(()=>{
     const fetchTaxonomy = async () => {
       try {
-        const base = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const base = getAPIBaseURL();
         const r = await fetch(base + '/jobs/taxonomy');
         if(r.ok){
           const data = await r.json();

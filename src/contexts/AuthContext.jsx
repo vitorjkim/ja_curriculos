@@ -1,26 +1,49 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import ApiService, { authAPI } from '../lib/api';
 
-// Helper para obter baseURL da API de forma consistente
-const getAPIBaseURL = () => {
+// ⚠️ IMPORTANTE: Usa a mesma validação rigorosa de getAPIBaseURL() de src/lib/api.js
+// Não há fallback para localhost
+function getAPIBaseURL() {
   const apiUrl = import.meta.env.VITE_API_URL;
   
-  if (!apiUrl) {
-    return 'http://localhost:3001/api';
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    const errorMsg = 
+      '❌ ERRO CRÍTICO: Variável de ambiente VITE_API_URL não está definida ou é vazia!\n' +
+      'A aplicação não pode funcionar sem esta configuração.\n' +
+      'Em produção (Vercel): Adicione VITE_API_URL nas Environment Variables\n' +
+      'Exemplo: VITE_API_URL=https://seu-backend.up.railway.app/api';
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL não configurada');
   }
   
   const trimmed = apiUrl.trim().replace(/\/$/, '');
   
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    return 'http://localhost:3001/api';
+    const errorMsg = 
+      `❌ ERRO CRÍTICO: VITE_API_URL deve ser uma URL ABSOLUTA.\n` +
+      `Recebido: "${apiUrl}"`;
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL deve ser uma URL absoluta');
   }
   
-  if (!trimmed.endsWith('/api')) {
-    return `${trimmed}/api`;
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && trimmed.includes('localhost')) {
+    const errorMsg = 
+      `❌ ERRO CRÍTICO: Em produção, VITE_API_URL não pode apontar para localhost!`;
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL apontando para localhost em produção');
   }
   
-  return trimmed;
-};
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
 
 const API_BASE_URL = getAPIBaseURL();
 

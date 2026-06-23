@@ -212,6 +212,40 @@ const JobHighlightCard = ({ job, type, full = false, user, isCandidate, followed
   );
 };
 
+// ---- Helper: Obter URL da API com validação rigorosa ----
+// ⚠️ IMPORTANTE: Não permite fallback para localhost em produção
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    const errorMsg = '❌ ERRO CRÍTICO: VITE_API_URL não configurada';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    const errorMsg = '❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && trimmed.includes('localhost')) {
+    const errorMsg = '❌ ERRO CRÍTICO: localhost não permitido em produção';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
+
 // ---- Component ----
 const SearchJobs = () => {
   const location = useLocation();
@@ -520,14 +554,14 @@ const SearchJobs = () => {
   // Efeito anterior de seleção automática de subárea removido (flatten aplicado)
 
   // Highlights & classes
-  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; const token=localStorage.getItem('curriculoja_token'); if(isCandidate){ const r=await fetch(base+'/jobs/highlights/mine',{ headers:{ Authorization:`Bearer ${token}` }}); if(r.ok){ const d=await r.json(); setHighlightedJobIds(d.jobs||[]); setHighlightedSchoolJobIds(d.schoolJobs||[]); setCompanyHighlightedJobIds(d.companyJobs||[]); } } if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
+  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isCandidate){ const r=await fetch(base+'/jobs/highlights/mine',{ headers:{ Authorization:`Bearer ${token}` }}); if(r.ok){ const d=await r.json(); setHighlightedJobIds(d.jobs||[]); setHighlightedSchoolJobIds(d.schoolJobs||[]); setCompanyHighlightedJobIds(d.companyJobs||[]); } } if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
 
   // Carregar destaques da escola (para aba "Vagas destacadas")
   const loadSchoolHighlights = async () => {
     if(!user || !isSchool) return;
     try{
       setLoadingSchoolHighlights(true);
-      const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const base=getAPIBaseURL();
       const token=localStorage.getItem('curriculoja_token');
       const r=await fetch(base+'/jobs/highlights/school',{ headers:{ Authorization:`Bearer ${token}` }});
       if(r.ok){ const d=await r.json(); setSchoolHighlights(d.highlights||[]); }
@@ -538,7 +572,7 @@ const SearchJobs = () => {
     if(!user || !isSchool) return;
     try{
       setLoadingSchoolCompanyHighlights(true);
-      const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const base=getAPIBaseURL();
       const token=localStorage.getItem('curriculoja_token');
       const r=await fetch(base+'/jobs/highlights/company-for-school',{ headers:{ Authorization:`Bearer ${token}` }});
       if(r.ok){ const d=await r.json(); setSchoolCompanyHighlights(d.highlights||[]); }
@@ -548,7 +582,7 @@ const SearchJobs = () => {
   const loadCandidateHighlights = async () => {
     if(!user || !isCandidate) return;
     try{
-      const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const base=getAPIBaseURL();
       const token=localStorage.getItem('curriculoja_token');
       const r=await fetch(base+'/jobs/highlights/mine',{ headers:{ Authorization:`Bearer ${token}` }});
       if(r.ok){ const d=await r.json(); setHighlightedJobIds(d.jobs||[]); setHighlightedSchoolJobIds(d.schoolJobs||[]); setCompanyHighlightedJobIds(d.companyJobs||[]); }
@@ -605,7 +639,7 @@ const SearchJobs = () => {
     } catch (_) { /* noop */ }
   };
   // Taxonomy: injeta sub-áreas padrão para todas as áreas principais se backend não fornecer
-  useEffect(()=>{ (async()=>{ try { const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; const res=await fetch(base+'/jobs/taxonomy'); if(res.ok){ const data=await res.json(); const taxOriginal=data.taxonomy||{}; const tax = { ...taxOriginal };
+  useEffect(()=>{ (async()=>{ try { const base=getAPIBaseURL(); const res=await fetch(base+'/jobs/taxonomy'); if(res.ok){ const data=await res.json(); const taxOriginal=data.taxonomy||{}; const tax = { ...taxOriginal };
       const defaultSubareas = {
         direito: ['tributario','civil','trabalhista','penal','contratual','compliance','empresarial'],
         educacao: ['quimica','matematica','fisica','biologia','historia','geografia','artes','portugues','ingles','espanhol','pedagogia','ead'],
@@ -781,7 +815,7 @@ const SearchJobs = () => {
   // Ação: parar de destacar (escola)
   const stopSchoolHighlight = async (jobId, classId) => {
     try{
-      const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const base=getAPIBaseURL();
       const token=localStorage.getItem('curriculoja_token');
       const url = new URL(base+`/jobs/highlights/school/${jobId}`);
       if(classId) url.searchParams.set('class_id', classId);
@@ -2487,7 +2521,7 @@ const SearchJobs = () => {
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="ghost" onClick={()=> { setSelectingJob(null); setSelectedClasses([]); }}>Cancelar</Button>
-                <Button disabled={!selectedClasses.length} onClick={async ()=> { try { const base=import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; const token=localStorage.getItem('curriculoja_token'); await fetch(base+`/jobs/${selectingJob.id}/highlight`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ classIds: selectedClasses }) }); toast({ title:'Vaga destacada', description:'Alunos verão em destaque.'}); setSelectingJob(null); setSelectedClasses([]); const r1=await fetch(base+'/jobs/highlights/school',{ headers:{ Authorization:`Bearer ${token}` }}); if(r1.ok){ const d1=await r1.json(); setSchoolHighlights(d1.highlights||[]); } const r2=await fetch(base+'/jobs/highlights/company-for-school',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setSchoolCompanyHighlights(d2.highlights||[]); } } catch(e){ toast({ title:'Erro ao destacar', description:'Tente novamente', variant:'destructive'}); } }}>Salvar</Button>
+                <Button disabled={!selectedClasses.length} onClick={async ()=> { try { const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); await fetch(base+`/jobs/${selectingJob.id}/highlight`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ classIds: selectedClasses }) }); toast({ title:'Vaga destacada', description:'Alunos verão em destaque.'}); setSelectingJob(null); setSelectedClasses([]); const r1=await fetch(base+'/jobs/highlights/school',{ headers:{ Authorization:`Bearer ${token}` }}); if(r1.ok){ const d1=await r1.json(); setSchoolHighlights(d1.highlights||[]); } const r2=await fetch(base+'/jobs/highlights/company-for-school',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setSchoolCompanyHighlights(d2.highlights||[]); } } catch(e){ toast({ title:'Erro ao destacar', description:'Tente novamente', variant:'destructive'}); } }}>Salvar</Button>
               </div>
             </div>
           </div>

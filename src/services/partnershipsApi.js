@@ -1,22 +1,39 @@
-// Helper para obter baseURL da API de forma consistente
+// ⚠️ IMPORTANTE: Validação rigorosa de VITE_API_URL - SEM fallback para localhost
 function getAPIBaseURL() {
   const apiUrl = import.meta.env.VITE_API_URL;
   
-  if (!apiUrl) {
-    return 'http://localhost:3001/api';
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    const errorMsg = 
+      '❌ ERRO CRÍTICO: Variável de ambiente VITE_API_URL não está definida!\n' +
+      'Em Vercel: Adicione nas Environment Variables\n' +
+      'Exemplo: VITE_API_URL=https://seu-backend.up.railway.app/api';
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL não configurada');
   }
   
   const trimmed = apiUrl.trim().replace(/\/$/, '');
   
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    return 'http://localhost:3001/api';
+    const errorMsg = 
+      `❌ ERRO CRÍTICO: VITE_API_URL deve ser URL ABSOLUTA.\n` +
+      `Recebido: "${apiUrl}"`;
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL inválida');
   }
   
-  if (!trimmed.endsWith('/api')) {
-    return `${trimmed}/api`;
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && trimmed.includes('localhost')) {
+    throw new Error('VITE_API_URL não pode apontar para localhost em produção');
   }
   
-  return trimmed;
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
 }
 
 const API_BASE_URL = getAPIBaseURL();

@@ -1,32 +1,70 @@
 // Configuração da API
-// Garantir que API_BASE_URL é sempre uma URL absoluta completa
+// ⚠️ IMPORTANTE: VITE_API_URL é OBRIGATÓRIA em produção
+// Se não estiver definida, a aplicação FALHARÁ explicitamente
+
 function getAPIBaseURL() {
   const apiUrl = import.meta.env.VITE_API_URL;
   
-  if (!apiUrl) {
-    // Fallback para desenvolvimento local
-    return 'http://localhost:3001/api';
+  // Validar que a variável está definida
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    const errorMsg = 
+      '❌ ERRO CRÍTICO: Variável de ambiente VITE_API_URL não está definida ou é vazia!\n' +
+      'A aplicação não pode funcionar sem esta configuração.\n' +
+      'Em produção (Vercel): Adicione VITE_API_URL nas Environment Variables\n' +
+      'Exemplo: VITE_API_URL=https://seu-backend.up.railway.app/api\n' +
+      'Em desenvolvimento: Crie arquivo .env na raiz com: VITE_API_URL=http://localhost:3001/api';
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL não configurada');
   }
   
-  // Remover trailing slash se existir
   const trimmed = apiUrl.trim().replace(/\/$/, '');
   
-  // Validar se é URL absoluta (começa com http:// ou https://)
+  // Validar que é URL absoluta (OBRIGATÓRIO - sem localhost em produção)
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    console.error(
-      '❌ VITE_API_URL deve ser uma URL absoluta (ex: https://seu-backend.up.railway.app/api), ' +
-      'mas foi recebido:', apiUrl
-    );
-    // Fallback para localhost como último recurso
-    return 'http://localhost:3001/api';
+    const errorMsg = 
+      `❌ ERRO CRÍTICO: VITE_API_URL deve ser uma URL ABSOLUTA completa.\n` +
+      `Recebido: "${apiUrl}"\n` +
+      `Exemplo correto: https://seu-backend.up.railway.app/api\n` +
+      `NÃO use URLs relativas como "/api" ou sem protocolo como "seu-backend.com/api"`;
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL deve ser uma URL absoluta');
   }
   
-  // Garantir que termina com /api se necessário
-  if (!trimmed.endsWith('/api')) {
-    return `${trimmed}/api`;
+  // Validar que não contém localhost em produção (buildtime check)
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && trimmed.includes('localhost')) {
+    const errorMsg = 
+      `❌ ERRO CRÍTICO: Em produção (Vercel), VITE_API_URL não pode apontar para localhost!\n` +
+      `Recebido: "${apiUrl}"\n` +
+      `Isso causará erros de conexão pois Vercel não consegue alcançar sua máquina local.\n` +
+      `Configure VITE_API_URL para apontar para seu backend em produção (ex: Railway)`;
+    
+    console.error(errorMsg);
+    throw new Error('VITE_API_URL apontando para localhost em produção');
   }
   
-  return trimmed;
+  // Garantir que termina com /api
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    // Se termina com apenas o domínio ou está faltando /api
+    if (finalUrl.match(/^https?:\/\/[^\/]+$/) || !finalUrl.includes('/api')) {
+      finalUrl = `${finalUrl}/api`;
+    } else {
+      // Se tem caminho mas não termina em /api, avisar
+      const warningMsg = 
+        `⚠️ AVISO: VITE_API_URL não termina com "/api"\n` +
+        `Adicionando "/api" automaticamente.\n` +
+        `Recebido: "${apiUrl}"\n` +
+        `Usando: "${finalUrl}/api"`;
+      console.warn(warningMsg);
+      finalUrl = `${finalUrl}/api`;
+    }
+  }
+  
+  console.log('✅ API configurada:', finalUrl);
+  return finalUrl;
 }
 
 const API_BASE_URL = getAPIBaseURL();

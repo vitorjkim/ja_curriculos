@@ -52,9 +52,24 @@ const SchoolPostView = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Obter URL da API com validação rigorosa
+      const getAPIBaseURL = () => {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+          throw new Error('❌ ERRO CRÍTICO: VITE_API_URL não configurada');
+        }
+        const trimmed = apiUrl.trim().replace(/\/$/, '');
+        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+          throw new Error('❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta');
+        }
+        let finalUrl = trimmed;
+        if (!finalUrl.endsWith('/api')) finalUrl = `${finalUrl}/api`;
+        return finalUrl;
+      };
+      
       // Carregar dados da escola
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const schoolRes = await fetch(`${API_URL}/api/users/schools/${schoolId}/public`, {
+      const API_URL = getAPIBaseURL();
+      const schoolRes = await fetch(`${API_URL}/users/schools/${schoolId}/public`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('curriculoja_token')}`,
           'Content-Type': 'application/json'

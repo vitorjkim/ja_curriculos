@@ -1,6 +1,38 @@
 // API para empresas navegarem por escolas e alunos
+// ⚠️ IMPORTANTE: Validação rigorosa de VITE_API_URL
+
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    const errorMsg = '❌ ERRO CRÍTICO: VITE_API_URL não configurada';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    const errorMsg = '❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && trimmed.includes('localhost')) {
+    throw new Error('localhost não permitido em produção');
+  }
+  
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
+
 export const companySchoolApi = {
-  base: `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/users`,
+  base: `${getAPIBaseURL()}/users`,
   authHeaders(){
     const t = localStorage.getItem('curriculoja_token');
     return { 'Authorization': `Bearer ${t}` };

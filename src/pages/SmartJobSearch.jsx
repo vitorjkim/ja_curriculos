@@ -15,6 +15,28 @@ import { jobsAPI, externalJobsAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
+// ---- Helper: Obter URL da API com validação rigorosa ----
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL não configurada');
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta');
+  }
+  
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
+
 const SmartJobSearch = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -86,7 +108,7 @@ const SmartJobSearch = () => {
   const loadHighlightedJobs = async () => {
     try {
       // Buscar vagas destacadas pela escola/empresa
-      const base = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const base = getAPIBaseURL();
       const token = localStorage.getItem('curriculoja_token');
       const response = await fetch(`${base}/jobs/highlights/mine`, {
         headers: { Authorization: `Bearer ${token}` }

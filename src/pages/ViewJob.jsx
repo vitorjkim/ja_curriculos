@@ -31,6 +31,28 @@ const getJobWithCache = (id) => {
   return p;
 };
 
+// ---- Helper: Obter URL da API com validação rigorosa ----
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL não configurada');
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta');
+  }
+  
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
+
 const ViewJob = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -103,7 +125,7 @@ const ViewJob = () => {
       if (direct) { setCompanyImage(direct); return; }
       // Buscar pela API pública (garante profile_image) – não requer token
       try {
-        const base = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const base = getAPIBaseURL();
         const resp = await fetch(`${base}/users/company/${companyId}`);
         if (resp.ok) {
           const data = await resp.json();

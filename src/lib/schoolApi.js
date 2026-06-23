@@ -1,6 +1,29 @@
 // API helpers para funcionalidades de Escola
+// ⚠️ IMPORTANTE: Validação rigorosa de VITE_API_URL
+
+function getAPIBaseURL() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim().length === 0) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL não configurada');
+  }
+  
+  const trimmed = apiUrl.trim().replace(/\/$/, '');
+  
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    throw new Error('❌ ERRO CRÍTICO: VITE_API_URL deve ser URL absoluta');
+  }
+  
+  let finalUrl = trimmed;
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = `${finalUrl}/api`;
+  }
+  
+  return finalUrl;
+}
+
 export const schoolApi = {
-  base: `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/schools`,
+  base: `${getAPIBaseURL()}/schools`,
   authHeaders() {
     const t = localStorage.getItem('curriculoja_token');
     return {
@@ -165,7 +188,10 @@ export const schoolApi = {
   // Download template (usa arquivo estático backend ou gera localmente)
   async downloadStudentsTemplate(){
     // Pode ser servido estaticamente; fallback: gerar link para CSV existente
-  const link = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/templates/students-import-template.csv`;
+    const baseUrl = import.meta.env.VITE_API_URL;
+    if (!baseUrl) throw new Error('VITE_API_URL não configurada');
+    const trimmed = baseUrl.trim().replace(/\/$/, '');
+    const link = `${trimmed}/templates/students-import-template.csv`;
     const a = document.createElement('a');
     a.href = link;
     a.download = 'template-import-alunos.csv';
