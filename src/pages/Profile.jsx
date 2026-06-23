@@ -40,10 +40,8 @@ const Profile = () => {
     try { return localStorage.getItem('avatar_shape_'+(user?.id||'')) || 'circle'; } catch { return 'circle'; }
   });
   const [cropImage, setCropImage] = useState(null); // DataURL bruto para o cropper
-  // Edição/permissão e upload
-  const [editingFormation, setEditingFormation] = useState(false)
+  // Edição/permissão e upload - consolidados em isEditing
   const [formationDraft, setFormationDraft] = useState({ title: '', description: '' })
-  const [editingSocials, setEditingSocials] = useState(false)
   const [socialDraft, setSocialDraft] = useState({ instagram_url: '', linkedin_url: '', whatsapp: '' })
   const fileInputRef = useRef(null)
   // Student posts (igual ao fluxo da escola)
@@ -239,45 +237,37 @@ const Profile = () => {
     return null;
   };
 
-  // PERMISSÕES / EDIÇÃO
+  // PERMISSÕES / EDIÇÃO CENTRALIZADA
   const isOwnProfile = user && (user.id === (profile?.id || profile?.user_id));
 
-  function onEditFormation() {
-    setFormationDraft({ title: profile.formation_title || '', description: profile.formation_description || '' });
-    setEditingFormation(true);
+  function startEditingProfile() {
+    setFormationDraft({ title: profile.formation_title || profile.life_status?.split('\n')[0] || '', description: profile.formation_description || profile.life_status || '' });
+    setSocialDraft({ instagram_url: profile.instagram_url || '', linkedin_url: profile.linkedin_url || '', whatsapp: profile.whatsapp || profile.phone || '' });
+    setIsEditing(true);
   }
 
-  async function saveFormation() {
+  async function saveProfileChanges() {
     try {
+      const payload = {
+        formation_title: formationDraft.title,
+        formation_description: formationDraft.description,
+        instagram_url: socialDraft.instagram_url,
+        linkedin_url: socialDraft.linkedin_url,
+        whatsapp: socialDraft.whatsapp,
+        life_status: formationDraft.description
+      };
       const res = await fetch(`/api/students/${profile.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formation_title: formationDraft.title, formation_description: formationDraft.description })
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error('save failed');
       const updated = await res.json();
       setProfile(prev => ({ ...prev, ...updated }));
-      setEditingFormation(false);
-      toast({ title: 'Formação atualizada.' });
-    } catch (err) { console.error(err); toast({ title: 'Erro ao salvar formação', variant: 'destructive' }); }
+      setIsEditing(false);
+      toast({ title: 'Perfil atualizado com sucesso.' });
+    } catch (err) { console.error(err); toast({ title: 'Erro ao salvar perfil', variant: 'destructive' }); }
   }
 
-  function cancelFormation() { setEditingFormation(false); }
-
-  function onEditSocials() {
-    setSocialDraft({ instagram_url: profile.instagram_url || '', linkedin_url: profile.linkedin_url || '', whatsapp: profile.whatsapp || '' });
-    setEditingSocials(true);
-  }
-
-  async function saveSocials() {
-    try {
-      const res = await fetch(`/api/students/${profile.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(socialDraft) });
-      if (!res.ok) throw new Error('save failed');
-      const updated = await res.json();
-      setProfile(prev => ({ ...prev, ...updated }));
-      setEditingSocials(false);
-      toast({ title: 'Redes sociais atualizadas.' });
-    } catch (err) { console.error(err); toast({ title: 'Erro ao salvar redes', variant: 'destructive' }); }
-  }
+  function cancelEditing() { setIsEditing(false); }
 
   function triggerFileInput() { fileInputRef.current?.click(); }
 
@@ -718,9 +708,9 @@ const Profile = () => {
                       <User className="w-12 h-12 text-slate-400" />
                     )}
                     {isOwnProfile && (
-                      <div className="absolute inset-0 bg-black/20 flex items-end justify-center opacity-0 hover:opacity-100 transition">
-                        <div className="mb-2 bg-white/80 px-3 py-1 rounded flex items-center gap-2 text-sm">
-                          <ImagePlus className="w-4 h-4" /> Alterar foto
+                      <div className={`absolute inset-0 bg-black/${isEditing ? '40' : '20'} flex items-end justify-center ${!isEditing && 'opacity-0 hover:opacity-100'} transition`}>
+                        <div className={`mb-2 bg-white/${isEditing ? '90' : '80'} px-3 py-1 rounded flex items-center gap-2 text-sm`}>
+                          <ImagePlus className="w-4 h-4" /> {isEditing ? 'Clique para mudar' : 'Alterar foto'}
                         </div>
                       </div>
                     )}
@@ -740,34 +730,51 @@ const Profile = () => {
 
               {/* Social icons */}
               <div className="mt-4 flex items-center gap-3">
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow" style={{background: 'linear-gradient(45deg,#f72585,#7209b7)'}} href={profile.instagram_url || '#'}>
-                  <Instagram className="w-4 h-4" />
-                </a>
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-blue-600 shadow" href={profile.linkedin_url || '#'}>
-                  <Linkedin className="w-4 h-4" />
-                </a>
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-green-500 shadow" href={`https://wa.me/${profile.phone || ''}`}>
-                  <Phone className="w-4 h-4" />
-                </a>
-                {isOwnProfile && (
-                  <button onClick={onEditSocials} className="ml-2 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800">
-                    <Pencil className="w-4 h-4" /> Editar
-                  </button>
+                {!isEditing ? (
+                  <>
+                    <a className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow" style={{background: 'linear-gradient(45deg,#f72585,#7209b7)'}} href={profile.instagram_url || '#'}>
+                      <Instagram className="w-4 h-4" />
+                    </a>
+                    <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-blue-600 shadow" href={profile.linkedin_url || '#'}>
+                      <Linkedin className="w-4 h-4" />
+                    </a>
+                    <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-green-500 shadow" href={`https://wa.me/${profile.phone || ''}`}>
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  </>
+                ) : (
+                  <div className="w-full grid grid-cols-1 gap-2">
+                    <div>
+                      <Label className="text-xs font-semibold">Instagram URL</Label>
+                      <Input value={socialDraft.instagram_url} onChange={e=>setSocialDraft(prev=>({...prev, instagram_url: e.target.value}))} placeholder="https://instagram.com/..." />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">LinkedIn URL</Label>
+                      <Input value={socialDraft.linkedin_url} onChange={e=>setSocialDraft(prev=>({...prev, linkedin_url: e.target.value}))} placeholder="https://linkedin.com/in/..." />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold">WhatsApp (com DDI)</Label>
+                      <Input value={socialDraft.whatsapp} onChange={e=>setSocialDraft(prev=>({...prev, whatsapp: e.target.value}))} placeholder="+55 11 9XXXX-XXXX" />
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {editingSocials && (
-                <div className="mt-3 bg-white p-3 rounded-md border">
-                  <div className="grid grid-cols-1 gap-2">
-                    <Input value={socialDraft.instagram_url} onChange={e=>setSocialDraft(prev=>({...prev, instagram_url: e.target.value}))} placeholder="Instagram URL" />
-                    <Input value={socialDraft.linkedin_url} onChange={e=>setSocialDraft(prev=>({...prev, linkedin_url: e.target.value}))} placeholder="LinkedIn URL" />
-                    <Input value={socialDraft.whatsapp} onChange={e=>setSocialDraft(prev=>({...prev, whatsapp: e.target.value}))} placeholder="WhatsApp (com DDI)" />
-                    <div className="flex gap-2 mt-2">
-                      <Button onClick={saveSocials}><Save className="w-4 h-4"/> Salvar</Button>
-                      <Button variant="ghost" onClick={()=>setEditingSocials(false)}>Cancelar</Button>
-                    </div>
+              {isOwnProfile && (
+                !isEditing ? (
+                  <button onClick={startEditingProfile} className="mt-6 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:shadow-lg">
+                    <Pencil className="w-4 h-4" /> Editar Perfil
+                  </button>
+                ) : (
+                  <div className="mt-6 flex gap-3">
+                    <button onClick={saveProfileChanges} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700">
+                      <Save className="w-4 h-4" /> Salvar Alterações
+                    </button>
+                    <button onClick={cancelEditing} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold hover:bg-slate-50">
+                      Cancelar
+                    </button>
                   </div>
-                </div>
+                )
               )}
 
               {!isOwnProfile && (
@@ -829,26 +836,21 @@ const Profile = () => {
                   <h3 className="text-teal-600 font-semibold">Formação</h3>
                 </div>
                 <div className="border p-3 rounded-xl bg-white">
-                  {!editingFormation ? (
+                  {!isEditing ? (
                     <div>
                       <div className="font-semibold">{(profile.life_status && profile.life_status.split('\n')[0]) || 'Analista de Business Intelligence | Dados & Estratégia'}</div>
                       <div className="mt-2 text-sm text-slate-600">{profile.life_status || 'Resumo profissional e acadêmico do estudante.'}</div>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <Input value={formationDraft.title} onChange={e=>setFormationDraft(prev=>({ ...prev, title: e.target.value }))} placeholder="Título da formação" />
-                      <Textarea value={formationDraft.description} onChange={e=>setFormationDraft(prev=>({ ...prev, description: e.target.value }))} placeholder="Descrição / resumo" />
-                      <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" onClick={cancelFormation}>Cancelar</Button>
-                        <Button onClick={saveFormation}>
-                          <Save className="w-4 h-4 mr-2" /> Salvar
-                        </Button>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs font-semibold">Título da Formação</Label>
+                        <Input value={formationDraft.title} onChange={e=>setFormationDraft(prev=>({ ...prev, title: e.target.value }))} placeholder="Ex: Analista de Business Intelligence" />
                       </div>
-                    </div>
-                  )}
-                  {isOwnProfile && !editingFormation && (
-                    <div className="mt-3 text-right">
-                      <Button size="sm" variant="outline" onClick={onEditFormation}><Pencil className="w-4 h-4 mr-2" />Editar</Button>
+                      <div>
+                        <Label className="text-xs font-semibold">Descrição / Resumo Profissional</Label>
+                        <Textarea value={formationDraft.description} onChange={e=>setFormationDraft(prev=>({ ...prev, description: e.target.value }))} placeholder="Escreva uma breve descrição sobre sua formação e experiência" className="min-h-24" />
+                      </div>
                     </div>
                   )}
                 </div>
