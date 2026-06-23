@@ -628,154 +628,23 @@ const Profile = () => {
       <title>Perfil</title>
     </Helmet>
     <div className="min-h-screen bg-slate-50/80">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="bg-blue-600 rounded-2xl p-6 shadow-md">
-          <div className="flex items-center justify-center gap-4">
-            <div className="w-14 h-14 rounded-lg bg-white/20 flex items-center justify-center">
-              <div className="w-10 h-10 bg-white/30 rounded-md flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
-              </div>
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Header Moderno */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-[20px] p-6 shadow-[0_12px_35px_rgba(37,99,235,0.2)]">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Perfil do Aluno</h1>
+            <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-white tracking-tight leading-tight">
+              Perfil do Aluno
+            </h1>
           </div>
         </div>
 
-        {/* Main content: two columns */}
-        <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Left identification column */}
-            <div className="col-span-1 flex flex-col items-center">
-              <div className="relative">
-                <div className={`w-40 h-40 ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-lg'} overflow-hidden border-4 border-blue-600 flex items-center justify-center bg-white`}> 
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-12 h-12 text-slate-400" />
-                  )}
-                </div>
-                {/* badge overlay */}
-                <div className="absolute right-0 bottom-0 transform translate-x-1/4 translate-y-1/4">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-slate-100">
-                    <img src={profile.school_avatar || '/favicon.ico'} alt="school" className="w-8 h-8 rounded-full object-cover" />
-                  </div>
-                </div>
-              </div>
+        {/* Avatar - escola pode editar; empresa/admin apenas visualiza */}
+        {/* REMOVIDO - Integrado ao card de Informações Pessoais */}
 
-              <h2 className="mt-4 text-lg font-semibold lowercase">{(profile.name || '—').toLowerCase()}</h2>
-              <p className="text-sm text-slate-500">{profile.class_name || '—'}</p>
-
-              {/* Social icons */}
-              <div className="mt-4 flex items-center gap-3">
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow" style={{background: 'linear-gradient(45deg,#f72585,#7209b7)'}} href={profile.instagram_url || '#'}>
-                  <Instagram className="w-4 h-4" />
-                </a>
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-blue-600 shadow" href={profile.linkedin_url || '#'}>
-                  <Linkedin className="w-4 h-4" />
-                </a>
-                <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-green-500 shadow" href={`https://wa.me/${profile.phone || ''}`}>
-                  <Phone className="w-4 h-4" />
-                </a>
-              </div>
-
-              <button className="mt-6 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-blue-800 text-white font-semibold">
-                <MessageSquare className="w-4 h-4" /> Adicionar aos contatos
-              </button>
-            </div>
-
-            {/* Right column (top grid and formation) */}
-            <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
-              {/* Grid of mini-cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl border border-green-100 flex items-start gap-3">
-                  <div className="p-2 rounded bg-green-50 text-green-600">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-slate-500">EMAIL</div>
-                    <div className="text-sm text-slate-700">{profile.email || '—'}</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl border border-orange-100 flex items-start gap-3">
-                  <div className="p-2 rounded bg-orange-50 text-orange-600">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-slate-500">TELEFONE</div>
-                    <div className="text-sm text-slate-700">{profile.phone || '—'}</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl border border-yellow-100 flex items-start gap-3">
-                  <div className="p-2 rounded bg-yellow-50 text-yellow-600">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-slate-500">TURMA</div>
-                    <div className="text-sm text-slate-700">{profile.class_name || '—'}</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl border border-violet-100 flex items-start gap-3">
-                  <div className="p-2 rounded bg-violet-50 text-violet-600">
-                    <Briefcase className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-semibold uppercase text-slate-500">SITUAÇÃO</div>
-                    <div className="text-sm text-slate-700">{profile.status || 'Não informado'}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Formação / Biografia */}
-              <div className="border-2 border-teal-200 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="w-5 h-5 text-teal-600" />
-                  <h3 className="text-teal-600 font-semibold">Formação</h3>
-                </div>
-                <div className="border p-3 rounded-xl bg-white">
-                  <div className="font-semibold">{(profile.life_status && profile.life_status.split('\n')[0]) || 'Analista de Business Intelligence | Dados & Estratégia'}</div>
-                  <div className="mt-2 text-sm text-slate-600">{profile.life_status || 'Resumo profissional e acadêmico do estudante.'}</div>
-                </div>
-              </div>
-
-              {/* Optionally keep posts below (kept compact) */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Publicações</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {posts.map(post => (
-                      <div key={post.id} className="border rounded p-3">
-                        <div className="flex justify-between">
-                          <div>
-                            <div className="font-medium">{post.author_name || profile.name}</div>
-                            <div className="text-xs text-slate-500">{new Date(post.created_at || post.created || Date.now()).toLocaleString()}</div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => onToggleLike(post.id)}><Heart className="w-4 h-4"/></Button>
-                            {user && post.author_id === user.id && (
-                              <Button size="sm" variant="destructive" onClick={() => onDeletePost(post.id, post.author_id)}><Trash2 className="w-4 h-4"/></Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <p>{post.caption || post.text || ''}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-  );
+      <div className="space-y-4">
 };
 
 export default Profile;
