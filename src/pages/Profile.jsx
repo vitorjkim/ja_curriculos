@@ -628,14 +628,14 @@ const Profile = () => {
       <title>Perfil</title>
     </Helmet>
     <div className="min-h-screen bg-slate-50/80">
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Header com fundo azul grande */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-[30px] p-8 shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Header Moderno */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-[20px] p-6 shadow-[0_12px_35px_rgba(37,99,235,0.2)]">
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-white tracking-tight leading-tight">
               Perfil do Aluno
             </h1>
           </div>
@@ -644,353 +644,214 @@ const Profile = () => {
           {/* Avatar - escola pode editar; empresa/admin apenas visualiza */}
           {/* REMOVIDO - Integrado ao card de Informações Pessoais */}
 
-        <div className="space-y-6">
-          {/* Seção do Perfil Visual - estilo da imagem antiga */}
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-8 p-8">
-              {/* Coluna esquerda: Avatar + Nome + Classe + Redes + Botão */}
-              <div className="flex flex-col items-center md:items-start md:w-1/3">
-                {/* Avatar grande e destacado */}
-                <div className="relative">
-                  <div className={`w-48 h-48 overflow-hidden ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-2xl'} bg-gradient-to-br from-blue-100 to-blue-50 border-4 border-white shadow-lg flex items-center justify-center`}>
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left column: avatar + stats */}
+            <div className="col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center text-center">
+                    <div className={`w-32 h-32 overflow-hidden ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-md'} bg-white/40 flex items-center justify-center`}>
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-12 h-12 text-slate-500" />
+                      )}
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold">{profile.name || '—'}</h3>
+                    <p className="text-sm text-slate-600">{profile.class_name || ''}</p>
+
+                    {/* Avatar controls when allowed */}
+                    {((user && user.type === 'candidate' && !id) || (user && user.type === 'school' && id)) && (
+                      <div className="mt-3 w-full">
+                        <input type="file" accept="image/*" onChange={onSelectAvatar} className="hidden" id="avatar-input" />
+                        <label htmlFor="avatar-input" className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-md text-sm">
+                          <ImagePlus className="w-4 h-4" /> Escolher imagem
+                        </label>
+                        <div className="mt-2 flex gap-2">
+                          <button onClick={() => handleSetShape('circle')} className={`px-2 py-1 text-sm rounded ${avatarShape==='circle'?'bg-blue-600 text-white':'bg-slate-100'}`}>Círculo</button>
+                          <button onClick={() => handleSetShape('square')} className={`px-2 py-1 text-sm rounded ${avatarShape==='square'?'bg-blue-600 text-white':'bg-slate-100'}`}>Quadrado</button>
+                        </div>
+                        {cropImage && (
+                          <div className="mt-3">
+                            <ImageCropper src={cropImage} onCrop={(dataUrl) => { setNewAvatar(dataUrl); setCropImage(null); }} />
+                            <div className="flex gap-2 mt-2">
+                              <Button onClick={() => setCropImage(null)}>Cancelar</Button>
+                              <Button onClick={onUploadAvatar} disabled={avatarUploading}>{avatarUploading ? 'Enviando...' : 'Salvar foto'}</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-slate-50 p-3 rounded">Currículos: <strong>{stats.resumes}</strong></div>
+                    <div className="bg-slate-50 p-3 rounded">Candidaturas: <strong>{stats.applications}</strong></div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Perfil Views */}
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle>Visualizações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">Total: <strong>{views.count}</strong></p>
+                  <div className="mt-2 space-y-1">
+                    {views.companies.slice(0,5).map((c,i)=> (
+                      <div key={i} className="text-sm text-slate-600">{c.name || c.company_name || 'Empresa'}</div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Middle + Right: profile sections and posts */}
+            <div className="col-span-1 md:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados Pessoais</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input value={profile.name} onChange={e => setProfile(prev=>({...prev, name: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={profile.email} disabled />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input value={profile.phone} onChange={e=> setProfile(prev=>({...prev, phone: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div>
+                      <Label>CPF</Label>
+                      <Input value={profile.cpf} onChange={e=> setProfile(prev=>({...prev, cpf: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Sobre</Label>
+                      <Textarea value={profile.life_status} onChange={e => setProfile(prev=>({...prev, life_status: e.target.value}))} disabled={!isEditing} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex gap-2">
+                    {!isEditing ? (
+                      <Button onClick={() => setIsEditing(true)}>Editar perfil</Button>
                     ) : (
-                      <User className="w-24 h-24 text-slate-300" />
+                      <>
+                        <Button onClick={handleSave}>Salvar</Button>
+                        <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>
+                      </>
                     )}
                   </div>
-                  {/* Badge/logo pequeno */}
-                  {profile.school_avatar && (
-                    <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-white rounded-full border-4 border-white shadow-md overflow-hidden">
-                      <img src={profile.school_avatar} alt="school" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Nome grande */}
-                <h2 className="mt-8 text-3xl font-bold text-slate-900 text-center md:text-left">{profile.name || '—'}</h2>
-                
-                {/* Classe */}
-                {profile.class_name && (
-                  <p className="mt-2 text-lg text-slate-600 font-medium text-center md:text-left">{profile.class_name}</p>
-                )}
-
-                {/* Avatar controls when allowed */}
-                {((user && user.type === 'candidate' && !id) || (user && user.type === 'school' && id)) && (
-                  <div className="mt-6 w-full max-w-xs">
-                    <input type="file" accept="image/*" onChange={onSelectAvatar} className="hidden" id="avatar-input" />
-                    <label htmlFor="avatar-input" className="cursor-pointer inline-flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition font-medium">
-                      <ImagePlus className="w-4 h-4" /> Escolher imagem
-                    </label>
-                    <div className="mt-3 flex gap-2">
-                      <button onClick={() => handleSetShape('circle')} className={`flex-1 px-3 py-1 text-sm rounded-lg transition font-medium ${avatarShape==='circle'?'bg-blue-600 text-white':'bg-slate-100 hover:bg-slate-200'}`}>Círculo</button>
-                      <button onClick={() => handleSetShape('square')} className={`flex-1 px-3 py-1 text-sm rounded-lg transition font-medium ${avatarShape==='square'?'bg-blue-600 text-white':'bg-slate-100 hover:bg-slate-200'}`}>Quadrado</button>
-                    </div>
-                    {cropImage && (
-                      <div className="mt-4">
-                        <ImageCropper src={cropImage} onCrop={(dataUrl) => { setNewAvatar(dataUrl); setCropImage(null); }} />
-                        <div className="flex gap-2 mt-3">
-                          <Button onClick={() => setCropImage(null)}>Cancelar</Button>
-                          <Button onClick={onUploadAvatar} disabled={avatarUploading}>{avatarUploading ? 'Enviando...' : 'Salvar foto'}</Button>
+              {/* Resume sections (education, experiences, projects, etc.) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seções do Currículo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {['education','experiences','projects','courses','languages'].map(section => (
+                      <div key={section} className="border rounded p-3">
+                        <div className="flex justify-between items-center">
+                          <strong className="capitalize">{section}</strong>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => toggleSection(section)}>{expandedSections[section] ? 'Dobrar' : 'Expandir'}</Button>
+                            <Button size="sm" onClick={() => toggleEditSection(section)}>{editingSections[section] ? 'Salvar' : 'Editar'}</Button>
+                          </div>
                         </div>
+                        {expandedSections[section] && (
+                          <div className="mt-2">
+                            {(profileSections[section] || []).map(item => (
+                              <div key={item.id} className="p-2 border-b last:border-b-0">
+                                <div className="flex justify-between">
+                                  <div>
+                                    <div className="text-sm font-medium">{item.title || item.name || item.company || '—'}</div>
+                                    <div className="text-xs text-slate-500">{item.period || ''}</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => removeItem(section, item.id)} variant="destructive">Remover</Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="mt-2">
+                              <Button onClick={() => addItem(section)}>Adicionar</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {profileSectionsDirty.size > 0 && (
+                      <div className="mt-2">
+                        <Button onClick={saveAllDirtySections}>Salvar mudanças</Button>
                       </div>
                     )}
                   </div>
-                )}
+                </CardContent>
+              </Card>
 
-                {/* Redes sociais */}
-                <div className="mt-6 flex gap-3 justify-center md:justify-start">
-                  {profile.instagram_url && (
-                    <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center text-white hover:shadow-lg transition">
-                      <Instagram className="w-7 h-7" />
-                    </a>
-                  )}
-                  {profile.linkedin_url && (
-                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-full bg-blue-700 flex items-center justify-center text-white hover:shadow-lg transition">
-                      <Linkedin className="w-7 h-7" />
-                    </a>
-                  )}
-                  {profile.custom_url && (
-                    <a href={profile.custom_url} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center text-white hover:shadow-lg transition">
-                      <MessageSquare className="w-7 h-7" />
-                    </a>
-                  )}
-                </div>
-
-                {/* Botão Adicionar aos contatos */}
-                <Button className="mt-6 w-full max-w-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold text-base py-3">
-                  💬 Adicionar aos contatos
-                </Button>
-              </div>
-
-              {/* Coluna direita: Cards de informações */}
-              <div className="flex-1 grid grid-cols-1 gap-4">
-                {/* EMAIL */}
-                <div className="border-l-4 border-teal-500 bg-teal-50 p-5 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Mail className="w-6 h-6 text-teal-600" />
-                    <span className="text-xs font-bold text-teal-700 uppercase tracking-wider">Email</span>
-                  </div>
-                  <p className="text-slate-800 font-semibold ml-9">{profile.email || '—'}</p>
-                </div>
-
-                {/* TELEFONE */}
-                <div className="border-l-4 border-orange-500 bg-orange-50 p-5 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Phone className="w-6 h-6 text-orange-600" />
-                    <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Telefone</span>
-                  </div>
-                  <p className="text-slate-800 font-semibold ml-9">{profile.phone || '—'}</p>
-                </div>
-
-                {/* TURMA */}
-                <div className="border-l-4 border-yellow-500 bg-yellow-50 p-5 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center gap-3 mb-2">
-                    <GraduationCap className="w-6 h-6 text-yellow-600" />
-                    <span className="text-xs font-bold text-yellow-700 uppercase tracking-wider">Turma</span>
-                  </div>
-                  <p className="text-slate-800 font-semibold ml-9">{profile.class_name || '—'}</p>
-                </div>
-
-                {/* SITUAÇÃO */}
-                <div className="border-l-4 border-purple-500 bg-purple-50 p-5 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center gap-3 mb-2">
-                    <AlertCircle className="w-6 h-6 text-purple-600" />
-                    <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">Situação</span>
-                  </div>
-                  <p className="text-slate-800 font-semibold ml-9">{profile.life_status || 'Não informado'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card de Formação em destaque */}
-          {profileSections.education && profileSections.education.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-md p-8 border-l-4 border-teal-500">
-              <div className="flex items-center gap-3 mb-4">
-                <Award className="w-6 h-6 text-teal-600" />
-                <h3 className="text-lg font-bold text-slate-900">Formação</h3>
-              </div>
-              <div className="space-y-3">
-                {profileSections.education.map((edu, idx) => (
-                  <div key={edu.id || idx} className="text-slate-700">
-                    <p className="font-semibold">{edu.school || edu.name || '—'}</p>
-                    {edu.description && (
-                      <p className="text-sm text-slate-600 mt-1">{edu.description}</p>
-                    )}
-                    {edu.period && (
-                      <p className="text-xs text-slate-500 mt-1">{edu.period}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl shadow p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.resumes}</p>
-              <p className="text-sm text-slate-600 mt-1">Currículos</p>
-            </div>
-            <div className="bg-white rounded-xl shadow p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.applications}</p>
-              <p className="text-sm text-slate-600 mt-1">Candidaturas</p>
-            </div>
-            <div className="bg-white rounded-xl shadow p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{views.count}</p>
-              <p className="text-sm text-slate-600 mt-1">Visualizações</p>
-            </div>
-          </div>
-
-          {/* Dados Pessoais - Expandível */}
-          <div className="bg-white rounded-2xl shadow-md p-8">
-            <div className="flex items-center justify-between mb-6 cursor-pointer hover:bg-slate-50 p-2 -m-2 rounded" onClick={() => setEditingSections(prev => ({...prev, personal: !prev.personal}))}>
-              <div className="flex items-center gap-3">
-                <User className="w-6 h-6 text-slate-600" />
-                <h3 className="text-lg font-bold text-slate-900">Dados Pessoais</h3>
-              </div>
-              <ChevronDown className={`w-5 h-5 text-slate-600 transition ${editingSections.personal ? 'rotate-180' : ''}`} />
-            </div>
-
-            {editingSections.personal && (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <Label>Nome</Label>
-                    <Input value={profile.name} onChange={e => setProfile(prev=>({...prev, name: e.target.value}))} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <Input value={profile.email} disabled />
-                  </div>
-                  <div>
-                    <Label>Telefone</Label>
-                    <Input value={profile.phone} onChange={e=> setProfile(prev=>({...prev, phone: e.target.value}))} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label>CPF</Label>
-                    <Input value={profile.cpf} onChange={e=> setProfile(prev=>({...prev, cpf: e.target.value}))} disabled={!isEditing} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label>Sobre</Label>
-                    <Textarea value={profile.life_status} onChange={e => setProfile(prev=>({...prev, life_status: e.target.value}))} disabled={!isEditing} rows={4} />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  {!isEditing ? (
-                    <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700">Editar perfil</Button>
-                  ) : (
-                    <>
-                      <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">Salvar</Button>
-                      <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancelar</Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Seções do Currículo - Resumido */}
-          <div className="bg-white rounded-2xl shadow-md p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <Briefcase className="w-6 h-6 text-slate-600" />
-              <h3 className="text-lg font-bold text-slate-900">Seções do Currículo</h3>
-            </div>
-            <div className="space-y-3">
-              {['education','experiences','projects','courses','languages'].map(section => (
-                <div key={section} className="border rounded-lg p-4 hover:bg-slate-50 transition">
-                  <div className="flex justify-between items-center">
+              {/* Posts feed */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Publicações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
                     <div>
-                      <strong className="capitalize text-slate-900">{section === 'education' ? 'Educação' : section === 'experiences' ? 'Experiências' : section === 'projects' ? 'Projetos' : section === 'courses' ? 'Cursos' : 'Idiomas'}</strong>
-                      <p className="text-sm text-slate-600 mt-1">
-                        {profileSections[section]?.length || 0} item{profileSections[section]?.length !== 1 ? 's' : ''}
-                      </p>
+                      <div className="flex gap-2">
+                        <input value={postCaption} onChange={e=>setPostCaption(e.target.value)} placeholder="O que você quer compartilhar?" className="flex-1 p-2 border rounded" />
+                        <Button onClick={() => setShowPostForm(s => !s)}>{showPostForm ? 'Fechar' : 'Nova'}</Button>
+                      </div>
+                      {showPostForm && (
+                        <div className="mt-2">
+                          <div className="flex gap-2">
+                            <input type="file" accept="image/*" multiple onChange={onSelectImage} />
+                          </div>
+                          <div className="mt-2 flex gap-2">
+                            <Button onClick={onPublish} disabled={creatingPost}>{creatingPost ? 'Publicando...' : 'Publicar'}</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => toggleSection(section)} variant="outline">
-                        {expandedSections[section] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </Button>
-                      <Button size="sm" onClick={() => toggleEditSection(section)} className="bg-blue-600 hover:bg-blue-700">
-                        {editingSections[section] ? 'Salvar' : 'Editar'}
-                      </Button>
-                    </div>
-                  </div>
-                  {expandedSections[section] && (
-                    <div className="mt-4">
-                      {(profileSections[section] || []).map(item => (
-                        <div key={item.id} className="p-3 border-b last:border-b-0">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="text-sm font-medium text-slate-900">{item.title || item.name || item.company || item.school || '—'}</div>
-                              <div className="text-xs text-slate-500 mt-1">{item.period || item.institution || ''}</div>
-                              {item.description && <div className="text-xs text-slate-600 mt-1">{item.description}</div>}
-                            </div>
-                            {editingSections[section] && (
-                              <Button size="sm" onClick={() => removeItem(section, item.id)} variant="destructive">
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+
+                    {posts.map(post => (
+                      <div key={post.id} className="border rounded p-3">
+                        <div className="flex justify-between">
+                          <div>
+                            <div className="font-medium">{post.author_name || profile.name}</div>
+                            <div className="text-xs text-slate-500">{new Date(post.created_at || post.created || Date.now()).toLocaleString()}</div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => onToggleLike(post.id)}><Heart className="w-4 h-4"/></Button>
+                            {user && post.author_id === user.id && (
+                              <Button size="sm" variant="destructive" onClick={() => onDeletePost(post.id, post.author_id)}><Trash2 className="w-4 h-4"/></Button>
                             )}
                           </div>
                         </div>
-                      ))}
-                      {editingSections[section] && (
-                        <div className="mt-3 pt-3 border-t">
-                          <Button size="sm" onClick={() => addItem(section)} className="bg-blue-600 hover:bg-blue-700">
-                            <Plus className="w-4 h-4 mr-1" /> Adicionar
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Publicações */}
-          <div className="bg-white rounded-2xl shadow-md p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <MessageCircle className="w-6 h-6 text-slate-600" />
-              <h3 className="text-lg font-bold text-slate-900">Publicações</h3>
-            </div>
-            
-            {user?.type === 'candidate' && (
-              <div className="mb-6 space-y-3">
-                <textarea 
-                  value={postCaption} 
-                  onChange={e=>setPostCaption(e.target.value)} 
-                  placeholder="O que você quer compartilhar?" 
-                  rows={3}
-                  className="w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {showPostForm && (
-                  <div className="border rounded-lg p-4 bg-slate-50">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Selecione imagens</label>
-                    <input type="file" accept="image/*" multiple onChange={onSelectImage} className="block w-full text-sm text-slate-600" />
-                    {postImages.length > 0 && (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {postImages.map((img, i) => (
-                          <div key={i} className="relative">
-                            <img src={img} alt={`preview-${i}`} className="w-full h-20 object-cover rounded" />
-                            <button onClick={() => removePostImage(i)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
-                              <X className="w-3 h-3" />
-                            </button>
+                        <div className="mt-2">
+                          <p>{post.caption || post.text || ''}</p>
+                          <div className="mt-2 grid grid-cols-3 gap-2">
+                            {(post.images || []).map((img, i) => (
+                              <img key={i} src={img} alt={`img-${i}`} className="w-full h-24 object-cover rounded" />
+                            ))}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <Button onClick={() => setShowPostForm(s => !s)} variant="outline">
-                    {showPostForm ? 'Fechar' : 'Adicionar imagens'}
-                  </Button>
-                  <Button onClick={onPublish} disabled={creatingPost} className="bg-blue-600 hover:bg-blue-700">
-                    {creatingPost ? 'Publicando...' : 'Publicar'}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Posts Feed */}
-            <div className="space-y-4">
-              {posts.length === 0 ? (
-                <p className="text-center text-slate-600 py-8">Nenhuma publicação ainda</p>
-              ) : (
-                posts.map(post => (
-                  <div key={post.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-medium text-slate-900">{post.author_name || profile.name}</div>
-                        <div className="text-xs text-slate-500">{new Date(post.created_at || post.created || Date.now()).toLocaleDateString('pt-BR')}</div>
-                      </div>
-                      {user && post.author_id === user.id && (
-                        <Button size="sm" variant="destructive" onClick={() => onDeletePost(post.id, post.author_id)}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                    {post.caption && <p className="text-slate-800 mb-3">{post.caption}</p>}
-                    {(post.images || []).length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        {post.images.map((img, i) => (
-                          <img key={i} src={img} alt={`img-${i}`} className="w-full h-24 object-cover rounded" />
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex gap-3 text-sm">
-                      <button onClick={() => onToggleLike(post.id)} className={`flex items-center gap-1 ${(post.likes||[]).includes(user?.id) ? 'text-red-500' : 'text-slate-600 hover:text-red-500'}`}>
-                        <Heart className="w-4 h-4" /> {(post.likes || []).length}
-                      </button>
-                      <button className="flex items-center gap-1 text-slate-600 hover:text-blue-500">
-                        <MessageCircle className="w-4 h-4" /> {(post.comments || []).length}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
