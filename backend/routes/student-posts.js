@@ -236,12 +236,25 @@ router.post('/comments/:id/like', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete post (only author candidate)
+// Delete post (author, admin, or company-owner when applicable)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    if (req.user.type !== 'candidate') return res.status(403).json({ success:false, message:'Apenas candidatos podem deletar publicações' });
     const { id } = req.params;
-    const r = await pool.query('DELETE FROM student_posts WHERE id=$1 AND candidate_id=$2 RETURNING id', [id, req.user.id]);
+    // Load post to verify ownership
+    const postQ = await pool.query('SELECT id, candidate_id FROM student_posts WHERE id=$1', [id]);
+    if (postQ.rows.length === 0) return res.status(404).json({ success:false, message:'Publicação não encontrada' });
+    const post = postQ.rows[0];
+
+    // Allow deletion if requester is the post creator, or an admin.
+    // If the post was created by a company, the creator check will still allow the company to delete it.
+    const isCreator = req.user.id === post.candidate_id;
+    const isAdmin = req.user.type === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ success:false, message:'Sem permissão para deletar publicação' });
+    }
+
+    const r = await pool.query('DELETE FROM student_posts WHERE id=$1 RETURNING id', [id]);
     if (r.rows.length === 0) return res.status(404).json({ success:false, message:'Publicação não encontrada' });
     res.json({ success:true, removed:true });
   } catch (e) {
