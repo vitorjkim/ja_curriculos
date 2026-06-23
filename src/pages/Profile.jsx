@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,12 @@ const Profile = () => {
     try { return localStorage.getItem('avatar_shape_'+(user?.id||'')) || 'circle'; } catch { return 'circle'; }
   });
   const [cropImage, setCropImage] = useState(null); // DataURL bruto para o cropper
+  // Edição/permissão e upload
+  const [editingFormation, setEditingFormation] = useState(false)
+  const [formationDraft, setFormationDraft] = useState({ title: '', description: '' })
+  const [editingSocials, setEditingSocials] = useState(false)
+  const [socialDraft, setSocialDraft] = useState({ instagram_url: '', linkedin_url: '', whatsapp: '' })
+  const fileInputRef = useRef(null)
   // Student posts (igual ao fluxo da escola)
   const [posts, setPosts] = useState([]);
   const [creatingPost, setCreatingPost] = useState(false);
@@ -232,6 +238,63 @@ const Profile = () => {
     // Não usar localStorage - apenas backend quando disponível no objeto user
     return null;
   };
+
+  // PERMISSÕES / EDIÇÃO
+  const isOwnProfile = user && (user.id === (profile?.id || profile?.user_id));
+
+  function onEditFormation() {
+    setFormationDraft({ title: profile.formation_title || '', description: profile.formation_description || '' });
+    setEditingFormation(true);
+  }
+
+  async function saveFormation() {
+    try {
+      const res = await fetch(`/api/students/${profile.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formation_title: formationDraft.title, formation_description: formationDraft.description })
+      });
+      if (!res.ok) throw new Error('save failed');
+      const updated = await res.json();
+      setProfile(prev => ({ ...prev, ...updated }));
+      setEditingFormation(false);
+      toast({ title: 'Formação atualizada.' });
+    } catch (err) { console.error(err); toast({ title: 'Erro ao salvar formação', variant: 'destructive' }); }
+  }
+
+  function cancelFormation() { setEditingFormation(false); }
+
+  function onEditSocials() {
+    setSocialDraft({ instagram_url: profile.instagram_url || '', linkedin_url: profile.linkedin_url || '', whatsapp: profile.whatsapp || '' });
+    setEditingSocials(true);
+  }
+
+  async function saveSocials() {
+    try {
+      const res = await fetch(`/api/students/${profile.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(socialDraft) });
+      if (!res.ok) throw new Error('save failed');
+      const updated = await res.json();
+      setProfile(prev => ({ ...prev, ...updated }));
+      setEditingSocials(false);
+      toast({ title: 'Redes sociais atualizadas.' });
+    } catch (err) { console.error(err); toast({ title: 'Erro ao salvar redes', variant: 'destructive' }); }
+  }
+
+  function triggerFileInput() { fileInputRef.current?.click(); }
+
+  async function onFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const fd = new FormData(); fd.append('avatar', file);
+    try {
+      setAvatarUploading(true);
+      const res = await fetch(`/api/students/${profile.id}/avatar`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('upload failed');
+      const updated = await res.json();
+      setProfile(prev => ({ ...prev, avatar: updated.avatar || updated.avatar_url }));
+      toast({ title: 'Foto atualizada.' });
+    } catch (err) { console.error(err); toast({ title: 'Erro ao enviar foto', variant: 'destructive' }); }
+    finally { setAvatarUploading(false); }
+  }
 
   useEffect(() => {
     try {
@@ -647,12 +710,22 @@ const Profile = () => {
             {/* Left identification column */}
             <div className="col-span-1 flex flex-col items-center">
               <div className="relative">
-                <div className={`w-40 h-40 ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-lg'} overflow-hidden border-4 border-blue-600 flex items-center justify-center bg-white`}> 
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-12 h-12 text-slate-400" />
-                  )}
+                <div className="relative">
+                  <div onClick={isOwnProfile ? triggerFileInput : undefined} className={`cursor-${isOwnProfile ? 'pointer' : 'default'} w-40 h-40 ${avatarShape === 'circle' ? 'rounded-full' : 'rounded-lg'} overflow-hidden border-4 border-blue-600 flex items-center justify-center bg-white`}> 
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-12 h-12 text-slate-400" />
+                    )}
+                    {isOwnProfile && (
+                      <div className="absolute inset-0 bg-black/20 flex items-end justify-center opacity-0 hover:opacity-100 transition">
+                        <div className="mb-2 bg-white/80 px-3 py-1 rounded flex items-center gap-2 text-sm">
+                          <ImagePlus className="w-4 h-4" /> Alterar foto
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} onChange={onFileChange} type="file" accept="image/*" className="hidden" />
                 </div>
                 {/* badge overlay */}
                 <div className="absolute right-0 bottom-0 transform translate-x-1/4 translate-y-1/4">
@@ -676,11 +749,32 @@ const Profile = () => {
                 <a className="w-9 h-9 rounded-full flex items-center justify-center text-white bg-green-500 shadow" href={`https://wa.me/${profile.phone || ''}`}>
                   <Phone className="w-4 h-4" />
                 </a>
+                {isOwnProfile && (
+                  <button onClick={onEditSocials} className="ml-2 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800">
+                    <Pencil className="w-4 h-4" /> Editar
+                  </button>
+                )}
               </div>
 
-              <button className="mt-6 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-blue-800 text-white font-semibold">
-                <MessageSquare className="w-4 h-4" /> Adicionar aos contatos
-              </button>
+              {editingSocials && (
+                <div className="mt-3 bg-white p-3 rounded-md border">
+                  <div className="grid grid-cols-1 gap-2">
+                    <Input value={socialDraft.instagram_url} onChange={e=>setSocialDraft(prev=>({...prev, instagram_url: e.target.value}))} placeholder="Instagram URL" />
+                    <Input value={socialDraft.linkedin_url} onChange={e=>setSocialDraft(prev=>({...prev, linkedin_url: e.target.value}))} placeholder="LinkedIn URL" />
+                    <Input value={socialDraft.whatsapp} onChange={e=>setSocialDraft(prev=>({...prev, whatsapp: e.target.value}))} placeholder="WhatsApp (com DDI)" />
+                    <div className="flex gap-2 mt-2">
+                      <Button onClick={saveSocials}><Save className="w-4 h-4"/> Salvar</Button>
+                      <Button variant="ghost" onClick={()=>setEditingSocials(false)}>Cancelar</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isOwnProfile && (
+                <button className="mt-6 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-blue-800 text-white font-semibold">
+                  <MessageSquare className="w-4 h-4" /> Adicionar aos contatos
+                </button>
+              )}
             </div>
 
             {/* Right column (top grid and formation) */}
@@ -735,8 +829,28 @@ const Profile = () => {
                   <h3 className="text-teal-600 font-semibold">Formação</h3>
                 </div>
                 <div className="border p-3 rounded-xl bg-white">
-                  <div className="font-semibold">{(profile.life_status && profile.life_status.split('\n')[0]) || 'Analista de Business Intelligence | Dados & Estratégia'}</div>
-                  <div className="mt-2 text-sm text-slate-600">{profile.life_status || 'Resumo profissional e acadêmico do estudante.'}</div>
+                  {!editingFormation ? (
+                    <div>
+                      <div className="font-semibold">{(profile.life_status && profile.life_status.split('\n')[0]) || 'Analista de Business Intelligence | Dados & Estratégia'}</div>
+                      <div className="mt-2 text-sm text-slate-600">{profile.life_status || 'Resumo profissional e acadêmico do estudante.'}</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Input value={formationDraft.title} onChange={e=>setFormationDraft(prev=>({ ...prev, title: e.target.value }))} placeholder="Título da formação" />
+                      <Textarea value={formationDraft.description} onChange={e=>setFormationDraft(prev=>({ ...prev, description: e.target.value }))} placeholder="Descrição / resumo" />
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" onClick={cancelFormation}>Cancelar</Button>
+                        <Button onClick={saveFormation}>
+                          <Save className="w-4 h-4 mr-2" /> Salvar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {isOwnProfile && !editingFormation && (
+                    <div className="mt-3 text-right">
+                      <Button size="sm" variant="outline" onClick={onEditFormation}><Pencil className="w-4 h-4 mr-2" />Editar</Button>
+                    </div>
+                  )}
                 </div>
               </div>
 
