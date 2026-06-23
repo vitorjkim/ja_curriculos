@@ -30,7 +30,6 @@ const Profile = () => {
   const [errors, setErrors] = useState({ phone: '', cpf: '' });
   const [stats, setStats] = useState({ resumes: 0, applications: 0 });
   const [recentResumes, setRecentResumes] = useState([]);
-  const canDownloadResumes = !!(user && (user.type==='school' || user.type==='company' || user.isAdmin));
   const [recentApplications, setRecentApplications] = useState([]);
   // Avatar
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -69,6 +68,8 @@ const Profile = () => {
   const [hasNoExperience, setHasNoExperience] = useState(false);
   // Tracking de seções com alterações não salvas
   const [profileSectionsDirty, setProfileSectionsDirty] = useState(new Set());
+  // Estado para armazenar user carregado da API se context for null
+  const [loadedUser, setLoadedUser] = useState(null);
   
   const [expandedSections, setExpandedSections] = useState({
     education: false,
@@ -238,7 +239,15 @@ const Profile = () => {
   };
 
   // PERMISSÕES / EDIÇÃO CENTRALIZADA
-  const isOwnProfile = user && (user.id === (profile?.id || profile?.user_id));
+  // Usar user do context ou user carregado da API
+  const currentUser = user || loadedUser;
+  const canDownloadResumes = !!(currentUser && (currentUser.type==='school' || currentUser.type==='company' || currentUser.isAdmin));
+  const isOwnProfile = currentUser && (currentUser.id === (profile?.id || profile?.user_id));
+  
+  // Debug: log de comparação de IDs
+  if (profile?.id) {
+    console.log("DEBUG Profile:", { profile_id: profile?.id, profile_user_id: profile?.user_id, currentUser_id: currentUser?.id, isOwnProfile });
+  }
 
   function startEditingProfile() {
     setFormationDraft({ title: profile.formation_title || profile.life_status?.split('\n')[0] || '', description: profile.formation_description || profile.life_status || '' });
@@ -299,6 +308,25 @@ const Profile = () => {
       setJourneyCompleted(false);
     }
   }, [user?.id]);
+
+  // Carrega user da API se context for null
+  useEffect(() => {
+    if (!user) {
+      const fetchCurrentUser = async () => {
+        try {
+          const res = await fetch('/api/auth/me', { credentials: 'include' });
+          if (res.ok) {
+            const data = await res.json();
+            console.log("User carregado da API:", data);
+            setLoadedUser(data.user || data);
+          }
+        } catch (err) {
+          console.warn("Erro ao carregar user de /api/auth/me:", err);
+        }
+      };
+      fetchCurrentUser();
+    }
+  }, [user]);
 
   useEffect(() => {
     const load = async () => {
