@@ -215,29 +215,43 @@ const StudentProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formDataFile = new FormData();
-    formDataFile.append('avatar', file);
-
     try {
       setAvatarUploading(true);
-      const res = await fetch(`/api/students/${profile.id}/avatar`, {
-        method: 'POST',
-        body: formDataFile
-      });
+      
+      // Converter arquivo para base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target.result;
+        
+        try {
+          const res = await fetch(`/api/users/${profile.id}/avatar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: base64 }),
+            credentials: 'include'
+          });
 
-      if (!res.ok) throw new Error('Upload falhou');
+          if (!res.ok) throw new Error(`Upload falhou: ${res.status}`);
 
-      const updated = await res.json();
-      setProfile(prev => ({
-        ...prev,
-        avatar: updated.avatar || updated.avatar_url || prev.avatar
-      }));
+          const updated = await res.json();
+          setProfile(prev => ({
+            ...prev,
+            avatar: updated.profileImage || updated.profile_image || updated.avatar || base64
+          }));
 
-      toast({ title: 'Foto atualizada com sucesso!' });
+          toast({ title: 'Foto atualizada com sucesso!' });
+        } catch (err) {
+          console.error(err);
+          toast({ title: 'Erro ao enviar foto', variant: 'destructive' });
+        } finally {
+          setAvatarUploading(false);
+        }
+      };
+      
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
-      toast({ title: 'Erro ao enviar foto', variant: 'destructive' });
-    } finally {
+      toast({ title: 'Erro ao processar foto', variant: 'destructive' });
       setAvatarUploading(false);
     }
   };

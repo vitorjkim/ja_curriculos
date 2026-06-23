@@ -2765,30 +2765,44 @@ router.get('/partnerships/my-school', authenticateToken, async (req, res) => {
     const schoolId = studentResult.rows[0].school_id;
     
     // Buscar parcerias aceitas da escola do aluno
-    const result = await pool.query(`
-      SELECT 
-        p.id,
-        p.company_id,
-        p.status,
-        p.created_at,
-        u.company_name,
-        u.email,
-        u.profile_image as avatar_url
-      FROM partnerships p
-      JOIN users u ON u.id = p.company_id
-      WHERE p.school_id = $1 AND p.status = 'accepted'
-      ORDER BY u.company_name
-    `, [schoolId]);
-    
-    const partnerCompanyIds = result.rows.map(p => String(p.company_id));
-    
-    console.log('[Partnerships/my-school] Student:', req.user.id, 'School:', schoolId, 'Partners:', partnerCompanyIds.length);
-    
-    res.json({ 
-      success: true, 
-      partnerships: result.rows,
-      partnerCompanyIds 
-    });
+    try {
+      const result = await pool.query(`
+        SELECT 
+          p.id,
+          p.company_id,
+          p.status,
+          p.created_at,
+          u.company_name,
+          u.email,
+          u.profile_image as avatar_url
+        FROM partnerships p
+        JOIN users u ON u.id = p.company_id
+        WHERE p.school_id = $1 AND p.status = 'accepted'
+        ORDER BY u.company_name
+      `, [schoolId]);
+      
+      const partnerCompanyIds = result.rows.map(p => String(p.company_id));
+      
+      console.log('[Partnerships/my-school] Student:', req.user.id, 'School:', schoolId, 'Partners:', partnerCompanyIds.length);
+      
+      res.json({ 
+        success: true, 
+        partnerships: result.rows,
+        partnerCompanyIds 
+      });
+    } catch (tableError) {
+      // Se tabela partnerships não existe, retorna array vazio
+      if (tableError.message.includes('partnerships') || tableError.message.includes('does not exist')) {
+        console.log('[Partnerships/my-school] Tabela partnerships não existe - retornando array vazio');
+        return res.json({ 
+          success: true, 
+          partnerships: [],
+          partnerCompanyIds: [],
+          message: 'Tabela de parcerias ainda não foi criada'
+        });
+      }
+      throw tableError;
+    }
   } catch (error) {
     console.error('Erro ao buscar parcerias da escola do aluno:', error);
     res.status(500).json({ success: false, message: 'Erro interno' });
