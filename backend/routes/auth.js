@@ -187,7 +187,7 @@ router.post('/login', validateLogin, async (req, res) => {
       SELECT 
         id, email, password, name, company_name, type, is_admin, disabled, 
         subscription_plan, subscription_status,
-        school_name, school_type, school_director, school_contact_phone, 
+        school_name, school_type, school_contact_phone, 
         school_city, school_state, school_website,
         profile_image, is_agency
       FROM users WHERE email = $1
@@ -250,13 +250,12 @@ router.post('/login', validateLogin, async (req, res) => {
         email: user.email,
         name: user.name,
         companyName: user.company_name,
-        schoolName: user.school_name,
-        schoolType: user.school_type,
-        schoolDirector: user.school_director,
-        schoolContactPhone: user.school_contact_phone,
-  schoolCity: user.school_city,
-  schoolState: user.school_state,
-  schoolWebsite: user.school_website,
+          schoolName: user.school_name,
+          schoolType: user.school_type,
+          schoolContactPhone: user.school_contact_phone,
+        schoolCity: user.school_city,
+        schoolState: user.school_state,
+        schoolWebsite: user.school_website,
         type: user.type,
         isAdmin: user.is_admin,
         subscriptionPlan: user.subscription_plan || 'free',
@@ -385,7 +384,7 @@ router.get('/me', authenticateToken, async (req, res) => {
     const result = await client.query(`
   SELECT id, email, name, company_name, phone, cpf, cnpj, type, 
      is_admin, bio, profile_image, created_at, updated_at, subscription_plan, subscription_status,
-     school_name, school_type, school_director, school_contact_phone, school_city, school_state, school_website,
+     school_name, school_type, school_contact_phone, school_city, school_state, school_website,
      is_agency
       FROM users WHERE id = $1
     `, [req.user.id]);
@@ -419,7 +418,6 @@ router.get('/me', authenticateToken, async (req, res) => {
         subscriptionStatus: user.subscription_status || 'active',
         schoolName: user.school_name,
         schoolType: user.school_type,
-        schoolDirector: user.school_director,
         schoolContactPhone: user.school_contact_phone,
         schoolCity: user.school_city,
         schoolState: user.school_state,
