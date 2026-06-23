@@ -78,11 +78,15 @@ if (process.env.ALLOWED_ORIGINS) {
   ];
 }
 
-app.use(cors({
+// Garantir que a origem do Vercel esteja na lista
+const vercelOrigin = 'https://ja-curriculos.vercel.app';
+if (allowedOrigins.indexOf(vercelOrigin) === -1) allowedOrigins.push(vercelOrigin);
+
+const corsOptions = {
   origin: function (origin, callback) {
     // Permitir requisições sem origin (ex: mobile apps, Postman)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
@@ -92,7 +96,11 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+};
+
+app.use(cors(corsOptions));
+// Responder OPTIONS (preflight) explicitamente
+app.options('*', cors(corsOptions));
 
 // Middlewares gerais
 app.use(compression()); // Compressão gzip

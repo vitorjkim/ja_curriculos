@@ -687,7 +687,7 @@ const Profile = () => {
             <div className="col-span-1 md:col-span-2 flex flex-col gap-6">
               {/* Grid of mini-cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg border border-green-100 flex items-start gap-3">
+                <div className="p-4 rounded-2xl border border-green-100 flex items-start gap-3">
                   <div className="p-2 rounded bg-green-50 text-green-600">
                     <Mail className="w-5 h-5" />
                   </div>
@@ -697,7 +697,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg border border-orange-100 flex items-start gap-3">
+                <div className="p-4 rounded-2xl border border-orange-100 flex items-start gap-3">
                   <div className="p-2 rounded bg-orange-50 text-orange-600">
                     <Phone className="w-5 h-5" />
                   </div>
@@ -707,7 +707,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg border border-yellow-100 flex items-start gap-3">
+                <div className="p-4 rounded-2xl border border-yellow-100 flex items-start gap-3">
                   <div className="p-2 rounded bg-yellow-50 text-yellow-600">
                     <GraduationCap className="w-5 h-5" />
                   </div>
@@ -717,7 +717,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg border border-violet-100 flex items-start gap-3">
+                <div className="p-4 rounded-2xl border border-violet-100 flex items-start gap-3">
                   <div className="p-2 rounded bg-violet-50 text-violet-600">
                     <Briefcase className="w-5 h-5" />
                   </div>
@@ -729,12 +729,12 @@ const Profile = () => {
               </div>
 
               {/* Formação / Biografia */}
-              <div className="border-2 border-teal-200 rounded-lg p-4">
+              <div className="border-2 border-teal-200 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <GraduationCap className="w-5 h-5 text-teal-600" />
                   <h3 className="text-teal-600 font-semibold">Formação</h3>
                 </div>
-                <div className="border p-3 rounded bg-white">
+                <div className="border p-3 rounded-xl bg-white">
                   <div className="font-semibold">{(profile.life_status && profile.life_status.split('\n')[0]) || 'Analista de Business Intelligence | Dados & Estratégia'}</div>
                   <div className="mt-2 text-sm text-slate-600">{profile.life_status || 'Resumo profissional e acadêmico do estudante.'}</div>
                 </div>
