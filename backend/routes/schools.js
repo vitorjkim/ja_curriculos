@@ -1597,8 +1597,10 @@ router.get('/students/activity', authenticateToken, requireSchool, async (req, r
 
 // ========== TURMAS (CLASSES) ==========
 const ensureClassesInfra = async () => {
+  // Ensure pgcrypto (gen_random_uuid) is available; fallback for uuid generation
+  try { await pool.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`); } catch (e) { /* ignore if not permitted */ }
   await pool.query(`CREATE TABLE IF NOT EXISTS school_classes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     school_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(120) NOT NULL,
     description TEXT,

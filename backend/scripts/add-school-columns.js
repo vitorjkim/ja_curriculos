@@ -11,13 +11,20 @@ async function ensureSchoolColumns() {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS school_city VARCHAR(120)`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS school_state VARCHAR(60)`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS school_website VARCHAR(255)`
+        ,`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_agency BOOLEAN DEFAULT FALSE`
     ];
 
     for (const q of queries) {
-      await client.query(q);
+      try {
+        console.log('Running:', q.replace(/\s+/g, ' ').trim());
+        await client.query(q);
+        console.log('OK');
+      } catch (e) {
+        console.error('Query failed:', e.message || e);
+      }
     }
 
-    console.log('School columns ensured (if they did not exist they were added).');
+    console.log('Finished running ALTER TABLE statements.');
   } catch (err) {
     console.error('Failed to ensure school columns:', err);
     process.exitCode = 1;
@@ -26,8 +33,7 @@ async function ensureSchoolColumns() {
   }
 }
 
-if (require.main === module) {
-  ensureSchoolColumns().then(() => process.exit());
-}
+// Execute when run directly
+ensureSchoolColumns().then(() => process.exit()).catch(() => process.exit(1));
 
 export default ensureSchoolColumns;
