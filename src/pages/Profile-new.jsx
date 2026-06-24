@@ -449,7 +449,7 @@ const StudentProfile = () => {
                           {profile.life_status?.split('\n')[0] || 'Título Profissional'}
                         </div>
                         <div className="mt-3 text-sm text-slate-600 whitespace-pre-wrap">
-                          {profile.life_status || 'Adicione uma descrição sobre sua formação e experiência profissional.'}
+                          {profile.life_status || 'Resumo Profissional e Acadêmico'}
                         </div>
                       </div>
                     ) : (
@@ -459,7 +459,7 @@ const StudentProfile = () => {
                           <Input
                             value={formData.formation_title}
                             onChange={e => setFormData(prev => ({ ...prev, formation_title: e.target.value }))}
-                            placeholder="Ex: Analista de Business Intelligence"
+                            placeholder="Título Profissional"
                             className="rounded-lg"
                           />
                         </div>
@@ -468,7 +468,7 @@ const StudentProfile = () => {
                           <Textarea
                             value={formData.formation_description}
                             onChange={e => setFormData(prev => ({ ...prev, formation_description: e.target.value }))}
-                            placeholder="Descreva sua formação, experiência e objetivos profissionais..."
+                            placeholder="Resumo Profissional e Acadêmico"
                             className="rounded-lg min-h-24"
                           />
                         </div>
