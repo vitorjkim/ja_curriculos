@@ -385,7 +385,7 @@ const StudentProfile = () => {
                   {/* Email */}
                   <div className="p-4 rounded-xl border border-green-100 bg-green-50/30">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-green-100">
+                      <div className="p-2 rounded-full bg-green-100">
                         <Mail className="w-5 h-5 text-green-600" />
                       </div>
                       <div className="flex-1">
@@ -398,7 +398,7 @@ const StudentProfile = () => {
                   {/* Phone */}
                   <div className="p-4 rounded-xl border border-orange-100 bg-orange-50/30">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-orange-100">
+                      <div className="p-2 rounded-full bg-orange-100">
                         <Phone className="w-5 h-5 text-orange-600" />
                       </div>
                       <div className="flex-1">
@@ -411,7 +411,7 @@ const StudentProfile = () => {
                   {/* Class */}
                   <div className="p-4 rounded-xl border border-yellow-100 bg-yellow-50/30">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-yellow-100">
+                      <div className="p-2 rounded-full bg-yellow-100">
                         <GraduationCap className="w-5 h-5 text-yellow-600" />
                       </div>
                       <div className="flex-1">
@@ -424,7 +424,7 @@ const StudentProfile = () => {
                   {/* Status */}
                   <div className="p-4 rounded-xl border border-violet-100 bg-violet-50/30">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-violet-100">
+                      <div className="p-2 rounded-full bg-violet-100">
                         <Briefcase className="w-5 h-5 text-violet-600" />
                       </div>
                       <div className="flex-1">
