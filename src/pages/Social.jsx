@@ -27,8 +27,7 @@ const Social = () => {
   const [uploading, setUploading] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [schools, setSchools] = useState([]);
-  const [isPaused, setIsPaused] = useState(false);
-  const [showCompanyNav, setShowCompanyNav] = useState(false);
+  const companiesPausedRef = useRef(false);
   
   // Carrosséis refs
   const carousel1Ref = useRef(null);
@@ -53,7 +52,7 @@ const Social = () => {
           companiesInitialized.current = true;
         }
 
-        if (!isPaused) {
+        if (!companiesPausedRef.current) {
           carousel.scrollLeft += scrollSpeed;
 
           // Reposicionamento infinito dentro do RAF — não depende de eventos de scroll
@@ -71,7 +70,7 @@ const Social = () => {
 
     animationId = requestAnimationFrame(scroll);
     return () => { if (animationId) cancelAnimationFrame(animationId); };
-  }, [companies, schools, isPaused]);
+  }, [companies, schools]);
 
   // Handler para navegação manual do carrossel de empresas
   const handleCompaniesScroll = (direction) => {
@@ -666,14 +665,14 @@ const Social = () => {
                 </div>
                 
                 <div
-                  className="relative"
-                  onMouseEnter={() => { setIsPaused(true); setShowCompanyNav(true); }}
-                  onMouseLeave={() => { setIsPaused(false); setShowCompanyNav(false); }}
+                  className="relative group"
+                  onMouseEnter={() => { companiesPausedRef.current = true; }}
+                  onMouseLeave={() => { companiesPausedRef.current = false; }}
                 >
                   {/* Botão Esquerda */}
                   <button
                     onClick={() => handleCompaniesScroll('left')}
-                    className={`absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-opacity hover:bg-slate-50 ${showCompanyNav ? 'opacity-100' : 'opacity-0'}`}
+                    className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-opacity hover:bg-slate-50 opacity-0 group-hover:opacity-100"
                   >
                     <ChevronLeft className="w-5 h-5 text-slate-700" />
                   </button>
@@ -812,7 +811,7 @@ const Social = () => {
                   {/* Botão Direita */}
                   <button
                     onClick={() => handleCompaniesScroll('right')}
-                    className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-opacity hover:bg-slate-50 ${showCompanyNav ? 'opacity-100' : 'opacity-0'}`}
+                    className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-lg flex items-center justify-center transition-opacity hover:bg-slate-50 opacity-0 group-hover:opacity-100"
                   >
                     <ChevronRight className="w-5 h-5 text-slate-700" />
                   </button>
