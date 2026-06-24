@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { ImagePlus, Mail, Phone, GraduationCap, Briefcase, Pencil, Save, X, MessageSquare, Instagram, Linkedin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { usersAPI } from '@/lib/api';
+import { usersAPI, authAPI } from '@/lib/api';
 
 const StudentProfile = () => {
   const { user } = useAuth();
@@ -64,14 +64,13 @@ const StudentProfile = () => {
     if (!user) {
       const fetchCurrentUser = async () => {
         try {
-          const res = await fetch('/api/auth/me', { credentials: 'include' });
-          if (res.ok) {
-            const data = await res.json();
-            console.log('User loaded from API:', data);
+          const data = await authAPI.me();
+          if (data?.user || data) {
+            console.log('User loaded from API (authAPI.me):', data);
             setLoadedUser(data.user || data);
           }
         } catch (err) {
-          console.warn('Erro ao carregar user:', err);
+          console.warn('Erro ao carregar user via authAPI.me:', err);
         }
       };
       fetchCurrentUser();
@@ -179,15 +178,8 @@ const StudentProfile = () => {
         whatsapp: formData.whatsapp
       };
 
-      const res = await fetch(`/api/students/${profile.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error('Falha ao salvar');
-
-      const updated = await res.json();
+      // Use usersAPI.update (routes expect /api/users/:id)
+      const updated = await usersAPI.update(profile.id, payload);
       setProfile(prev => ({
         ...prev,
         life_status: updated.life_status || formData.formation_description,
@@ -215,24 +207,18 @@ const StudentProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formDataFile = new FormData();
-    formDataFile.append('avatar', file);
-
     try {
       setAvatarUploading(true);
-      const res = await fetch(`/api/students/${profile.id}/avatar`, {
-        method: 'POST',
-        body: formDataFile
+      const toDataURL = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
-
-      if (!res.ok) throw new Error('Upload falhou');
-
-      const updated = await res.json();
-      setProfile(prev => ({
-        ...prev,
-        avatar: updated.avatar || updated.avatar_url || prev.avatar
-      }));
-
+      const dataUrl = await toDataURL(file);
+      const resp = await usersAPI.uploadAvatar(profile.id, dataUrl);
+      const newAvatarUrl = resp?.profileImage || resp?.avatar || dataUrl;
+      setProfile(prev => ({ ...prev, avatar: newAvatarUrl }));
       toast({ title: 'Foto atualizada com sucesso!' });
     } catch (err) {
       console.error(err);
