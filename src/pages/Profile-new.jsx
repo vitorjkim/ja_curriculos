@@ -435,43 +435,23 @@ const StudentProfile = () => {
                   </div>
                 </div>
 
-                {/* Formation Section */}
+                {/* Free-form Summary Section */}
                 <div className="border-2 border-teal-200 rounded-2xl p-4 bg-teal-50/20">
-                  <div className="flex items-center gap-2 mb-4">
-                    <GraduationCap className="w-5 h-5 text-teal-600" />
-                    <h3 className="text-teal-600 font-semibold">Formação / Resumo Profissional</h3>
-                  </div>
-
                   <div className="border rounded-xl p-4 bg-white">
                     {!isEditing ? (
                       <div>
-                        <div className="font-semibold text-slate-800">
-                          {profile.life_status?.split('\n')[0] || 'Título Profissional'}
-                        </div>
-                        <div className="mt-3 text-sm text-slate-600 whitespace-pre-wrap">
-                          {profile.life_status || 'Resumo Profissional e Acadêmico'}
+                        <div className="mt-0 text-sm text-slate-600 whitespace-pre-wrap">
+                          {profile.life_status || 'Escreva seu resumo profissional e acadêmico aqui.'}
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="text-xs font-semibold">Título Profissional</Label>
-                          <Input
-                            value={formData.formation_title}
-                            onChange={e => setFormData(prev => ({ ...prev, formation_title: e.target.value }))}
-                            placeholder="Título Profissional"
-                            className="rounded-lg"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs font-semibold">Resumo Profissional e Acadêmico</Label>
-                          <Textarea
-                            value={formData.formation_description}
-                            onChange={e => setFormData(prev => ({ ...prev, formation_description: e.target.value }))}
-                            placeholder="Resumo Profissional e Acadêmico"
-                            className="rounded-lg min-h-24"
-                          />
-                        </div>
+                      <div>
+                        <Textarea
+                          value={formData.formation_description}
+                          onChange={e => setFormData(prev => ({ ...prev, formation_description: e.target.value }))}
+                          placeholder="Resumo Profissional e Acadêmico"
+                          className="rounded-lg min-h-24 w-full"
+                        />
                       </div>
                     )}
                   </div>
