@@ -200,10 +200,24 @@ const CompanyProfile = () => {
       const response = await studentPostsAPI.list(id);
       console.log('📷 [DEBUG] Resposta da API studentPosts:', response);
       console.log('📷 [DEBUG] Posts retornados:', response.posts?.length || 0);
-      if (response.posts && response.posts.length > 0) {
-        console.log('📷 [DEBUG] Primeiro post:', response.posts[0]);
+      const rawPosts = response.posts || [];
+      if (rawPosts.length > 0) {
+        console.log('📷 [DEBUG] Primeiro post:', rawPosts[0]);
       }
-      setPosts(response.posts || []);
+
+      // Normalizar propriedades para garantir consistência na UI
+      const normalized = rawPosts.map(p => {
+        const likesCount = p.likesCount ?? p.likes_count ?? (Array.isArray(p.likes) ? p.likes.length : (typeof p.likes === 'number' ? p.likes : 0));
+        const commentsCount = p.commentsCount ?? p.comments_count ?? (Array.isArray(p.comments) ? p.comments.length : (typeof p.comments === 'number' ? p.comments : 0));
+        return {
+          ...p,
+          likesCount,
+          commentsCount,
+          likes: Array.isArray(p.likes) ? p.likes : (p.likes_count ? [] : (p.likesCount ? [] : []))
+        };
+      });
+
+      setPosts(normalized);
     } catch (error) {
       console.error('❌ [DEBUG] Erro ao carregar publicações:', error);
       console.error('❌ [DEBUG] Error message:', error.message);
