@@ -50,10 +50,25 @@ const CompanyDashboard = () => {
     const loadDashboardData = async () => {
       if (user && user.type === 'company') {
         // Garantir que o usuário tenha um plano definido
-        if (!user.subscriptionPlan) {
+          if (!user.subscriptionPlan) {
           // Atualizar usuário com plano gratuito por padrão
           const updatedUser = { ...user, subscriptionPlan: 'free' };
-          localStorage.setItem('curriculoja_user', JSON.stringify(updatedUser));
+          // Evitar salvar imagens grandes
+          try {
+            const safe = { ...updatedUser };
+            if (typeof safe.profileImage === 'string' && safe.profileImage.startsWith('data:') && safe.profileImage.length > 200000) delete safe.profileImage;
+            if (typeof safe.profile_image === 'string' && safe.profile_image.startsWith('data:') && safe.profile_image.length > 200000) delete safe.profile_image;
+            localStorage.setItem('curriculoja_user', JSON.stringify(safe));
+          } catch (e) {
+            try {
+              const safe2 = { ...updatedUser };
+              if (typeof safe2.profileImage === 'string' && safe2.profileImage.startsWith('data:') && safe2.profileImage.length > 200000) delete safe2.profileImage;
+              if (typeof safe2.profile_image === 'string' && safe2.profile_image.startsWith('data:') && safe2.profile_image.length > 200000) delete safe2.profile_image;
+              localStorage.setItem('curriculoja_user', JSON.stringify(safe2));
+            } catch (e2) {
+              localStorage.setItem('curriculoja_user', JSON.stringify(updatedUser));
+            }
+          }
           setCurrentPlan('free');
         } else {
           setCurrentPlan(user.subscriptionPlan);

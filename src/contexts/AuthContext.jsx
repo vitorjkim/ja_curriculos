@@ -47,6 +47,35 @@ function getAPIBaseURL() {
 
 const API_BASE_URL = getAPIBaseURL();
 
+// Remove campos grandes (ex: imagens em base64) antes de persistir no localStorage
+const sanitizeUserForStorage = (u) => {
+  if (!u || typeof u !== 'object') return u;
+  try {
+    const copy = { ...u };
+    const avatarKeys = ['profileImage', 'profile_image', 'avatar', 'avatar_url', 'avatarUrl'];
+    for (const k of avatarKeys) {
+      if (!copy[k]) continue;
+      const v = copy[k];
+      if (typeof v === 'string' && v.startsWith('data:') && v.length > 200000) {
+        // Very large base64 image — remove before storing
+        delete copy[k];
+      }
+    }
+    return copy;
+  } catch (e) {
+    return u;
+  }
+};
+
+const safeSetUserToStorage = (userObj) => {
+  try {
+    const safe = sanitizeUserForStorage(userObj);
+    localStorage.setItem('curriculoja_user', JSON.stringify(safe));
+  } catch (e) {
+    console.error('Erro ao salvar usuário no localStorage (safe):', e);
+  }
+};
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -92,7 +121,7 @@ export const AuthProvider = ({ children }) => {
           
           localStorage.setItem('curriculoja_token', refreshResponse.token);
           localStorage.setItem('curriculoja_refresh_token', refreshResponse.refreshToken);
-          localStorage.setItem('curriculoja_user', JSON.stringify(refreshResponse.user));
+          safeSetUserToStorage(refreshResponse.user);
           
           setUser(refreshResponse.user);
           console.log('Token renovado automaticamente!');
@@ -134,7 +163,7 @@ export const AuthProvider = ({ children }) => {
             // Garantir que o usuário tenha um plano definido
             if (!apiUser.subscriptionPlan) {
               apiUser = { ...apiUser, subscriptionPlan: 'free', subscriptionStatus: 'active' };
-              localStorage.setItem('curriculoja_user', JSON.stringify(apiUser));
+              safeSetUserToStorage(apiUser);
             }
             
             // Garantir que o avatar seja incluído
@@ -181,7 +210,7 @@ export const AuthProvider = ({ children }) => {
                 // Salvar novos tokens
                 localStorage.setItem('curriculoja_token', refreshResponse.token);
                 localStorage.setItem('curriculoja_refresh_token', refreshResponse.refreshToken);
-                localStorage.setItem('curriculoja_user', JSON.stringify(user));
+                safeSetUserToStorage(user);
                 
                 setUser(user);
                 
@@ -261,7 +290,7 @@ export const AuthProvider = ({ children }) => {
           
           setUser(userData);
           localStorage.setItem('curriculoja_token', response.token);
-          localStorage.setItem('curriculoja_user', JSON.stringify(userData));
+          safeSetUserToStorage(userData);
           if (response.refreshToken) localStorage.setItem('curriculoja_refresh_token', response.refreshToken);
           
           // Disparar evento de atualização de avatar para a Navbar (com pequeno delay para garantir que os componentes estejam montados)
@@ -311,7 +340,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         const token = `local_token_${Date.now()}`;
         localStorage.setItem('curriculoja_token', token);
-        localStorage.setItem('curriculoja_user', JSON.stringify(userData));
+        safeSetUserToStorage(userData);
         return { success: true, user: userData, offline: true };
       }
     } catch (e) {
@@ -414,7 +443,7 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = response.user;
       
       setUser(updatedUser);
-      localStorage.setItem('curriculoja_user', JSON.stringify(updatedUser));
+      safeSetUserToStorage(updatedUser);
       return updatedUser;
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
@@ -446,7 +475,7 @@ export const AuthProvider = ({ children }) => {
       };
 
       setUser(updatedUser);
-      localStorage.setItem('curriculoja_user', JSON.stringify(updatedUser));
+      safeSetUserToStorage(updatedUser);
       
       // IMPORTANTE: Também atualizar na lista de usuários para persistir
       const users = JSON.parse(localStorage.getItem('curriculoja_users') || '[]');

@@ -108,15 +108,27 @@ const SchoolProfile = () => {
       const finalUrl = resp?.profileImage || newAvatar;
       setAvatarUrl(finalUrl);
       setNewAvatar(null);
-      // Persist cache local para uso offline ou fallback em listagens
+        // Persist cache local para uso offline ou fallback em listagens
       try {
         localStorage.setItem('school_avatar_'+user.id, finalUrl);
-        // Atualizar usuário armazenado
+        // Atualizar usuário armazenado sem salvar grandes base64
         const stored = JSON.parse(localStorage.getItem('curriculoja_user')||'null');
         if (stored && stored.id === user.id) {
           stored.profileImage = finalUrl;
           stored.profile_image = finalUrl;
-          localStorage.setItem('curriculoja_user', JSON.stringify(stored));
+          try {
+            const safe = { ...stored };
+            if (typeof safe.profileImage === 'string' && safe.profileImage.startsWith('data:') && safe.profileImage.length > 200000) delete safe.profileImage;
+            if (typeof safe.profile_image === 'string' && safe.profile_image.startsWith('data:') && safe.profile_image.length > 200000) delete safe.profile_image;
+            localStorage.setItem('curriculoja_user', JSON.stringify(safe));
+          } catch {
+            try {
+              const safe2 = { ...stored };
+              if (typeof safe2.profileImage === 'string' && safe2.profileImage.startsWith('data:') && safe2.profileImage.length > 200000) delete safe2.profileImage;
+              if (typeof safe2.profile_image === 'string' && safe2.profile_image.startsWith('data:') && safe2.profile_image.length > 200000) delete safe2.profile_image;
+              localStorage.setItem('curriculoja_user', JSON.stringify(safe2));
+            } catch { localStorage.setItem('curriculoja_user', JSON.stringify(stored)); }
+          }
         }
       } catch {}
       // Atualizar contexto de autenticação
@@ -316,7 +328,19 @@ const SchoolProfile = () => {
         schoolState: updated.school_state,
         schoolWebsite: updated.school_website
       };
-      localStorage.setItem('curriculoja_user', JSON.stringify(newUser));
+      try {
+        const safe = { ...newUser };
+        if (typeof safe.profileImage === 'string' && safe.profileImage.startsWith('data:') && safe.profileImage.length > 200000) delete safe.profileImage;
+        if (typeof safe.profile_image === 'string' && safe.profile_image.startsWith('data:') && safe.profile_image.length > 200000) delete safe.profile_image;
+        localStorage.setItem('curriculoja_user', JSON.stringify(safe));
+      } catch {
+        try {
+          const safe2 = { ...newUser };
+          if (typeof safe2.profileImage === 'string' && safe2.profileImage.startsWith('data:') && safe2.profileImage.length > 200000) delete safe2.profileImage;
+          if (typeof safe2.profile_image === 'string' && safe2.profile_image.startsWith('data:') && safe2.profile_image.length > 200000) delete safe2.profile_image;
+          localStorage.setItem('curriculoja_user', JSON.stringify(safe2));
+        } catch { localStorage.setItem('curriculoja_user', JSON.stringify(newUser)); }
+      }
       // Forçar refresh via updateUser (carrega /me) ou set direto
       try { await updateUser(); } catch { /* ignore */ }
       setMessage('Perfil atualizado com sucesso');

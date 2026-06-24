@@ -31,7 +31,22 @@ export const fixUserSubscriptionData = () => {
       // Atualizar ambos
       users[userIndex] = userData;
       localStorage.setItem('curriculoja_users', JSON.stringify(users));
-      localStorage.setItem('curriculoja_user', JSON.stringify(userData));
+      // Evitar salvar imagens grandes em base64
+      try {
+        const safe = { ...userData };
+        if (typeof safe.profileImage === 'string' && safe.profileImage.startsWith('data:') && safe.profileImage.length > 200000) delete safe.profileImage;
+        if (typeof safe.profile_image === 'string' && safe.profile_image.startsWith('data:') && safe.profile_image.length > 200000) delete safe.profile_image;
+        localStorage.setItem('curriculoja_user', JSON.stringify(safe));
+      } catch (e) {
+        try {
+          const safe2 = { ...userData };
+          if (typeof safe2.profileImage === 'string' && safe2.profileImage.startsWith('data:') && safe2.profileImage.length > 200000) delete safe2.profileImage;
+          if (typeof safe2.profile_image === 'string' && safe2.profile_image.startsWith('data:') && safe2.profile_image.length > 200000) delete safe2.profile_image;
+          localStorage.setItem('curriculoja_user', JSON.stringify(safe2));
+        } catch (e2) {
+          localStorage.setItem('curriculoja_user', JSON.stringify(userData));
+        }
+      }
       
       console.log('Dados do usuário sincronizados:', userData);
       return userData;
