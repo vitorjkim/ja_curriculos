@@ -833,12 +833,36 @@ const Social = () => {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowCreateModal(false)}
           >
-            <motion.div
+              <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
+              onPaste={async (e) => {
+                try {
+                  const items = e.clipboardData?.items || [];
+                  for (let i = 0; i < items.length; i++) {
+                    const it = items[i];
+                    if (it.type && it.type.startsWith('image/')) {
+                      const file = it.getAsFile();
+                      if (file) {
+                        const toDataURL = (f) => new Promise((resolve, reject) => {
+                          const reader = new FileReader();
+                          reader.onload = () => resolve(reader.result);
+                          reader.onerror = reject;
+                          reader.readAsDataURL(f);
+                        });
+                        const dataUrl = await toDataURL(file);
+                        setNewPostImage(dataUrl);
+                        break;
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.warn('Erro ao colar imagem:', err);
+                }
+              }}
               className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] overflow-y-auto border-2 border-gray-200"
             >
               {/* Header */}
@@ -867,11 +891,12 @@ const Social = () => {
                     Imagem <span className="text-red-400">*</span>
                   </label>
                   {newPostImage ? (
-                    <div className="relative">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 flex items-center justify-center max-h-80">
                       <img
                         src={newPostImage}
                         alt="Preview"
-                        className="w-full h-48 object-cover rounded-2xl border-2 border-gray-200"
+                        className="w-full max-h-80 object-contain rounded-2xl"
+                        style={{ display: 'block' }}
                       />
                       <button
                         onClick={() => setNewPostImage(null)}
@@ -882,7 +907,7 @@ const Social = () => {
                     </div>
                   ) : (
                     <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-all duration-200">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-purple-100 flex items-center justify-center mb-2 transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 group-hover:bg-purple-100 flex items-center justify-center mb-2 transition-colors overflow-hidden">
                         <ImageIcon className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
                       </div>
                       <span className="text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors">Clique para adicionar uma imagem</span>
