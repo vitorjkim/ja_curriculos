@@ -891,11 +891,11 @@ const Social = () => {
                     Imagem <span className="text-red-400">*</span>
                   </label>
                   {newPostImage ? (
-                    <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 flex items-center justify-center max-h-80">
+                    <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 flex items-center justify-center h-36">
                       <img
                         src={newPostImage}
                         alt="Preview"
-                        className="w-full max-h-80 object-contain rounded-2xl"
+                        className="max-w-full max-h-full object-contain rounded-2xl"
                         style={{ display: 'block' }}
                       />
                       <button
