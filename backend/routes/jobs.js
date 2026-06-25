@@ -1703,11 +1703,29 @@ router.post('/partnerships/request/:schoolId', authenticateToken, requireCompany
     }
 
     // Criar nova solicitação
-    await pool.query(
-      `INSERT INTO partnerships (school_id, company_id, status, requested_by) 
-       VALUES ($1, $2, 'pending', 'company')`,
-      [schoolId, companyId]
-    );
+    try {
+      await pool.query(
+        `INSERT INTO partnerships (school_id, company_id, status, requested_by) 
+         VALUES ($1, $2, 'pending', 'company')`,
+        [schoolId, companyId]
+      );
+    } catch (insertErr) {
+      console.warn('Inserção com requested_by falhou, tentando fallback sem essa coluna:', insertErr.message);
+      // Se a coluna requested_by não existir no schema (migração ausente), tentar fallback sem ela
+      if (/requested_by|column .* does not exist|42703/.test(String(insertErr.message))) {
+        try {
+          await pool.query(
+            `INSERT INTO partnerships (school_id, company_id, status) VALUES ($1, $2, 'pending')`,
+            [schoolId, companyId]
+          );
+        } catch (fallbackErr) {
+          console.error('Fallback de inserção também falhou:', fallbackErr);
+          throw fallbackErr;
+        }
+      } else {
+        throw insertErr;
+      }
+    }
 
     res.json({ success: true, message: 'Solicitação de parceria enviada!', status: 'pending' });
   } catch (error) {
