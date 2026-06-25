@@ -2664,8 +2664,7 @@ router.get('/partnerships', authenticateToken, requireSchool, async (req, res) =
         u.company_name,
         u.email,
         u.cnpj,
-        u.profile_image as avatar_url,
-        u.avatar_shape as company_avatar_shape
+        u.profile_image as avatar_url
       FROM partnerships p
       JOIN users u ON u.id = p.company_id
       WHERE p.school_id = $1
