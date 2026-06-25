@@ -2698,7 +2698,7 @@ router.post('/partnerships/accept/:partnershipId', authenticateToken, requireSch
 
     const result = await pool.query(
       `UPDATE partnerships 
-       SET status='accepted', updated_at=CURRENT_TIMESTAMP 
+       SET status='accepted'
        WHERE id=$1 AND school_id=$2 AND status='pending'
        RETURNING *`,
       [partnershipId, schoolId]
