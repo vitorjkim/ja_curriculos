@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Star, X, FileText, Send, TrendingUp, CalendarDays, Briefcase, Info, Filter, MapPin, Activity, Compass, Search, ArrowDownAZ, ChevronDown } from 'lucide-react';
 import { schoolApi } from '@/lib/schoolApi';
 
@@ -241,7 +242,13 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
               {/* Name + email + info */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className={`text-sm font-semibold truncate ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>{s.name}</span>
+                  <Link
+                    to={`/school/student/${s.user_id}`}
+                    className={`text-sm font-semibold truncate hover:underline ${isActive ? 'text-blue-700' : 'text-blue-600 hover:text-blue-800'}`}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {s.name}
+                  </Link>
                   {s.is_featured && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />}
                   <InfoButton student={s} data={data} />
                 </div>
