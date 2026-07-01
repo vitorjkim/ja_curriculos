@@ -1287,32 +1287,33 @@ const Dashboard = () => {
         {/* Modal: Currículos */}
         <Dialog open={activeModal === 'resumes'} onOpenChange={(open) => !open && setActiveModal(null)}>
           <DialogContent className="sm:max-w-2xl border-0 rounded-[28px] shadow-[0_32px_80px_rgba(59,130,246,0.12)] p-0 overflow-hidden">
-            {/* Header sólido */}
-            <div className="bg-blue-700 px-7 py-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
-                  <FileText className="w-7 h-7 text-white" />
+              <DialogHeader className="p-0">
+                <div className="bg-blue-700 px-7 py-6">
+                  <DialogTitle className="flex items-center gap-4 text-2xl">
+                    <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
+                      <FileText className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-2xl font-bold text-white">Currículo Inteligente</span>
+                      <p className="text-blue-200 text-sm mt-0.5">Gerencie seus currículos profissionais</p>
+                    </div>
+                  </DialogTitle>
+                  {/* Status badge inline no header */}
+                  <div className="mt-5 flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-[24px] px-5 py-4 border border-white/20">
+                    <div>
+                      <p className="text-blue-100 text-xs font-semibold uppercase tracking-widest mb-1">Status</p>
+                      <p className="text-white text-2xl font-extrabold">{stats.totalResumes} currículo{stats.totalResumes !== 1 ? 's' : ''} criado{stats.totalResumes !== 1 ? 's' : ''}</p>
+                    </div>
+                    <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
+                      stats.totalResumes > 0
+                        ? 'bg-emerald-400 text-emerald-900'
+                        : 'bg-amber-400 text-amber-900'
+                    }`}>
+                      {stats.totalResumes > 0 ? '✓ Concluído' : '⏳ Pendente'}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Currículo Inteligente</h2>
-                  <p className="text-blue-200 text-sm mt-0.5">Gerencie seus currículos profissionais</p>
-                </div>
-              </div>
-              {/* Status badge inline no header */}
-              <div className="mt-5 flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-[24px] px-5 py-4 border border-white/20">
-                <div>
-                  <p className="text-blue-100 text-xs font-semibold uppercase tracking-widest mb-1">Status</p>
-                  <p className="text-white text-2xl font-extrabold">{stats.totalResumes} currículo{stats.totalResumes !== 1 ? 's' : ''} criado{stats.totalResumes !== 1 ? 's' : ''}</p>
-                </div>
-                <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
-                  stats.totalResumes > 0
-                    ? 'bg-emerald-400 text-emerald-900'
-                    : 'bg-amber-400 text-amber-900'
-                }`}>
-                  {stats.totalResumes > 0 ? '✓ Concluído' : '⏳ Pendente'}
-                </span>
-              </div>
-            </div>
+              </DialogHeader>
 
             {/* Body */}
             <div className="px-7 py-6 space-y-4 max-h-[50vh] overflow-y-auto bg-gradient-to-b from-slate-50 to-white">
