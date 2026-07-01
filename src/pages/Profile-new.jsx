@@ -267,6 +267,18 @@ const StudentProfile = () => {
         <title>{profile.name || 'Perfil do Aluno'}</title>
       </Helmet>
 
+      {showCropper && rawAvatar && isOwnProfile && (
+        <ImageCropper
+          imageSrc={rawAvatar}
+          initialShape={profile.avatar_shape === 'square' ? 'square' : 'circle'}
+          lockShape={false}
+          previewSize={320}
+          exportSize={512}
+          onCancel={() => { setShowCropper(false); setRawAvatar(null); }}
+          onConfirm={handleCropConfirm}
+        />
+      )}
+
       <div className="min-h-screen bg-slate-50/80">
         <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
           {/* Header */}
@@ -307,6 +319,7 @@ const StudentProfile = () => {
                     )}
                   </div>
 
+                  
                   {/* School Badge */}
                   {profile.school_avatar && (
                     <div className="absolute bottom-0 right-0 transform translate-x-1/4 translate-y-1/4">
