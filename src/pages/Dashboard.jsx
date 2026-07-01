@@ -630,11 +630,11 @@ const Dashboard = () => {
               ].map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <button
-                    key={stat.label}
-                    onClick={() => handleStatClick(stat.label === 'Perfil' ? 'Perfil Completo' : stat.label)}
-                    className={`group relative overflow-hidden rounded-2xl p-5 text-left w-full transition-all duration-200 hover:shadow-xl hover:brightness-105 active:scale-[0.98] ${stat.color}`}
-                  >
+                    <button
+                      key={stat.label}
+                      onClick={() => handleStatClick(stat.label === 'Perfil' ? 'Perfil Completo' : stat.label)}
+                      className={`group relative overflow-hidden rounded-[24px] p-5 text-left w-full transition-all duration-200 hover:shadow-xl hover:brightness-105 active:scale-[0.98] ${stat.color}`}
+                    >
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">{stat.label}</p>
                       <div className="w-8 h-8 rounded-xl bg-black/15 flex items-center justify-center shrink-0">
@@ -660,7 +660,7 @@ const Dashboard = () => {
                 {quickActions.map((action, index) => (
                   <Card 
                     key={action.title}
-                    className={`hover:shadow-lg transition-all duration-300 rounded-2xl border-2 border-gray-200 shadow-md group overflow-hidden cursor-pointer bg-white ${
+                    className={`hover:shadow-lg transition-all duration-300 rounded-[24px] border-2 border-gray-200 shadow-md group overflow-hidden cursor-pointer bg-white ${
                       action.title === 'Buscar Vagas' ? 'hover:border-blue-400' :
                       action.title === 'Criar Currículo' ? 'hover:border-green-400' :
                       action.title === 'Meu Perfil' ? 'hover:border-yellow-400' : 'hover:border-purple-400'
@@ -1323,7 +1323,7 @@ const Dashboard = () => {
                     Seus currículos
                   </h4>
                   {recentResumes.map((resume) => (
-                    <div key={resume.id} className="flex items-center justify-between gap-4 p-4 bg-white border-2 border-blue-100 rounded-2xl hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-0.5 transition-all duration-300 group">
+                    <div key={resume.id} className="flex items-center justify-between gap-4 p-4 bg-white border-2 border-blue-100 rounded-[24px] hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-0.5 transition-all duration-300 group">
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0 border-2 border-blue-200 group-hover:scale-105 transition-transform">
                           <FileText className="w-5 h-5 text-blue-600" />
@@ -1348,7 +1348,7 @@ const Dashboard = () => {
                   ))}
                 </>
               ) : (
-                <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-blue-200">
+                <div className="text-center py-12 bg-white rounded-[24px] border-2 border-dashed border-blue-200">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
                     <FileText className="w-8 h-8 text-blue-400" />
                   </div>
@@ -1390,7 +1390,7 @@ const Dashboard = () => {
                     Candidaturas recentes:
                   </h4>
                   {recentApplications.map((app) => (
-                    <div key={app.id} className="p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-green-300 hover:shadow-lg transition-all duration-300 group">
+                    <div key={app.id} className="p-4 bg-white border-2 border-gray-100 rounded-[24px] hover:border-green-300 hover:shadow-lg transition-all duration-300 group">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center group-hover:scale-110 transition-transform">

@@ -300,7 +300,7 @@ export default function CandidateInterviewsSection() {
                     animate={{ opacity: 1, y: 0 }}
                     whileHover={{ y: -4 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className={`relative p-4 rounded-2xl border-2 ${cardBorderColor} ${cardBgColor} transition-colors duration-300 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-200/50`}
+                    className={`relative p-4 rounded-[24px] border-2 ${cardBorderColor} ${cardBgColor} transition-colors duration-300 hover:border-violet-400 hover:shadow-lg hover:shadow-violet-200/50`}
                   >
                     {/* Botão Fechar - canto superior direito, apenas quando dispensável */}
                     {(isConfirmed || isExpired || isCanceledByCompany || isRejectedByCandidate || isCompleted) && (
