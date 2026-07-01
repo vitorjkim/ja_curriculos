@@ -59,7 +59,7 @@ const CreateResume = () => {
       city: pick(CIDADES),
       area: 'tecnologia',
       subarea: 'backend',
-      education: [{ id: 1, institution: 'Universidade Federal', degree: 'Bacharelado em Ciência da Computação', period: '2018 - 2022', description: 'Formação completa na área de tecnologia.' }],
+      education: `Bacharelado em Ciência da Computação — Universidade Federal (2018 - 2022). Formação completa na área de tecnologia.`,
       experiences: [
         { id: 1, company: pick(EMPRESAS), position: pick(CARGOS), period: `${randInt(2019,2022)} - ${randInt(2023,2025)}`, description: 'Atuei em desenvolvimento de sistemas, análise de requisitos e manutenção de aplicações web.' },
         { id: 2, company: pick(EMPRESAS), position: pick(CARGOS), period: `${randInt(2016,2018)} - ${randInt(2019,2021)}`, description: 'Responsável pelo suporte técnico, implantação de melhorias e documentação de processos.' }
@@ -113,7 +113,7 @@ const CreateResume = () => {
   subarea: '',
     
     // Outras seções
-    education: [],
+    education: '',
     experiences: [{ id: 1, company: '', position: '', period: '', description: '' }],
     projects: [],
     courses: [],
