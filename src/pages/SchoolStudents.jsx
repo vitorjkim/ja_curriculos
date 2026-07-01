@@ -14,7 +14,7 @@ const SchoolStudents = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
   const [form, setForm] = useState({
-    name:'', cpf:'', birth_date:'', email:'', phone:'', password:'', confirmPassword:'', class_id:''
+    name:'', cpf:'', birth_date:'', email:'', phone:'', password:'123456', confirmPassword:'123456', class_id:''
   });
   const [showPass,setShowPass]=useState(false);
   const [detail,setDetail]=useState(null);
@@ -89,16 +89,19 @@ const SchoolStudents = () => {
     e.preventDefault();
     try {
       setCreating(true);
-      if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      // Enforce default password as requested
+      const enforcedForm = { ...form, password: '123456', confirmPassword: '123456' };
+      if (!enforcedForm.name || !enforcedForm.email || !enforcedForm.password || !enforcedForm.confirmPassword) {
         setError('Preencha os campos obrigatórios');
         return;
       }
-      if (form.password !== form.confirmPassword) {
+      if (enforcedForm.password !== enforcedForm.confirmPassword) {
         setError('As senhas não conferem');
         return;
       }
-      const payload = { ...form };
-      if (!payload.password) payload.password = Math.random().toString(36).slice(-8); // fallback
+      const payload = { ...enforcedForm };
+      // Force password to 123456 as requested
+      payload.password = '123456';
       if (payload.current_semester) payload.current_semester = parseInt(payload.current_semester);
       if (payload.total_semesters) payload.total_semesters = parseInt(payload.total_semesters);
       if(!payload.class_id) delete payload.class_id; // avoid empty string
@@ -173,6 +176,31 @@ const SchoolStudents = () => {
       <div className="grid md:grid-cols-3 gap-8 items-start">
         <form onSubmit={createStudent} className="md:col-span-1 space-y-4 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h2 className="font-semibold text-lg flex items-center gap-2"><Plus className="w-4 h-4"/> Novo Aluno</h2>
+            <div className="flex gap-2">
+              <button type="button" onClick={()=>{
+                // preencher aleatório
+                const rndName = ['Ana','Bruno','Carla','Diego','Eduardo','Fernanda','Gustavo','Helena'][Math.floor(Math.random()*8)];
+                const rndLast = Math.random().toString(36).slice(2,7).toUpperCase();
+                const rndCpf = '000.000.000-00'.replace(/0/g, ()=>Math.floor(Math.random()*9));
+                const rndEmail = `${rndName.toLowerCase()}.${rndLast.toLowerCase()}@exemplo.com`;
+                const today = new Date();
+                const year = 2003 + Math.floor(Math.random()*6);
+                const month = String(1 + Math.floor(Math.random()*12)).padStart(2,'0');
+                const day = String(1 + Math.floor(Math.random()*28)).padStart(2,'0');
+                const rndPhone = `(11) 9${Math.floor(10000000 + Math.random()*89999999)}`;
+                setForm({
+                  name: `${rndName} ${rndLast}`,
+                  cpf: rndCpf,
+                  birth_date: `${year}-${month}-${day}`,
+                  email: rndEmail,
+                  phone: rndPhone,
+                  password: '123456',
+                  confirmPassword: '123456',
+                  class_id: classes.length? classes[Math.floor(Math.random()*classes.length)].id : ''
+                });
+              }} className="text-xs px-2 py-1 rounded-md border">Preencher aleatório</button>
+              <div className="text-xs text-gray-500 self-center">Senha padrão: <strong>123456</strong></div>
+            </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">Nome Completo *</label>
             <input name="name" value={form.name} onChange={onChange} placeholder="Seu nome completo" className="w-full border rounded-md px-3 py-2 text-sm" required />

@@ -152,6 +152,28 @@ const SchoolClasses = () => {
           <button onClick={()=>{ setForm({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'', job_contract_type:'', job_experience_level:'' }); setShowCreate(true); }} className='inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg'>
             <Plus className='w-4 h-4'/> Criar Turma
           </button>
+            <button onClick={()=>{
+                // Preencher o formulário com valores aleatórios e abrir modal
+                const areas = areaOptions.filter(a=>a.value).map(a=>a.value);
+                const randomArea = areas.length ? areas[Math.floor(Math.random()*areas.length)] : '';
+                const shifts = ['Manhã','Tarde','Noite'];
+                const years = [2023,2024,2025,2026];
+                setForm({
+                  name: `Turma ${Math.random().toString(36).slice(2,7).toUpperCase()}`,
+                  description: `Turma gerada automaticamente em ${(new Date()).toLocaleDateString()}`,
+                  year: years[Math.floor(Math.random()*years.length)].toString(),
+                  shift: shifts[Math.floor(Math.random()*shifts.length)],
+                  job_area: randomArea,
+                  job_subarea: '',
+                  job_location: 'São Paulo',
+                  job_work_type: '',
+                  job_contract_type: '',
+                  job_experience_level: ''
+                });
+                setShowCreate(true);
+              }} className='inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-sm font-semibold hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md'>
+              Preencher aleatório
+            </button>
           <button onClick={load} className='inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-300 bg-white hover:bg-gray-50 text-sm font-semibold transition-all duration-300 shadow-sm hover:shadow-md'>
             <RefreshCcw className='w-4 h-4'/> Atualizar
           </button>
