@@ -148,6 +148,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             {/* Rota para escolas visualizarem/editem o perfil de um aluno */}
             <Route path="/alunos/:id" element={<Profile />} />
+            <Route path="/school/student/:id" element={<Profile />} />
             <Route path="/search-jobs" element={<SearchJobs />} />
             <Route path="/search-jobs/resultados" element={<SearchJobsResults />} />
             <Route path="/social" element={<Social />} />
