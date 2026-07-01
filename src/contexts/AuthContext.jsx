@@ -135,6 +135,9 @@ export const AuthProvider = ({ children }) => {
           return false;
         }
       }
+      // Para erros de rede ou outros erros HTTP (não 401), não fazer logout
+      // Apenas retornar false - o usuário continua logado com dados salvos
+      console.warn('⚠️ Erro ao verificar token (rede ou servidor temporariamente indisponível):', error.message);
       return false;
     }
   };
@@ -183,9 +186,9 @@ export const AuthProvider = ({ children }) => {
               }));
             }
           } catch (error) {
-            console.log('Token expirado, tentando renovar...');
+            console.log('Erro ao verificar token com API:', error.message);
             
-            // Se token expirou, tentar renovar com refresh token
+            // Se token expirou (401), tentar renovar com refresh token
             if (refreshToken && error.response?.status === 401) {
               try {
                 const refreshResponse = await authAPI.refreshToken(refreshToken);
@@ -232,12 +235,61 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem('curriculoja_refresh_token');
                 localStorage.removeItem('curriculoja_user');
               }
+            } else if (!error.response) {
+              // Erro de rede (sem response HTTP) - usar dados salvos localmente e manter usuário logado
+              // Isso é um erro transitório do servidor ou conexão
+              console.warn('⚠️ Erro de rede ao verificar token (backend temporariamente indisponível). Usando dados salvos localmente.');
+              let userData = savedUserData;
+              
+              // Garantir que o usuário tenha um plano definido
+              if (!userData.subscriptionPlan) {
+                userData = { ...userData, subscriptionPlan: 'free', subscriptionStatus: 'active' };
+                safeSetUserToStorage(userData);
+              }
+              
+              // Garantir que o avatar seja incluído
+              if (userData.profile_image && !userData.profileImage) {
+                userData.profileImage = userData.profile_image;
+              }
+              
+              setUser(userData);
+              
+              // Disparar evento de atualização de avatar
+              if (userData.profileImage || userData.profile_image) {
+                window.dispatchEvent(new CustomEvent('avatarUpdated', {
+                  detail: { 
+                    userId: userData.id, 
+                    avatar: userData.profileImage || userData.profile_image 
+                  }
+                }));
+              }
             } else {
-              // Token inválido por outros motivos, limpar dados
-              console.log('Token inválido, limpando dados de autenticação');
-              localStorage.removeItem('curriculoja_token');
-              localStorage.removeItem('curriculoja_refresh_token');
-              localStorage.removeItem('curriculoja_user');
+              // Outro erro HTTP (não 401) - usar dados salvos localmente
+              console.warn('⚠️ Erro ao verificar token (status:', error.response?.status, '). Usando dados salvos localmente.');
+              let userData = savedUserData;
+              
+              // Garantir que o usuário tenha um plano definido
+              if (!userData.subscriptionPlan) {
+                userData = { ...userData, subscriptionPlan: 'free', subscriptionStatus: 'active' };
+                safeSetUserToStorage(userData);
+              }
+              
+              // Garantir que o avatar seja incluído
+              if (userData.profile_image && !userData.profileImage) {
+                userData.profileImage = userData.profile_image;
+              }
+              
+              setUser(userData);
+              
+              // Disparar evento de atualização de avatar
+              if (userData.profileImage || userData.profile_image) {
+                window.dispatchEvent(new CustomEvent('avatarUpdated', {
+                  detail: { 
+                    userId: userData.id, 
+                    avatar: userData.profileImage || userData.profile_image 
+                  }
+                }));
+              }
             }
           }
         }
