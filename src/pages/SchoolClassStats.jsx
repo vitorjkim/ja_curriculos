@@ -262,13 +262,12 @@ export default function SchoolClassStats(){
         const res = await schoolApi.getClassStats(id);
         if(mounted) setData(res);
         
-        // Buscar dados reais para gráficos
-        const [applications, interviewsRaw, hired, students] = await Promise.all([
-          schoolApi.listApplications({ class_id: id, limit: 1000 }),
-          schoolApi.listActiveInterviews({ class_id: id, limit: 1000 }),
-          schoolApi.listHired({ class_id: id, limit: 1000 }),
-          schoolApi.listClassStudents(id)
-        ]);
+        // Buscar dados reais para gráficos — buscar `students` primeiro para renderizar rápido,
+        // e então carregar os demais dados sequencialmente para evitar muitas requisições paralelas.
+        const students = await schoolApi.listClassStudents(id).catch(() => []);
+        const applications = await schoolApi.listApplications({ class_id: id, limit: 1000 }).catch(() => []);
+        const interviewsRaw = await schoolApi.listActiveInterviews({ class_id: id, limit: 1000 }).catch(() => ({ upcoming: [], history: [] }));
+        const hired = await schoolApi.listHired({ class_id: id, limit: 1000 }).catch(() => []);
 
         // Garantir que temos tanto entrevistas futuras quanto histórico quando o backend já separar
         const interviewsUpcoming = Array.isArray(interviewsRaw?.upcoming) ? interviewsRaw.upcoming : (interviewsRaw || []);
