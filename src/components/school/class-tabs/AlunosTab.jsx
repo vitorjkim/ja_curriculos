@@ -153,6 +153,11 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
   const [searchQuery, setSearchQuery] = useState('');
   const [sortMode, setSortMode] = useState('alpha');
 
+  // Memoizar o handler para evitar re-renders desnecessários
+  const handleNameLinkClick = (e) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className="rounded-2xl bg-white border-2 border-gray-200 shadow-md">
       {/* Header */}
@@ -245,7 +250,7 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
                   <Link
                     to={`/school/student/${s.user_id}`}
                     className={`text-sm font-semibold truncate hover:underline ${isActive ? 'text-blue-700' : 'text-blue-600 hover:text-blue-800'}`}
-                    onClick={e => e.stopPropagation()}
+                    onClick={handleNameLinkClick}
                   >
                     {s.name}
                   </Link>
