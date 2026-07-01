@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ImagePlus, Mail, Phone, GraduationCap, Briefcase, Pencil, Save, X, MessageSquare, Instagram, Linkedin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import ImageCropper from '@/components/ImageCropper';
 import { useToast } from '@/components/ui/use-toast';
 import { usersAPI, authAPI } from '@/lib/api';
 
@@ -36,6 +37,8 @@ const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loadedUser, setLoadedUser] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [rawAvatar, setRawAvatar] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   // Formulário de edição
   const [formData, setFormData] = useState({
@@ -214,25 +217,36 @@ const StudentProfile = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Arquivo inválido', description: 'Selecione uma imagem.', variant: 'destructive' });
+      return;
+    }
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawAvatar(reader.result);
+      setShowCropper(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Called when cropper confirms
+  const handleCropConfirm = async (dataUrl, shape) => {
     try {
       setAvatarUploading(true);
-      const toDataURL = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const dataUrl = await toDataURL(file);
+      // Upload to server
       const resp = await usersAPI.uploadAvatar(profile.id, dataUrl);
       const newAvatarUrl = resp?.profileImage || resp?.avatar || dataUrl;
       setProfile(prev => ({ ...prev, avatar: newAvatarUrl }));
+      try { if (updateUser) await updateUser(); } catch {}
       toast({ title: 'Foto atualizada com sucesso!' });
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao enviar avatar:', err);
       toast({ title: 'Erro ao enviar foto', variant: 'destructive' });
     } finally {
       setAvatarUploading(false);
+      setShowCropper(false);
+      setRawAvatar(null);
     }
   };
 
