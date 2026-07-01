@@ -786,8 +786,8 @@ const Dashboard = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="h-full"
               >
-                <Card className="h-full min-h-[360px] rounded-[24px] border-[3px] border-blue-300 bg-white shadow-[0_18px_45px_rgba(37,99,235,0.12)] flex flex-col">
-                  <CardHeader className="border-b-[3px] border-blue-300 pb-4 bg-blue-50/70 rounded-t-[22px]">
+                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm flex flex-col">
+                  <CardHeader className="border-b border-gray-100 pb-4 bg-blue-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-blue-900">
                         <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shadow-sm border-2 border-blue-200">
@@ -872,8 +872,8 @@ const Dashboard = () => {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="h-full"
               >
-                <Card className="h-full min-h-[360px] rounded-[24px] border-[3px] border-green-300 bg-white shadow-[0_18px_45px_rgba(22,163,74,0.12)] flex flex-col">
-                  <CardHeader className="border-b-[3px] border-green-300 pb-4 bg-green-50/70 rounded-t-[22px]">
+                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm flex flex-col">
+                  <CardHeader className="border-b border-gray-100 pb-4 bg-green-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-green-900">
                         <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center shadow-sm border-2 border-green-200">
@@ -992,8 +992,8 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.45 }}
               >
-                <Card className="h-full rounded-[24px] border-[3px] border-indigo-300 bg-white shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                  <CardHeader className="border-b-[3px] border-indigo-300 pb-4 bg-indigo-50/50 rounded-t-[22px]">
+                <Card className="h-full rounded-[24px] bg-white shadow-sm">
+                  <CardHeader className="border-b border-gray-100 pb-4 bg-indigo-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-indigo-900">
                         <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center shadow-sm border-2 border-indigo-200">
@@ -1191,7 +1191,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
-                <Card className="rounded-[24px] border-[3px] border-pink-300 bg-white shadow-[0_18px_45px_rgba(236,72,153,0.12)]">
+                <Card className="rounded-[24px] bg-white shadow-sm">
                   <CardHeader className="border-b-[3px] border-pink-300 pb-4 bg-pink-50/70 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-pink-900">
