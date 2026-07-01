@@ -585,7 +585,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-gray-900 mb-1 tracking-tight leading-tight">
-                Olá, <span className="text-blue-600">{user?.name || 'Usuário'}</span>! 👋
+                Olá, <span className="text-blue-600">{user?.name || 'Usuário'}</span>!
               </h1>
               <p className="text-[15px] text-gray-600 leading-relaxed">
                 Acompanhe suas atividades e acesse suas ferramentas
@@ -839,7 +839,7 @@ const Dashboard = () => {
                               size="sm"
                               className="rounded-full border-2 border-blue-200 bg-white text-xs font-semibold text-blue-600 shadow-sm hover:border-blue-400 hover:bg-blue-500 hover:text-white transition-all duration-300 h-8 px-3"
                             >
-                              <Link to={`/view-resume/${resume.id}`}>
+                              <Link to={`/resume/${resume.id}`}>
                                 <Eye size={14} className="mr-1" />
                                 Ver
                               </Link>
