@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, LayoutGroup } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
@@ -10,14 +10,14 @@ import { ArrowLeft, Users, Briefcase, CalendarDays, Send, BookOpen, BarChart3, T
 import jsPDF from 'jspdf';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area, RadialBarChart, RadialBar, Line, Customized } from 'recharts';
 import SaaSLineChart from '@/components/SaaSLineChart';
-import PainelTab from '@/components/school/class-tabs/PainelTab';
-import AlunosTab from '@/components/school/class-tabs/AlunosTab';
-import FunilTab from '@/components/school/class-tabs/FunilTab';
-import VagasTab from '@/components/school/class-tabs/VagasTab';
-import AtividadeTab from '@/components/school/class-tabs/AtividadeTab';
-import GeografiaTab from '@/components/school/class-tabs/GeografiaTab';
-import JornadaTab from '@/components/school/class-tabs/JornadaTab';
-import DestaquesTab from '@/components/school/class-tabs/DestaquesTab';
+const PainelTab = lazy(() => import('@/components/school/class-tabs/PainelTab'));
+const AlunosTab = lazy(() => import('@/components/school/class-tabs/AlunosTab'));
+const FunilTab = lazy(() => import('@/components/school/class-tabs/FunilTab'));
+const VagasTab = lazy(() => import('@/components/school/class-tabs/VagasTab'));
+const AtividadeTab = lazy(() => import('@/components/school/class-tabs/AtividadeTab'));
+const GeografiaTab = lazy(() => import('@/components/school/class-tabs/GeografiaTab'));
+const JornadaTab = lazy(() => import('@/components/school/class-tabs/JornadaTab'));
+const DestaquesTab = lazy(() => import('@/components/school/class-tabs/DestaquesTab'));
 
 export default function SchoolClassStats(){
   const { id } = useParams();
@@ -682,6 +682,7 @@ export default function SchoolClassStats(){
             )}
 
             {/* Tab Content */}
+            <Suspense fallback={<div className="p-6">Carregando conteúdo...</div>}>
             {activeTab === 'painel' && (
               <PainelTab
                 data={data}
@@ -771,6 +772,7 @@ export default function SchoolClassStats(){
                 avatarTick={avatarTick}
               />
             )}
+            </Suspense>
           </>
         )}
       </div>

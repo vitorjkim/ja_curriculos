@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, X, FileText, Send, TrendingUp, CalendarDays, Briefcase, Info, Filter, MapPin, Activity, Compass, Search, ArrowDownAZ, ChevronDown } from 'lucide-react';
 import { schoolApi } from '@/lib/schoolApi';
@@ -151,12 +151,19 @@ function SortDropdown({ value, onChange }) {
 
 export default function AlunosTab({ id, data, studentFilter, setStudentFilter, globalStudentFilter, setGlobalStudentFilter, avatarTick, stepsFirstRender, setStepsFirstRender, setDrilldown, setCompanyModal }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortMode, setSortMode] = useState('alpha');
 
+  // Debounce para o campo de busca (reduz re-renders/filtragens rápidas)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   // Memoizar o handler para evitar re-renders desnecessários
-  const handleNameLinkClick = (e) => {
+  const handleNameLinkClick = useCallback((e) => {
     e.stopPropagation();
-  };
+  }, []);
 
   return (
     <div className="rounded-2xl bg-white border-2 border-gray-200 shadow-md">
@@ -205,7 +212,7 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
       {/* Student rows */}
       <div className="divide-y divide-gray-100 max-h-[420px] overflow-y-auto">
         {[...studentFilter.activity]
-          .filter(s => !searchQuery || (s.name||'').toLowerCase().includes(searchQuery.toLowerCase()))
+          .filter(s => !debouncedSearch || (s.name||'').toLowerCase().includes(debouncedSearch.toLowerCase()))
           .sort((a, b) => {
             if (sortMode === 'featured') {
               if (a.is_featured && !b.is_featured) return -1;

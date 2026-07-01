@@ -143,13 +143,20 @@ const apiRequest = async (endpoint, options = {}) => {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
+      const attemptStart = Date.now();
       const response = await fetch(url, fetchConfig);
+      const duration = Date.now() - attemptStart;
       clearTimeout(timer);
 
       // Ler como texto primeiro para evitar throws em JSON inválido
       const text = await response.text().catch(() => '');
       let data = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text } }
+
+      // Log de latência por tentativa
+      try {
+        console.info(`[api] ${fetchConfig.method || 'GET'} ${endpoint} attempt=${attempt} duration=${duration}ms status=${response.status}`);
+      } catch {}
 
       if (response.ok) {
         return data;
@@ -166,10 +173,15 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
     } catch (err) {
       clearTimeout(timer);
+      const durationErr = (() => { try { return Date.now() - (typeof attemptStart !== 'undefined' ? attemptStart : Date.now()); } catch { return 0; } })();
 
       // Apenas fazer retry em erros de rede REAIS, não em AbortError de timeout
       const isNetworkError = err instanceof TypeError && /network|failed|fetch/i.test(err.message || '');
       
+      try {
+        console.warn(`[api] ${fetchConfig.method || 'GET'} ${endpoint} attempt=${attempt} error=${err.name || err.message} duration=${durationErr}ms`);
+      } catch {}
+
       if (isNetworkError && attempt <= maxRetries) {
         const wait = 200; // espera fixa
         await new Promise((r) => setTimeout(r, wait));
