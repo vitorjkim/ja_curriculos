@@ -74,7 +74,7 @@ const getAuthToken = () => {
   return localStorage.getItem('curriculoja_token');
 };
 
-// Função principal para fazer requisições
+// Função principal para fazer requisições com timeout e retry exponencial
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getAuthToken();
@@ -85,7 +85,6 @@ const apiRequest = async (endpoint, options = {}) => {
   const isAuthMe = endpoint === '/auth/me';
   if (isLocalToken && (isProtectedUsersRoute)) {
     console.warn('[offline-mode] Bloqueando chamada à API protegida:', endpoint);
-    // Retornar estrutura compatível esperada pelo AdminDashboard
     if (endpoint.startsWith('/users')) {
       return {
         users: [],
@@ -95,7 +94,6 @@ const apiRequest = async (endpoint, options = {}) => {
     }
   }
   if (isLocalToken && isAuthMe) {
-    // Tentar ler usuário local e devolver
     try {
       const localUser = JSON.parse(localStorage.getItem('curriculoja_user') || 'null');
       if (localUser) {
@@ -122,30 +120,66 @@ const apiRequest = async (endpoint, options = {}) => {
     ...options,
   };
 
-  // Se body é um objeto, converter para JSON
   if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
     config.body = JSON.stringify(config.body);
-    // definir Content-Type para JSON quando o body foi serializado
     config.headers['Content-Type'] = 'application/json';
   }
 
-  // Se body é FormData, remover Content-Type para permitir que o browser defina o boundary
   if (config.body instanceof FormData) {
     if (config.headers['Content-Type']) delete config.headers['Content-Type'];
   }
 
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
+  const maxRetries = typeof options.retries === 'number' ? options.retries : 2; // tentativas extras
+  const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000; // 10s padrão
 
-    if (!response.ok) {
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    attempt += 1;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const fetchConfig = { ...config, signal };
+
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, fetchConfig);
+      clearTimeout(timer);
+
+      // Ler como texto primeiro para evitar throws em JSON inválido
+      const text = await response.text().catch(() => '');
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { message: text } }
+
+      if (response.ok) {
+        return data;
+      }
+
+      // Se for erro 5xx, tentar novamente
+      if (response.status >= 500 && attempt <= maxRetries) {
+        const wait = Math.pow(2, attempt) * 100;
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      // Erro não recuperável (4xx) - lançar
       throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
-    }
+    } catch (err) {
+      clearTimeout(timer);
 
-    return data;
-  } catch (error) {
-    console.error('API Request failed:', error);
-    throw error;
+      // Abort ou erro de rede: tentar novamente se restarem tentativas
+      const isAbort = err.name === 'AbortError';
+      const isNetworkError = err instanceof TypeError && /network|failed/i.test(err.message || '');
+
+      if ((isAbort || isNetworkError) && attempt <= maxRetries) {
+        const wait = Math.pow(2, attempt) * 100;
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      console.error('API Request failed:', err);
+      throw err;
+    }
   }
 };
 
