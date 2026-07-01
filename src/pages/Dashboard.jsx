@@ -583,33 +583,59 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Stats Cards - Minimal Design */}
+            {/* Stats Cards */}
             <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
             >
               {[
-                { label: 'Currículos', value: stats.totalResumes, accent: 'bg-blue-600' },
-                { label: 'Candidaturas', value: stats.totalApplications, accent: 'bg-emerald-600' },
-                { label: 'Pendentes', value: stats.pendingApplications, accent: 'bg-amber-500' },
-                { label: 'Perfil Completo', value: `${displayedCompleteness}%`, accent: 'bg-violet-600' }
-              ].map((s) => (
-                <button
-                  key={s.label}
-                  onClick={() => handleStatClick(s.label)}
-                  className="group flex items-center gap-4 bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                {
+                  title: 'Currículos',
+                  value: stats.totalResumes,
+                  icon: FileText,
+                  color: 'from-blue-500 to-blue-600',
+                  bgColor: 'from-blue-50 to-blue-100'
+                },
+                {
+                  title: 'Candidaturas',
+                  value: stats.totalApplications,
+                  icon: Briefcase,
+                  color: 'from-green-500 to-green-600',
+                  bgColor: 'from-green-50 to-green-100'
+                },
+                {
+                  title: 'Pendentes',
+                  value: stats.pendingApplications,
+                  icon: Clock,
+                  color: 'from-yellow-500 to-orange-500',
+                  bgColor: 'from-yellow-50 to-orange-100'
+                },
+                {
+                  title: 'Perfil Completo',
+                  value: `${displayedCompleteness}%`,
+                  icon: Award,
+                  color: 'from-purple-500 to-purple-600',
+                  bgColor: 'from-purple-50 to-purple-100'
+                }
+              ].map((stat) => (
+                <Card 
+                  key={stat.title}
+                  className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 bg-white/80 backdrop-blur-sm group overflow-hidden"
                 >
-                  <div className={`w-1 h-12 rounded ${s.accent} flex-shrink-0`} />
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold uppercase text-slate-500">{s.label}</p>
-                    <p className="text-3xl font-extrabold text-slate-900 mt-2 tabular-nums">{s.value}</p>
-                  </div>
-                  <div className="text-slate-400 opacity-80">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>
-                  </div>
-                </button>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                        <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                      </div>
+                      <div className={`p-3 rounded-2xl bg-gradient-to-r ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                        <stat.icon className={`w-6 h-6 text-gradient bg-gradient-to-r ${stat.color} bg-clip-text`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </motion.div>
 
@@ -619,49 +645,28 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {quickActions.map((action) => {
-                  const colorMap = {
-                    'Buscar Vagas': 'border-blue-200 bg-blue-50/50 hover:border-blue-400 hover:bg-blue-50',
-                    'Criar Currículo': 'border-green-200 bg-green-50/50 hover:border-green-400 hover:bg-green-50',
-                    'Meu Perfil': 'border-amber-200 bg-amber-50/50 hover:border-amber-400 hover:bg-amber-50',
-                    'Mensagens': 'border-purple-200 bg-purple-50/50 hover:border-purple-400 hover:bg-purple-50'
-                  };
-                  const textColorMap = {
-                    'Buscar Vagas': 'text-blue-900',
-                    'Criar Currículo': 'text-green-900',
-                    'Meu Perfil': 'text-amber-900',
-                    'Mensagens': 'text-purple-900'
-                  };
-                  const iconColorMap = {
-                    'Buscar Vagas': 'text-blue-600',
-                    'Criar Currículo': 'text-green-600',
-                    'Meu Perfil': 'text-amber-600',
-                    'Mensagens': 'text-purple-600'
-                  };
-                  
-                  return (
-                    <Link 
-                      key={action.title}
-                      to={action.path}
-                      className={`rounded-2xl border-2 p-4 transition-all duration-300 hover:shadow-lg active:scale-95 group ${colorMap[action.title] || 'border-slate-200 bg-slate-50/50 hover:border-slate-400'}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300 ${iconColorMap[action.title] ? iconColorMap[action.title].replace('text-', 'bg-').replace('600', '100') : 'bg-slate-100'}`}>
-                          <action.icon className={`w-5 h-5 ${iconColorMap[action.title] || 'text-slate-600'}`} />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className={`font-semibold text-sm leading-tight ${textColorMap[action.title] || 'text-slate-900'}`}>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {quickActions.map((action) => (
+                  <Card 
+                    key={action.title}
+                    className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 bg-white/80 backdrop-blur-sm group overflow-hidden cursor-pointer"
+                  >
+                    <CardContent className="p-6">
+                      <Link to={action.path} className="block">
+                        <div className="text-center">
+                          <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${action.bgColor} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                            <action.icon className={`w-8 h-8 bg-gradient-to-r ${action.color} bg-clip-text text-transparent`} />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                             {action.title}
                           </h3>
-                          <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">
-                            {action.description}
-                          </p>
+                          <p className="text-sm text-gray-600">{action.description}</p>
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </motion.div>
 
