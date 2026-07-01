@@ -583,38 +583,34 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Stats Cards - Modern Design */}
+            {/* Stats Cards - Minimal Design */}
             <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ duration: 0.45, delay: 0.1 }}
             >
               {[
-                { label: 'Currículos', value: stats.totalResumes, icon: FileText, color: 'bg-blue-600 text-white' },
-                { label: 'Candidaturas', value: stats.totalApplications, icon: Briefcase, color: 'bg-emerald-600 text-white' },
-                { label: 'Pendentes', value: stats.pendingApplications, icon: Clock, color: 'bg-amber-500 text-white' },
-                { label: 'Perfil', value: `${displayedCompleteness}%`, icon: Award, color: 'bg-violet-600 text-white' }
-              ].map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <button
-                    key={stat.label}
-                    onClick={() => handleStatClick(stat.label === 'Perfil' ? 'Perfil Completo' : stat.label)}
-                    className={`group relative overflow-hidden rounded-2xl p-5 text-left w-full transition-all duration-200 hover:shadow-xl hover:brightness-105 active:scale-[0.98] ${stat.color}`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">{stat.label}</p>
-                      <div className="w-8 h-8 rounded-xl bg-black/15 flex items-center justify-center shrink-0">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <p className="text-4xl font-black leading-none tabular-nums">{stat.value}</p>
-                    <div className="absolute -bottom-8 -right-8 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
-                    <div className="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-white/5 pointer-events-none" />
-                  </button>
-                );
-              })}
+                { label: 'Currículos', value: stats.totalResumes, accent: 'bg-blue-600' },
+                { label: 'Candidaturas', value: stats.totalApplications, accent: 'bg-emerald-600' },
+                { label: 'Pendentes', value: stats.pendingApplications, accent: 'bg-amber-500' },
+                { label: 'Perfil Completo', value: `${displayedCompleteness}%`, accent: 'bg-violet-600' }
+              ].map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => handleStatClick(s.label)}
+                  className="group flex items-center gap-4 bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                >
+                  <div className={`w-1 h-12 rounded ${s.accent} flex-shrink-0`} />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold uppercase text-slate-500">{s.label}</p>
+                    <p className="text-3xl font-extrabold text-slate-900 mt-2 tabular-nums">{s.value}</p>
+                  </div>
+                  <div className="text-slate-400 opacity-80">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>
+                  </div>
+                </button>
+              ))}
             </motion.div>
 
             {/* Quick Actions */}
