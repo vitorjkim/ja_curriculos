@@ -473,6 +473,7 @@ const StudentProfile = () => {
                 {/* Free-form Summary Section */}
                 <div className="border-2 border-teal-200 rounded-2xl p-4 bg-teal-50/20">
                   <div className="border rounded-xl p-4 bg-white">
+                    <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Resumo do Currículo</p>
                     {!isEditing ? (
                       <div>
                         <div className="mt-0 text-sm text-slate-600 whitespace-pre-wrap">
