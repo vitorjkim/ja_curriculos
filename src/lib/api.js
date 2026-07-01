@@ -129,8 +129,8 @@ const apiRequest = async (endpoint, options = {}) => {
     if (config.headers['Content-Type']) delete config.headers['Content-Type'];
   }
 
-  const maxRetries = typeof options.retries === 'number' ? options.retries : 2; // tentativas extras
-  const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000; // 10s padrão
+  const maxRetries = typeof options.retries === 'number' ? options.retries : 1; // 1 retry
+  const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 30000; // 30s padrão (mais realista)
 
   let attempt = 0;
   while (attempt <= maxRetries) {
@@ -155,9 +155,9 @@ const apiRequest = async (endpoint, options = {}) => {
         return data;
       }
 
-      // Se for erro 5xx, tentar novamente
+      // Se for erro 5xx, tentar novamente apenas se for a primeira tentativa
       if (response.status >= 500 && attempt <= maxRetries) {
-        const wait = Math.pow(2, attempt) * 100;
+        const wait = 200; // espera fixa, não exponencial
         await new Promise((r) => setTimeout(r, wait));
         continue;
       }
@@ -167,12 +167,11 @@ const apiRequest = async (endpoint, options = {}) => {
     } catch (err) {
       clearTimeout(timer);
 
-      // Abort ou erro de rede: tentar novamente se restarem tentativas
-      const isAbort = err.name === 'AbortError';
-      const isNetworkError = err instanceof TypeError && /network|failed/i.test(err.message || '');
-
-      if ((isAbort || isNetworkError) && attempt <= maxRetries) {
-        const wait = Math.pow(2, attempt) * 100;
+      // Apenas fazer retry em erros de rede REAIS, não em AbortError de timeout
+      const isNetworkError = err instanceof TypeError && /network|failed|fetch/i.test(err.message || '');
+      
+      if (isNetworkError && attempt <= maxRetries) {
+        const wait = 200; // espera fixa
         await new Promise((r) => setTimeout(r, wait));
         continue;
       }
