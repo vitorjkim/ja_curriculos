@@ -3,13 +3,14 @@ import ResumeCard from './ResumeCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { User, Upload, Trash2, Linkedin, Github, Globe } from 'lucide-react';
+import { User, Upload, Trash2, Linkedin, Github, Globe, Instagram } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { calculateAge } from '@/lib/utils';
 import { useTemplateTheme } from '@/contexts/TemplateThemeContext';
 import ImageCropper from '@/components/ImageCropper';
 
 const SOCIAL_LINKS = [
+  { key: 'instagram_url', Icon: Instagram, color: 'text-pink-500', ring: 'ring-pink-300', bg: 'hover:bg-pink-50', dot: 'bg-pink-500', placeholder: 'instagram.com/seu-perfil' },
   { key: 'linkedin_url', Icon: Linkedin, color: 'text-blue-600', ring: 'ring-blue-400', bg: 'hover:bg-blue-50', dot: 'bg-blue-500', placeholder: 'linkedin.com/in/seu-perfil' },
   { key: 'github_url',   Icon: Github,   color: 'text-slate-800', ring: 'ring-slate-400', bg: 'hover:bg-slate-100', dot: 'bg-slate-600', placeholder: 'github.com/seu-usuario' },
   { key: 'custom_url',  Icon: Globe,    color: 'text-emerald-600', ring: 'ring-emerald-400', bg: 'hover:bg-emerald-50', dot: 'bg-emerald-500', placeholder: 'seu-portfolio.com' },
