@@ -306,26 +306,7 @@ const SchoolClasses = () => {
                         <option value='remoto'>Remoto</option>
                       </select>
                     </div>
-                    <div>
-                      <label className='text-xs font-medium text-gray-600'>Contrato</label>
-                      <select value={form.job_contract_type} onChange={e=>setForm(f=>({...f,job_contract_type:e.target.value}))} className='w-full border rounded-md px-3 py-2 text-sm'>
-                        <option value=''>Todos</option>
-                        <option value='clt'>CLT</option>
-                        <option value='pj'>PJ</option>
-                        <option value='estagio'>Estágio</option>
-                        <option value='temporario'>Temporário</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className='text-xs font-medium text-gray-600'>Nível</label>
-                      <select value={form.job_experience_level} onChange={e=>setForm(f=>({...f,job_experience_level:e.target.value}))} className='w-full border rounded-md px-3 py-2 text-sm'>
-                        <option value=''>Todos</option>
-                        <option value='estagio'>Estágio</option>
-                        <option value='junior'>Júnior</option>
-                        <option value='pleno'>Pleno</option>
-                        <option value='senior'>Sênior</option>
-                      </select>
-                    </div>
+                    
                   </div>
                   <p className='mt-2 text-[11px] text-gray-500'>Esses campos serão usados para pré-filtrar vagas na primeira vez que um aluno desta turma acessar a busca.</p>
                 </div>
@@ -428,26 +409,7 @@ const SchoolClasses = () => {
                         <option value='remoto'>Remoto</option>
                       </select>
                     </div>
-                    <div>
-                      <label className='text-xs font-medium text-gray-600'>Contrato</label>
-                      <select value={form.job_contract_type} onChange={e=>setForm(f=>({...f,job_contract_type:e.target.value}))} className='w-full border rounded-md px-3 py-2 text-sm'>
-                        <option value=''>Todos</option>
-                        <option value='clt'>CLT</option>
-                        <option value='pj'>PJ</option>
-                        <option value='estagio'>Estágio</option>
-                        <option value='temporario'>Temporário</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className='text-xs font-medium text-gray-600'>Nível</label>
-                      <select value={form.job_experience_level} onChange={e=>setForm(f=>({...f,job_experience_level:e.target.value}))} className='w-full border rounded-md px-3 py-2 text-sm'>
-                        <option value=''>Todos</option>
-                        <option value='estagio'>Estágio</option>
-                        <option value='junior'>Júnior</option>
-                        <option value='pleno'>Pleno</option>
-                        <option value='senior'>Sênior</option>
-                      </select>
-                    </div>
+                    
                   </div>
                   <p className='mt-2 text-[11px] text-gray-500'>Esses campos serão usados para pré-filtrar vagas na primeira vez que um aluno desta turma acessar a busca.</p>
                 </div>
