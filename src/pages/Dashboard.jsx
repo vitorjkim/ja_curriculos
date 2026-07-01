@@ -615,84 +615,38 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Stats Cards */}
+            {/* Stats Cards - Modern Design */}
             <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              {[ 
-                {
-                  title: 'Currículos',
-                  value: stats.totalResumes,
-                  icon: FileText,
-                  iconColor: 'text-blue-600',
-                  iconBg: 'from-blue-50 to-blue-100',
-                  iconBorder: 'border-blue-200',
-                  cardBg: 'bg-gradient-to-br from-blue-50 to-blue-100',
-                  cardBorder: 'border-blue-300 hover:border-blue-400',
-                  titleColor: 'text-blue-700',
-                  valueColor: 'text-blue-800'
-                },
-                {
-                  title: 'Candidaturas',
-                  value: stats.totalApplications,
-                  icon: Briefcase,
-                  iconColor: 'text-green-600',
-                  iconBg: 'from-green-50 to-green-100',
-                  iconBorder: 'border-green-200',
-                  cardBg: 'bg-gradient-to-br from-emerald-50 to-green-100',
-                  cardBorder: 'border-green-300 hover:border-green-400',
-                  titleColor: 'text-green-700',
-                  valueColor: 'text-green-800'
-                },
-                {
-                  title: 'Pendentes',
-                  value: stats.pendingApplications,
-                  icon: Clock,
-                  iconColor: 'text-yellow-600',
-                  iconBg: 'from-yellow-50 to-yellow-100',
-                  iconBorder: 'border-yellow-200',
-                  cardBg: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
-                  cardBorder: 'border-yellow-200 hover:border-yellow-300',
-                  titleColor: 'text-yellow-700',
-                  valueColor: 'text-yellow-800'
-                },
-                {
-                  title: 'Perfil Completo',
-                  value: `${displayedCompleteness}%`,
-                  icon: Award,
-                  iconColor: 'text-purple-600',
-                  iconBg: 'from-purple-50 to-purple-100',
-                  iconBorder: 'border-purple-200',
-                  cardBg: 'bg-gradient-to-br from-purple-50 to-purple-100',
-                  cardBorder: 'border-purple-300 hover:border-purple-400',
-                  titleColor: 'text-purple-700',
-                  valueColor: 'text-purple-800'
-                }
-              ].map((stat, index) => (
-                <Card 
-                  key={stat.title}
-                  onClick={() => handleStatClick(stat.title)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleStatClick(stat.title); }}
-                  role={['Currículos','Candidaturas','Pendentes','Perfil Completo'].includes(stat.title) ? 'button' : undefined}
-                  tabIndex={['Currículos','Candidaturas','Pendentes','Perfil Completo'].includes(stat.title) ? 0 : undefined}
-                  className={`hover:shadow-lg transition-all duration-300 rounded-2xl border-2 shadow-md group overflow-hidden ${stat.cardBg} ${stat.cardBorder} ${['Currículos','Candidaturas','Pendentes','Perfil Completo'].includes(stat.title) ? 'cursor-pointer' : ''}`}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${stat.titleColor}`}>{stat.title}</p>
-                        <p className={`text-3xl font-bold ${stat.valueColor}`}>{stat.value}</p>
-                      </div>
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.iconBg} flex items-center justify-center shadow-md border-2 ${stat.iconBorder} group-hover:scale-110 transition-transform duration-300`}>
-                        <stat.icon className={`w-6 h-6 ${stat.iconColor} stroke-[2.5]`} />
+              {[
+                { label: 'Currículos', value: stats.totalResumes, icon: FileText, color: 'bg-blue-600 text-white' },
+                { label: 'Candidaturas', value: stats.totalApplications, icon: Briefcase, color: 'bg-emerald-600 text-white' },
+                { label: 'Pendentes', value: stats.pendingApplications, icon: Clock, color: 'bg-amber-500 text-white' },
+                { label: 'Perfil', value: `${displayedCompleteness}%`, icon: Award, color: 'bg-violet-600 text-white' }
+              ].map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <button
+                    key={stat.label}
+                    onClick={() => handleStatClick(stat.label === 'Perfil' ? 'Perfil Completo' : stat.label)}
+                    className={`group relative overflow-hidden rounded-2xl p-5 text-left w-full transition-all duration-200 hover:shadow-xl hover:brightness-105 active:scale-[0.98] ${stat.color}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">{stat.label}</p>
+                      <div className="w-8 h-8 rounded-xl bg-black/15 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <p className="text-4xl font-black leading-none tabular-nums">{stat.value}</p>
+                    <div className="absolute -bottom-8 -right-8 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+                    <div className="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-white/5 pointer-events-none" />
+                  </button>
+                );
+              })}
             </motion.div>
 
             {/* Quick Actions */}
