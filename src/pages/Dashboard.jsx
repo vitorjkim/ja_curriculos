@@ -819,32 +819,32 @@ const Dashboard = () => {
                     ) : (
                       <div className="space-y-3">
                         {recentResumes.slice(0,3).map((resume) => (
-                          <Card key={resume.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white">
-                                    <FileText className="w-5 h-5 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-slate-900">{resume.title}</p>
-                                    <p className="text-[11px] text-slate-500">{formatDate(resume.created_at)}</p>
-                                  </div>
-                                </div>
-                                <div className="flex-shrink-0">
-                                  <Button asChild size="sm" className="text-blue-600">
-                                    <Link to={`/resume/${resume.id}`}>
-                                      <Eye size={14} className="mr-1" />
-                                      Ver
-                                    </Link>
-                                  </Button>
-                                </div>
+                          <div 
+                            key={resume.id}
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-blue-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-200/50"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-blue-200 bg-white">
+                                <FileText className="w-5 h-5 text-blue-600" />
                               </div>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="text-sm text-gray-600">Modelo: {resume.template || 'Modelo Padrão'}</div>
-                            </CardContent>
-                          </Card>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">{resume.title}</p>
+                                <p className="text-[11px] text-slate-500">
+                                  {formatDate(resume.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                            <Button 
+                              asChild 
+                              size="sm"
+                              className="rounded-full border-2 border-blue-200 bg-white text-xs font-semibold text-blue-600 shadow-sm hover:border-blue-400 hover:bg-blue-500 hover:text-white transition-all duration-300 h-8 px-3"
+                            >
+                              <Link to={`/resume/${resume.id}`}>
+                                <Eye size={14} className="mr-1" />
+                                Ver
+                              </Link>
+                            </Button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -905,46 +905,65 @@ const Dashboard = () => {
                     ) : (
                       <div className="space-y-3">
                         {recentApplications.slice(0,3).map((application) => (
-                          <Card key={application.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                  <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full bg-white overflow-hidden flex-shrink-0">
-                                    {(application.company_logo || application.job?.company?.logo_url) ? (
-                                      <img 
-                                        src={application.company_logo || application.job?.company?.logo_url} 
-                                        alt={application.company_name || application.job?.company?.company_name || 'Empresa'} 
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <Building className="w-5 h-5 text-green-600" />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs md:text-sm font-medium text-slate-900 truncate">{application.job_title || application.job?.title || 'Vaga não encontrada'}</p>
-                                    <p className="text-[10px] md:text-[11px] text-slate-500 truncate">{(application.company_name || application.job?.company?.company_name) ? `${application.company_name || application.job?.company?.company_name} • ${formatDate(application.created_at || application.applied_at)}` : formatDate(application.created_at || application.applied_at)}</p>
-                                  </div>
-                                </div>
-                                <div className="flex-shrink-0">
-                                  {application.status === 'interested' && (
-                                    <div className="flex items-center gap-1 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200"><ThumbsUp size={12} className="text-blue-600" /><span className="text-[11px] text-blue-700 font-semibold">Pré-aprovado</span></div>
-                                  )}
-                                  {application.status === 'pending' && (
-                                    <div className="flex items-center gap-1 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200"><Clock size={12} className="text-yellow-600" /><span className="text-[11px] text-yellow-700 font-medium">Pendente</span></div>
-                                  )}
-                                  {application.status === 'reviewed' && (
-                                    <div className="flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200"><Eye size={12} className="text-blue-600" /><span className="text-[11px] text-blue-700 font-medium">Analisado</span></div>
-                                  )}
-                                  {application.status === 'approved' && (
-                                    <div className="flex items-center gap-1 bg-green-50 px-2.5 py-1 rounded-full border border-green-200"><CheckCircle size={12} className="text-green-600" /><span className="text-[11px] text-green-700 font-medium">Aprovado</span></div>
-                                  )}
-                                  {application.status === 'rejected' && (
-                                    <div className="flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-full border border-red-200"><AlertCircle size={12} className="text-red-600" /><span className="text-[11px] text-red-700 font-medium">Recusado</span></div>
-                                  )}
-                                </div>
+                          <div 
+                            key={application.id}
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-green-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-green-400 hover:shadow-lg hover:shadow-green-200/50"
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border-2 border-green-200 bg-white overflow-hidden flex-shrink-0">
+                                {(application.company_logo || application.job?.company?.logo_url) ? (
+                                  <img 
+                                    src={application.company_logo || application.job?.company?.logo_url} 
+                                    alt={application.company_name || application.job?.company?.company_name || 'Empresa'} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Building className="w-5 h-5 text-green-600" />
+                                )}
                               </div>
-                            </CardHeader>
-                          </Card>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm font-medium text-slate-900 truncate">
+                                  {application.job_title || application.job?.title || 'Vaga não encontrada'}
+                                </p>
+                                <p className="text-[10px] md:text-[11px] text-slate-500 truncate">
+                                  {(application.company_name || application.job?.company?.company_name) && (
+                                    <span>{application.company_name || application.job?.company?.company_name} • </span>
+                                  )}
+                                  {formatDate(application.created_at || application.applied_at)}
+                                </p>
+                              </div>
+                            </div>
+                            {application.status === 'interested' && (
+                              <div className="flex items-center gap-1 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200">
+                                <ThumbsUp size={12} className="text-blue-600" />
+                                <span className="text-[11px] text-blue-700 font-semibold">Pré-aprovado</span>
+                              </div>
+                            )}
+                            {application.status === 'pending' && (
+                              <div className="flex items-center gap-1 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">
+                                <Clock size={12} className="text-amber-600" />
+                                <span className="text-[11px] text-amber-700 font-semibold">Pendente</span>
+                              </div>
+                            )}
+                            {application.status === 'reviewed' && (
+                              <div className="flex items-center gap-1 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200">
+                                <Eye size={12} className="text-blue-600" />
+                                <span className="text-[11px] text-blue-700 font-semibold">Analisado</span>
+                              </div>
+                            )}
+                            {application.status === 'approved' && (
+                              <div className="flex items-center gap-1 bg-green-100 px-2.5 py-1 rounded-full border border-green-200">
+                                <CheckCircle size={12} className="text-green-600" />
+                                <span className="text-[11px] text-green-700 font-semibold">Aprovado</span>
+                              </div>
+                            )}
+                            {application.status === 'rejected' && (
+                              <div className="flex items-center gap-1 bg-red-100 px-2.5 py-1 rounded-full border border-red-200">
+                                <AlertCircle size={12} className="text-red-600" />
+                                <span className="text-[11px] text-red-700 font-semibold">Recusado</span>
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -990,7 +1009,7 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="pt-5">
                     {alertFormOpen && (
-                      <div className="mb-4 p-5 rounded-2xl bg-indigo-50/40">
+                      <div className="mb-4 p-5 rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white shadow-sm">
                         <div className="grid md:grid-cols-3 gap-3">
                           <div>
                             <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Localização</Label>
@@ -1207,39 +1226,41 @@ const Dashboard = () => {
                           const companyLogo = job.company_logo || job.companyLogo || job.company?.logo || job.company?.profile_image || null;
                           const companyInitials = (job.company_name || 'E').split(' ').filter(Boolean).slice(0,2).map(w => w[0]?.toUpperCase()).join('') || 'E';
                           return (
-                          <Card key={job.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center bg-slate-50 flex-shrink-0">
-                                    {companyLogo ? (
-                                      <img src={companyLogo} alt={job.company_name || 'Empresa'} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <span className="text-sm font-bold text-pink-600">{companyInitials}</span>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-gray-900">{job.title}</p>
-                                    <p className="text-sm text-gray-600">{job.company_name}{job.location ? ` • ${job.location}` : ''}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button asChild variant="outline" size="sm" className="text-pink-700">
-                                    <Link to={`/job/${job.id}`}>Ver</Link>
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    className="text-red-600"
-                                    onClick={async () => { await removeSavedJob(job.id); const jobs = await listSavedJobs(); setSavedJobs(jobs.sort((a,b) => (b.savedAt||0) - (a.savedAt||0))); }}
-                                    title="Remover"
-                                  >
-                                    Remover
-                                  </Button>
-                                </div>
+                          <div 
+                            key={job.id}
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-pink-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-pink-400 hover:shadow-lg hover:shadow-pink-200/50"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-11 h-11 rounded-xl border-2 border-pink-200 shadow-sm overflow-hidden flex items-center justify-center bg-slate-50 flex-shrink-0">
+                                {companyLogo ? (
+                                  <img src={companyLogo} alt={job.company_name || 'Empresa'} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-sm font-bold text-pink-600">{companyInitials}</span>
+                                )}
                               </div>
-                            </CardHeader>
-                          </Card>
+                              <div>
+                                <p className="font-semibold text-gray-900">{job.title}</p>
+                                <p className="text-sm text-gray-600">
+                                  {job.company_name}
+                                  {job.location ? ` • ${job.location}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button asChild variant="outline" size="sm" className="rounded-full border-2 border-pink-200 bg-pink-500/5 px-4 text-[11px] font-bold text-pink-700 shadow-sm shadow-pink-100 hover:border-pink-400 hover:bg-pink-500 hover:text-white hover:shadow-md hover:shadow-pink-200 transition-all duration-300">
+                                <Link to={`/job/${job.id}`}>Ver</Link>
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="rounded-full border-2 border-red-200 bg-red-500/5 px-4 text-[11px] font-bold text-red-600 shadow-sm shadow-red-100 hover:border-red-400 hover:bg-red-500 hover:text-white hover:shadow-md hover:shadow-red-200 transition-all duration-300"
+                                onClick={async () => { await removeSavedJob(job.id); const jobs = await listSavedJobs(); setSavedJobs(jobs.sort((a,b) => (b.savedAt||0) - (a.savedAt||0))); }}
+                                title="Remover"
+                              >
+                                Remover
+                              </Button>
+                            </div>
+                          </div>
                           );
                         })}
                         <div className="pt-4 border-t border-slate-100">
