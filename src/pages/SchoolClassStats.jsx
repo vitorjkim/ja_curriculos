@@ -869,7 +869,13 @@ export default function SchoolClassStats(){
                           {/* Info do aluno */}
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                              {r.name}
+                              <Link
+                                to={`/school/student/${r.user_id || r.id}`}
+                                className="block truncate text-gray-900 hover:text-blue-700 hover:underline"
+                                onClick={() => setDrilldown(p => ({ ...p, open: false }))}
+                              >
+                                {r.name}
+                              </Link>
                             </div>
                             <div className="text-xs text-gray-500 truncate mt-0.5">
                               {r.email}
