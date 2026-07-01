@@ -187,8 +187,8 @@ export default function CandidateInterviewsSection() {
       transition={{ duration: 0.5, delay: 0.25 }}
       className="mb-5"
     >
-      <Card className="rounded-[24px] bg-white shadow-sm border-2 border-gray-200">
-        <CardHeader className="border-b border-gray-100 pb-4 bg-violet-50/50 rounded-t-[22px]">
+      <Card className="rounded-lg bg-white shadow-sm">
+        <CardHeader className="border-b border-gray-100 pb-3 bg-white rounded-t-lg">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center text-base font-semibold text-violet-900">
               <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center shadow-sm border-2 border-violet-300">
