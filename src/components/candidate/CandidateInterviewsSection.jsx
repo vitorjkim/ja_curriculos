@@ -188,7 +188,7 @@ export default function CandidateInterviewsSection() {
       className="mb-5"
     >
       <Card className="rounded-[24px] bg-white shadow-sm border-2 border-gray-200 overflow-hidden">
-        <CardHeader className="border-b border-gray-100 pb-4 bg-gradient-to-br from-violet-50 to-white rounded-t-[22px]">
+        <CardHeader className="border-b border-gray-100 pb-4 bg-violet-50 rounded-t-[22px]">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center text-base font-semibold text-violet-900">
               <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center shadow-sm border-2 border-violet-300">
