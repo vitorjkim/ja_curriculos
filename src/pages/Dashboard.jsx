@@ -1286,9 +1286,9 @@ const Dashboard = () => {
         {/* Modais Detalhados dos Cards */}
         {/* Modal: Currículos */}
         <Dialog open={activeModal === 'resumes'} onOpenChange={(open) => !open && setActiveModal(null)}>
-          <DialogContent className="sm:max-w-2xl border-0 rounded-[28px] shadow-[0_32px_80px_rgba(59,130,246,0.2)] p-0 overflow-hidden">
-            {/* Header com gradiente */}
-            <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-7 py-6">
+          <DialogContent className="sm:max-w-2xl border-0 rounded-[28px] shadow-[0_32px_80px_rgba(59,130,246,0.12)] p-0 overflow-hidden">
+            {/* Header sólido */}
+            <div className="bg-blue-700 px-7 py-6">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
                   <FileText className="w-7 h-7 text-white" />
@@ -1299,7 +1299,7 @@ const Dashboard = () => {
                 </div>
               </div>
               {/* Status badge inline no header */}
-              <div className="mt-5 flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20">
+              <div className="mt-5 flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-[24px] px-5 py-4 border border-white/20">
                 <div>
                   <p className="text-blue-100 text-xs font-semibold uppercase tracking-widest mb-1">Status</p>
                   <p className="text-white text-2xl font-extrabold">{stats.totalResumes} currículo{stats.totalResumes !== 1 ? 's' : ''} criado{stats.totalResumes !== 1 ? 's' : ''}</p>
@@ -1325,7 +1325,7 @@ const Dashboard = () => {
                   {recentResumes.map((resume) => (
                     <div key={resume.id} className="flex items-center justify-between gap-4 p-4 bg-white border-2 border-blue-100 rounded-[24px] hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-0.5 transition-all duration-300 group">
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0 border-2 border-blue-200 group-hover:scale-105 transition-transform">
+                        <div className="w-12 h-12 rounded-[12px] bg-blue-50 flex items-center justify-center flex-shrink-0 border-2 border-blue-100 group-hover:scale-105 transition-transform">
                           <FileText className="w-5 h-5 text-blue-600" />
                         </div>
                         <div className="min-w-0">
@@ -1340,7 +1340,7 @@ const Dashboard = () => {
                         <Button asChild variant="outline" size="sm" className="rounded-full border-2 border-blue-200 bg-blue-50 text-blue-700 font-bold text-xs hover:border-blue-400 hover:bg-blue-100 transition-all h-9 px-4">
                           <Link to={`/resume/${resume.id}`}>Ver</Link>
                         </Button>
-                        <Button asChild size="sm" className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-200 h-9 px-4">
+                        <Button asChild size="sm" className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-200 h-9 px-4">
                           <Link to={`/resume/${resume.id}/edit`}>Editar</Link>
                         </Button>
                       </div>
@@ -1349,12 +1349,12 @@ const Dashboard = () => {
                 </>
               ) : (
                 <div className="text-center py-12 bg-white rounded-[24px] border-2 border-dashed border-blue-200">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
+                  <div className="w-16 h-16 rounded-[12px] bg-blue-50 flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
                     <FileText className="w-8 h-8 text-blue-400" />
                   </div>
                   <p className="text-gray-600 font-semibold mb-1">Nenhum currículo ainda</p>
                   <p className="text-gray-400 text-sm mb-5">Crie seu primeiro currículo profissional</p>
-                  <Button asChild className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-200 font-bold px-7">
+                  <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold px-7">
                     <Link to="/create-resume">Criar Currículo</Link>
                   </Button>
                 </div>
