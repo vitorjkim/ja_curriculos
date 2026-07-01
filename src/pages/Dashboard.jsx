@@ -576,6 +576,38 @@ const Dashboard = () => {
       </Helmet>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-gray-900 mb-1 tracking-tight leading-tight">
+                Olá, <span className="text-blue-600">{user?.name || 'Usuário'}</span>! 👋
+              </h1>
+              <p className="text-[15px] text-gray-600 leading-relaxed">
+                Acompanhe suas atividades e acesse suas ferramentas
+              </p>
+            </div>
+            
+            {/* Indicador de dados reais vs exemplo */}
+            <div className="hidden md:flex items-center gap-3">
+              {usingRealData ? (
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-semibold border border-green-200 shadow-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Dados reais
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Dados de exemplo
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -583,60 +615,38 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Stats Cards */}
+            {/* Stats Cards - Modern Design */}
             <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               {[
-                {
-                  title: 'Currículos',
-                  value: stats.totalResumes,
-                  icon: FileText,
-                  color: 'from-blue-500 to-blue-600',
-                  bgColor: 'from-blue-50 to-blue-100'
-                },
-                {
-                  title: 'Candidaturas',
-                  value: stats.totalApplications,
-                  icon: Briefcase,
-                  color: 'from-green-500 to-green-600',
-                  bgColor: 'from-green-50 to-green-100'
-                },
-                {
-                  title: 'Pendentes',
-                  value: stats.pendingApplications,
-                  icon: Clock,
-                  color: 'from-yellow-500 to-orange-500',
-                  bgColor: 'from-yellow-50 to-orange-100'
-                },
-                {
-                  title: 'Perfil Completo',
-                  value: `${displayedCompleteness}%`,
-                  icon: Award,
-                  color: 'from-purple-500 to-purple-600',
-                  bgColor: 'from-purple-50 to-purple-100'
-                }
-              ].map((stat) => (
-                <Card 
-                  key={stat.title}
-                  className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 bg-white/80 backdrop-blur-sm group overflow-hidden"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                        <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                      </div>
-                      <div className={`p-3 rounded-2xl bg-gradient-to-r ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                        <stat.icon className={`w-6 h-6 text-gradient bg-gradient-to-r ${stat.color} bg-clip-text`} />
+                { label: 'Currículos', value: stats.totalResumes, icon: FileText, color: 'bg-blue-600 text-white' },
+                { label: 'Candidaturas', value: stats.totalApplications, icon: Briefcase, color: 'bg-emerald-600 text-white' },
+                { label: 'Pendentes', value: stats.pendingApplications, icon: Clock, color: 'bg-amber-500 text-white' },
+                { label: 'Perfil', value: `${displayedCompleteness}%`, icon: Award, color: 'bg-violet-600 text-white' }
+              ].map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <button
+                    key={stat.label}
+                    onClick={() => handleStatClick(stat.label === 'Perfil' ? 'Perfil Completo' : stat.label)}
+                    className={`group relative overflow-hidden rounded-2xl p-5 text-left w-full transition-all duration-200 hover:shadow-xl hover:brightness-105 active:scale-[0.98] ${stat.color}`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 leading-tight">{stat.label}</p>
+                      <div className="w-8 h-8 rounded-xl bg-black/15 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4" />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <p className="text-4xl font-black leading-none tabular-nums">{stat.value}</p>
+                    <div className="absolute -bottom-8 -right-8 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+                    <div className="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-white/5 pointer-events-none" />
+                  </button>
+                );
+              })}
             </motion.div>
 
             {/* Quick Actions */}
@@ -645,25 +655,40 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {quickActions.map((action) => (
+              <h2 className="text-xl font-bold text-gray-900 mb-5" data-tour="qa.section">Ações <span className="text-blue-600">Rápidas:</span></h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {quickActions.map((action, index) => (
                   <Card 
                     key={action.title}
-                    className="hover:shadow-xl transition-all duration-300 rounded-2xl border-0 bg-white/80 backdrop-blur-sm group overflow-hidden cursor-pointer"
+                    className={`hover:shadow-lg transition-all duration-300 rounded-2xl border-2 border-gray-200 shadow-md group overflow-hidden cursor-pointer bg-white ${
+                      action.title === 'Buscar Vagas' ? 'hover:border-blue-400' :
+                      action.title === 'Criar Currículo' ? 'hover:border-green-400' :
+                      action.title === 'Meu Perfil' ? 'hover:border-yellow-400' : 'hover:border-purple-400'
+                    }`}
                   >
                     <CardContent className="p-6">
-                      <Link to={action.path} className="block">
+                        <Link to={action.path} className="block" data-tour={
+                          action.title === 'Criar Currículo' ? 'qa.createResume' :
+                          action.title === 'Meu Perfil' ? 'qa.profile' : undefined
+                        }>
                         <div className="text-center">
-                          <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${action.bgColor} mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                            <action.icon className={`w-8 h-8 bg-gradient-to-r ${action.color} bg-clip-text text-transparent`} />
+                          <div className={`inline-flex w-14 h-14 rounded-xl items-center justify-center mb-4 shadow-md border-2 border-white group-hover:scale-110 transition-transform duration-300 bg-gradient-to-br ${action.bgColor}`}>
+                            <action.icon className={`w-7 h-7 stroke-[2] ${
+                              action.title === 'Buscar Vagas' ? 'text-blue-600' :
+                              action.title === 'Criar Currículo' ? 'text-green-600' :
+                              action.title === 'Meu Perfil' ? 'text-yellow-600' : 'text-purple-600'
+                            }`} />
                           </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                          <h3 className={`text-base font-bold mb-1 transition-colors text-gray-900 ${
+                            action.title === 'Buscar Vagas' ? 'group-hover:text-blue-600' :
+                            action.title === 'Criar Currículo' ? 'group-hover:text-green-600' :
+                            action.title === 'Meu Perfil' ? 'group-hover:text-yellow-600' : 'group-hover:text-purple-600'
+                          }`}>
                             {action.title}
                           </h3>
                           <p className="text-sm text-gray-600">{action.description}</p>
                         </div>
-                      </Link>
+                        </Link>
                     </CardContent>
                   </Card>
                 ))}
@@ -759,57 +784,85 @@ const Dashboard = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
+                className="h-full"
               >
-                <div className="rounded-2xl border-2 border-slate-200 bg-white shadow-sm overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300 h-full">
-                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-100">
-                      <FileText className="w-4 h-4 text-blue-600" />
+                <Card className="h-full min-h-[360px] rounded-[24px] border-[3px] border-blue-300 bg-white shadow-[0_18px_45px_rgba(37,99,235,0.12)] flex flex-col">
+                  <CardHeader className="border-b-[3px] border-blue-300 pb-4 bg-blue-50/70 rounded-t-[22px]">
+                    <div className="flex justify-between items-center gap-3">
+                      <CardTitle className="flex items-center text-base font-semibold text-blue-900">
+                        <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shadow-sm border-2 border-blue-200">
+                          <FileText className="w-5 h-5 text-blue-600 stroke-[2.5]" />
+                        </div>
+                        Currículos Recentes
+                      </CardTitle>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Currículos Recentes</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Seus últimos currículos</p>
-                    </div>
-                  </div>
-                  <div className="p-5">
+                  </CardHeader>
+                  <CardContent className="pt-5 flex-1 flex flex-col">
+                    <div className="flex-1">
                     {recentResumes.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-8">
-                        <FileText className="w-8 h-8 text-slate-300" />
-                        <p className="text-sm font-medium text-slate-600">Nenhum currículo encontrado</p>
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/70 py-10">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-500 ring-2 ring-blue-200">
+                          <FileText className="w-7 h-7" />
+                        </div>
+                        <p className="text-sm font-medium text-blue-900">Nenhum currículo encontrado</p>
+                        <p className="text-xs text-slate-500">Crie seu primeiro currículo</p>
                         <Button 
                           asChild 
-                          className="rounded-full border-2 border-blue-200 bg-blue-500/5 text-xs font-bold text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 h-8 px-3 mt-2"
+                          className="rounded-full border-2 border-blue-200 bg-blue-500/5 text-xs font-bold text-blue-600 shadow-sm shadow-blue-100 hover:border-blue-400 hover:bg-blue-500 hover:text-white hover:shadow-md hover:shadow-blue-200 transition-all duration-300 h-9 px-4 mt-2"
                         >
-                          <Link to="/create-resume">Criar Currículo</Link>
+                          <Link to="/create-resume">
+                            <Plus className="w-3.5 h-3.5 mr-1" />
+                            Criar Currículo
+                          </Link>
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {recentResumes.slice(0, 4).map((resume) => (
-                          <Link 
+                      <div className="space-y-3">
+                        {recentResumes.slice(0,3).map((resume) => (
+                          <div 
                             key={resume.id}
-                            to={`/view-resume/${resume.id}`}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 group"
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-blue-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-200/50"
                           >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900 text-sm truncate group-hover:text-blue-600">{resume.title}</p>
-                              <p className="text-xs text-slate-500 mt-0.5">{formatDate(resume.created_at)}</p>
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-blue-200 bg-white">
+                                <FileText className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">{resume.title}</p>
+                                <p className="text-[11px] text-slate-500">
+                                  {formatDate(resume.created_at)}
+                                </p>
+                              </div>
                             </div>
-                            <Eye className="w-4 h-4 text-slate-400 group-hover:text-blue-600 flex-shrink-0" />
-                          </Link>
+                            <Button 
+                              asChild 
+                              size="sm"
+                              className="rounded-full border-2 border-blue-200 bg-white text-xs font-semibold text-blue-600 shadow-sm hover:border-blue-400 hover:bg-blue-500 hover:text-white transition-all duration-300 h-8 px-3"
+                            >
+                              <Link to={`/view-resume/${resume.id}`}>
+                                <Eye size={14} className="mr-1" />
+                                Ver
+                              </Link>
+                            </Button>
+                          </div>
                         ))}
-                        {recentResumes.length > 4 && (
-                          <Button 
-                            asChild
-                            variant="ghost"
-                            className="w-full rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:border-slate-300 h-8 mt-2"
-                          >
-                            <Link to="/my-resume">Ver todos os currículos</Link>
-                          </Button>
-                        )}
                       </div>
                     )}
-                  </div>
-                </div>
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-blue-100">
+                      <Link to="/my-resume" className="block">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full rounded-full border-2 border-blue-200 bg-blue-500/5 px-4 text-[11px] font-bold text-blue-700 shadow-sm shadow-blue-100
+                                     hover:border-blue-400 hover:bg-blue-500 hover:text-white hover:shadow-md hover:shadow-blue-200 transition-all duration-300"
+                        >
+                          Ver todos os currículos
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
 
               {/* Recent Applications */}
@@ -817,61 +870,118 @@ const Dashboard = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
+                className="h-full"
               >
-                <div className="rounded-2xl border-2 border-slate-200 bg-white shadow-sm overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300 h-full">
-                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-green-100">
-                      <Briefcase className="w-4 h-4 text-green-600" />
+                <Card className="h-full min-h-[360px] rounded-[24px] border-[3px] border-green-300 bg-white shadow-[0_18px_45px_rgba(22,163,74,0.12)] flex flex-col">
+                  <CardHeader className="border-b-[3px] border-green-300 pb-4 bg-green-50/70 rounded-t-[22px]">
+                    <div className="flex justify-between items-center gap-3">
+                      <CardTitle className="flex items-center text-base font-semibold text-green-900">
+                        <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center shadow-sm border-2 border-green-200">
+                          <Briefcase className="w-5 h-5 text-green-600 stroke-[2.5]" />
+                        </div>
+                        Candidaturas Recentes
+                      </CardTitle>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Candidaturas Recentes</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Suas últimas candidaturas</p>
-                    </div>
-                  </div>
-                  <div className="p-5">
+                  </CardHeader>
+                  <CardContent className="pt-5 flex-1 flex flex-col">
+                    <div className="flex-1">
                     {recentApplications.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-8">
-                        <Briefcase className="w-8 h-8 text-slate-300" />
-                        <p className="text-sm font-medium text-slate-600">Nenhuma candidatura encontrada</p>
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-green-200 bg-green-50/70 py-10">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-green-500 ring-2 ring-green-200">
+                          <Briefcase className="w-7 h-7" />
+                        </div>
+                        <p className="text-sm font-medium text-green-900">Nenhuma candidatura encontrada</p>
+                        <p className="text-xs text-slate-500">Candidate-se a vagas para aparecer aqui</p>
                         <Button 
                           asChild 
-                          className="rounded-full border-2 border-green-200 bg-green-500/5 text-xs font-bold text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300 h-8 px-3 mt-2"
+                          className="rounded-full border-2 border-green-200 bg-green-500/5 text-xs font-bold text-green-600 shadow-sm shadow-green-100 hover:border-green-400 hover:bg-green-500 hover:text-white hover:shadow-md hover:shadow-green-200 transition-all duration-300 h-9 px-4 mt-2"
                         >
-                          <Link to="/jobs">Buscar Vagas</Link>
+                          <Link to="/jobs">
+                            <Search className="w-3.5 h-3.5 mr-1" />
+                            Buscar Vagas
+                          </Link>
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {recentApplications.slice(0, 4).map((application) => (
+                      <div className="space-y-3">
+                        {recentApplications.slice(0,3).map((application) => (
                           <div 
                             key={application.id}
-                            className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:border-green-300 hover:bg-green-50 transition-all duration-300 group"
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-green-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-green-400 hover:shadow-lg hover:shadow-green-200/50"
                           >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900 text-sm truncate group-hover:text-green-600">{application.job_title || 'Vaga não encontrada'}</p>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {application.company_name && `${application.company_name} • `}
-                                {formatDate(application.created_at || application.applied_at)}
-                              </p>
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border-2 border-green-200 bg-white overflow-hidden flex-shrink-0">
+                                {(application.company_logo || application.job?.company?.logo_url) ? (
+                                  <img 
+                                    src={application.company_logo || application.job?.company?.logo_url} 
+                                    alt={application.company_name || application.job?.company?.company_name || 'Empresa'} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Building className="w-5 h-5 text-green-600" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs md:text-sm font-medium text-slate-900 truncate">
+                                  {application.job_title || application.job?.title || 'Vaga não encontrada'}
+                                </p>
+                                <p className="text-[10px] md:text-[11px] text-slate-500 truncate">
+                                  {(application.company_name || application.job?.company?.company_name) && (
+                                    <span>{application.company_name || application.job?.company?.company_name} • </span>
+                                  )}
+                                  {formatDate(application.created_at || application.applied_at)}
+                                </p>
+                              </div>
                             </div>
-                            {application.status === 'approved' && <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full flex-shrink-0">Aprovado</span>}
-                            {application.status === 'pending' && <span className="text-xs font-semibold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full flex-shrink-0">Pendente</span>}
-                            {application.status === 'rejected' && <span className="text-xs font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full flex-shrink-0">Recusado</span>}
+                            {application.status === 'interested' && (
+                              <div className="flex items-center gap-1 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200">
+                                <ThumbsUp size={12} className="text-blue-600" />
+                                <span className="text-[11px] text-blue-700 font-semibold">Pré-aprovado</span>
+                              </div>
+                            )}
+                            {application.status === 'pending' && (
+                              <div className="flex items-center gap-1 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">
+                                <Clock size={12} className="text-amber-600" />
+                                <span className="text-[11px] text-amber-700 font-semibold">Pendente</span>
+                              </div>
+                            )}
+                            {application.status === 'reviewed' && (
+                              <div className="flex items-center gap-1 bg-blue-100 px-2.5 py-1 rounded-full border border-blue-200">
+                                <Eye size={12} className="text-blue-600" />
+                                <span className="text-[11px] text-blue-700 font-semibold">Analisado</span>
+                              </div>
+                            )}
+                            {application.status === 'approved' && (
+                              <div className="flex items-center gap-1 bg-green-100 px-2.5 py-1 rounded-full border border-green-200">
+                                <CheckCircle size={12} className="text-green-600" />
+                                <span className="text-[11px] text-green-700 font-semibold">Aprovado</span>
+                              </div>
+                            )}
+                            {application.status === 'rejected' && (
+                              <div className="flex items-center gap-1 bg-red-100 px-2.5 py-1 rounded-full border border-red-200">
+                                <AlertCircle size={12} className="text-red-600" />
+                                <span className="text-[11px] text-red-700 font-semibold">Recusado</span>
+                              </div>
+                            )}
                           </div>
                         ))}
-                        {recentApplications.length > 4 && (
-                          <Button 
-                            asChild
-                            variant="ghost"
-                            className="w-full rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:border-slate-300 h-8 mt-2"
-                          >
-                            <Link to="/applications">Ver todas as candidaturas</Link>
-                          </Button>
-                        )}
                       </div>
                     )}
-                  </div>
-                </div>
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-green-100">
+                      <Link to="/applications" className="block">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full rounded-full border-2 border-green-200 bg-green-500/5 px-4 text-[11px] font-bold text-green-700 shadow-sm shadow-green-100
+                                     hover:border-green-400 hover:bg-green-500 hover:text-white hover:shadow-md hover:shadow-green-200 transition-all duration-300"
+                        >
+                          Ver todas as candidaturas
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             </div>
 
@@ -882,73 +992,195 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.45 }}
               >
-                <div className="rounded-2xl border-2 border-slate-200 bg-white shadow-sm overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300">
-                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-indigo-100">
-                        <Target className="w-4 h-4 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 text-sm">Vagas que eu quero receber</h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Crie alertas personalizados</p>
-                      </div>
+                <Card className="h-full rounded-[24px] border-[3px] border-indigo-300 bg-white shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
+                  <CardHeader className="border-b-[3px] border-indigo-300 pb-4 bg-indigo-50/50 rounded-t-[22px]">
+                    <div className="flex justify-between items-center gap-3">
+                      <CardTitle className="flex items-center text-base font-semibold text-indigo-900">
+                        <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center shadow-sm border-2 border-indigo-200">
+                          <Target className="w-5 h-5 text-indigo-600 stroke-[2.5]" />
+                        </div>
+                        Vagas que eu quero receber
+                      </CardTitle>
+                      <Button size="sm" onClick={()=> setAlertFormOpen(v=>!v)} className="rounded-full border-2 border-indigo-200 bg-indigo-500/5 px-4 text-[11px] font-bold text-indigo-700 shadow-sm shadow-indigo-100 hover:border-indigo-400 hover:bg-indigo-500 hover:text-white hover:shadow-md hover:shadow-indigo-200 transition-all duration-300">
+                        {alertFormOpen ? 'Fechar' : 'Criar alerta'}
+                      </Button>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={()=> setAlertFormOpen(v=>!v)} 
-                      className="rounded-lg border border-indigo-200 bg-indigo-500/5 text-xs font-semibold text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all duration-300 h-8 px-3 flex-shrink-0"
-                    >
-                      {alertFormOpen ? '✕' : '+ Alerta'}
-                    </Button>
-                  </div>
-                  <div className="p-5">
+                    <p className="text-xs text-slate-500 mt-2 ml-10">Crie alertas com filtros; quando surgirem vagas que combinam, elas aparecem aqui.</p>
+                  </CardHeader>
+                  <CardContent className="pt-5">
                     {alertFormOpen && (
-                      <div className="mb-4 p-4 rounded-xl border border-slate-200 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Input value={alertForm.location} onChange={e=> setAlertForm(p=>({...p, location:e.target.value}))} placeholder="Localização" className="text-xs rounded-lg" />
-                        <Combobox variant="minimal" options={areasList} value={alertForm.area} onChange={val=> setAlertForm(p=>({...p, area:val}))} />
-                        {subareasList.length>0 && <Combobox variant="minimal" options={subareasList} value={alertForm.subarea} onChange={val=> setAlertForm(p=>({...p, subarea:val}))} />}
-                        <Combobox variant="minimal" options={[{value:'Todos',label:'Todos'}, {value:'clt',label:'CLT'}, {value:'pj',label:'PJ'}, {value:'estagio',label:'Estágio'}, {value:'temporario',label:'Temporário'}]} value={alertForm.contract_type} onChange={val=> setAlertForm(p=>({...p, contract_type:val}))} />
-                        <Combobox variant="minimal" options={[{value:'Todos',label:'Todas'}, {value:'presencial',label:'Presencial'}, {value:'hibrido',label:'Híbrido'}, {value:'remoto',label:'Remoto'}]} value={alertForm.work_type} onChange={val=> setAlertForm(p=>({...p, work_type:val}))} />
-                        <Combobox variant="minimal" options={[{value:'Todos',label:'Todos'}, {value:'estagio',label:'Estágio'}, {value:'junior',label:'Júnior'}, {value:'pleno',label:'Pleno'}, {value:'senior',label:'Sênior'}]} value={alertForm.experience_level} onChange={val=> setAlertForm(p=>({...p, experience_level:val}))} />
-                        <div className="sm:col-span-2 flex justify-end gap-2">
-                          <Button onClick={()=> setAlertForm({ location:'', contract_type:'Todos', work_type:'Todos', experience_level:'Todos', area:'Todos', subarea:'Todos' })} className="rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:border-slate-300 h-8 px-3">Limpar</Button>
-                          <Button onClick={async () => { if (!user?.id) return; const created = await addAlert(user.id, { filters: { location: alertForm.location, contract_type: alertForm.contract_type, work_type: alertForm.work_type, experience_level: alertForm.experience_level, area: alertForm.area, subarea: alertForm.subarea } }); setJobAlerts(prev => [created, ...prev]); setAlertFormOpen(false); toast({ title: 'Alerta criado', description: 'Vagas que combinam aparecerão aqui.' }); }} className="rounded-lg border border-indigo-200 bg-indigo-500/5 text-xs font-semibold text-indigo-600 hover:bg-indigo-500 hover:text-white h-8 px-3">Salvar</Button>
+                      <div className="mb-4 p-5 rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white shadow-sm">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Localização</Label>
+                            <Input value={alertForm.location} onChange={e=> setAlertForm(p=>({...p, location:e.target.value}))} placeholder="Cidade, estado" className="rounded-xl" />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Área</Label>
+                            <Combobox variant="minimal" options={areasList} value={alertForm.area} onChange={val=> setAlertForm(p=>({...p, area:val}))} />
+                          </div>
+                          {subareasList.length>0 && (
+                            <div>
+                              <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Sub-área</Label>
+                              <Combobox variant="minimal" options={subareasList} value={alertForm.subarea} onChange={val=> setAlertForm(p=>({...p, subarea:val}))} />
+                            </div>
+                          )}
+                          <div>
+                            <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Contrato</Label>
+                            <Combobox
+                              variant="minimal"
+                              options={[{value:'Todos',label:'Todos'}, {value:'clt',label:'CLT'}, {value:'pj',label:'PJ'}, {value:'estagio',label:'Estágio'}, {value:'temporario',label:'Temporário'}]}
+                              value={alertForm.contract_type}
+                              onChange={val=> setAlertForm(p=>({...p, contract_type:val}))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Modalidade</Label>
+                            <Combobox
+                              variant="minimal"
+                              options={[{value:'Todos',label:'Todas'}, {value:'presencial',label:'Presencial'}, {value:'hibrido',label:'Híbrido'}, {value:'remoto',label:'Remoto'}]}
+                              value={alertForm.work_type}
+                              onChange={val=> setAlertForm(p=>({...p, work_type:val}))}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-semibold text-gray-800 mb-1.5 block">Experiência</Label>
+                            <Combobox
+                              variant="minimal"
+                              options={[{value:'Todos',label:'Todos'}, {value:'estagio',label:'Estágio'}, {value:'junior',label:'Júnior'}, {value:'pleno',label:'Pleno'}, {value:'senior',label:'Sênior'}]}
+                              value={alertForm.experience_level}
+                              onChange={val=> setAlertForm(p=>({...p, experience_level:val}))}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-4 flex justify-end gap-3">
+                          <Button onClick={()=> setAlertForm({ location:'', contract_type:'Todos', work_type:'Todos', experience_level:'Todos', area:'Todos', subarea:'Todos' })} className="rounded-full border-2 border-slate-200 bg-slate-500/5 text-xs font-bold text-slate-600 shadow-sm shadow-slate-100 hover:border-slate-400 hover:bg-slate-500 hover:text-white hover:shadow-md hover:shadow-slate-200 transition-all duration-300 h-9 px-4">Limpar</Button>
+                          <Button onClick={async () => {
+                            if (!user?.id) return;
+                            const created = await addAlert(user.id, { filters: {
+                              location: alertForm.location,
+                              contract_type: alertForm.contract_type,
+                              work_type: alertForm.work_type,
+                              experience_level: alertForm.experience_level,
+                              area: alertForm.area,
+                              subarea: alertForm.subarea,
+                            } });
+                            setJobAlerts(prev => [created, ...prev]);
+                            setAlertFormOpen(false);
+                            toast({ title: 'Alerta criado', description: 'Mostraremos aqui as vagas que combinam.' });
+                          }} className="rounded-full border-2 border-indigo-200 bg-indigo-500/5 text-xs font-bold text-indigo-600 shadow-sm shadow-indigo-100 hover:border-indigo-400 hover:bg-indigo-500 hover:text-white hover:shadow-md hover:shadow-indigo-200 transition-all duration-300 h-9 px-4">Salvar alerta</Button>
                         </div>
                       </div>
                     )}
+
+                    {/* Alerts list */}
                     {jobAlerts.length === 0 ? (
                       <div className="text-center py-6">
-                        <Target className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-sm text-slate-600">Nenhum alerta criado ainda</p>
-                        <p className="text-xs text-slate-500 mt-1">Crie seu primeiro alerta acima</p>
+                        <Target className="w-10 h-10 text-indigo-400 mx-auto mb-2" />
+                        <p className="text-gray-600">Você ainda não criou alertas de vaga.</p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         {jobAlerts.map((a) => {
                           const matches = matchesByAlert[a.id] || [];
                           const title = summarizeAlert(a.filters) || 'Minha busca';
+                          const expanded = expandedAlerts.has(a.id);
+                          const INITIAL_ITEMS = 6;
+                          const visible = expanded ? matches : matches.slice(0, INITIAL_ITEMS);
                           return (
-                            <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-300">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-slate-900 text-sm truncate">{title}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${a.active ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}>{a.active ? 'Ativo' : 'Pausado'}</span>
-                                  <span className="text-xs text-slate-600">{matches.length} vaga{matches.length!==1?'s':''}</span>
+                            <div key={a.id} className="rounded-2xl border-2 border-slate-200 bg-white transition-all duration-300 hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-200/50">
+                              {/* Header do alerta */}
+                              <div className="p-3 md:p-4 border-b border-slate-200">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${a.active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                                          {a.active ? 'Ativo' : 'Pausado'}
+                                        </span>
+                                        <span className="font-semibold text-slate-900 text-sm truncate">{title}</span>
+                                      </div>
+                                      {a.filters?.location && (
+                                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                                          <span className="truncate">{a.filters.location}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className="text-[10px] md:text-[11px] px-2 md:px-2.5 py-1 rounded-full border-2 bg-blue-50 border-blue-200 text-blue-700 font-bold whitespace-nowrap">
+                                      {matches.length} vaga{matches.length!==1?'s':''}
+                                    </div>
+                                    <Button size="sm" onClick={async () => { const alerts = await removeAlert(user.id, a.id); setJobAlerts(alerts); toast({ title:'Removido', description:'Alerta excluído.'}); }} className="rounded-full border-2 border-red-200 bg-red-500/5 text-[10px] md:text-xs font-bold text-red-600 shadow-sm shadow-red-100 hover:border-red-400 hover:bg-red-500 hover:text-white hover:shadow-md hover:shadow-red-200 transition-all duration-300 h-7 md:h-8 px-2 md:px-3">
+                                      Excluir
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Link to={`/jobs?alert=${a.id}`}>
-                                  <Button size="sm" className="rounded-lg border border-indigo-200 bg-indigo-500/5 text-xs font-semibold text-indigo-600 hover:bg-indigo-500 hover:text-white h-8 px-3">Ver</Button>
-                                </Link>
-                                <Button size="sm" onClick={async () => { const alerts = await removeAlert(user.id, a.id); setJobAlerts(alerts); }} className="rounded-lg border border-red-200 bg-red-500/5 text-xs font-semibold text-red-600 hover:bg-red-500 hover:text-white h-8 px-3">✕</Button>
-                              </div>
+                              {/* Lista de vagas */}
+                              {matches.length > 0 && (
+                                <div className="p-4 bg-slate-50/50">
+                                  <div className="grid sm:grid-cols-2 gap-3">
+                                    {visible.map(j => {
+                                      const companyLogo = j.company_logo || j.companyLogo || j.company?.logo || j.company?.profile_image || null;
+                                      return (
+                                      <div key={j.id} className="flex items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-white p-3 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-200/50">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-200 bg-slate-50 flex-shrink-0 overflow-hidden">
+                                            {companyLogo ? (
+                                              <img src={companyLogo} alt={j.company_name || 'Empresa'} className="w-full h-full object-cover" />
+                                            ) : (
+                                              <Briefcase className="w-4 h-4 text-indigo-600" />
+                                            )}
+                                          </div>
+                                          <div className="min-w-0">
+                                            <div className="font-medium text-sm text-slate-900 leading-snug line-clamp-1">{j.title}</div>
+                                            <div className="text-[11px] text-slate-500 line-clamp-1">{j.company_name}{j.location?` • ${j.location}`:''}</div>
+                                          </div>
+                                        </div>
+                                        <Link to={`/job/${j.id}`} className="flex-shrink-0">
+                                          <Button size="sm" className="rounded-full border-2 border-indigo-200 bg-indigo-500/5 text-xs font-bold text-indigo-600 shadow-sm shadow-indigo-100 hover:border-indigo-400 hover:bg-indigo-500 hover:text-white hover:shadow-md hover:shadow-indigo-200 transition-all duration-300 h-8 px-3">Ver</Button>
+                                        </Link>
+                                      </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                              {matches.length === 0 && (
+                                <div className="p-6 text-center bg-slate-50/50">
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-400 mx-auto mb-2">
+                                    <Briefcase className="w-5 h-5" />
+                                  </div>
+                                  <p className="text-sm text-slate-500">Sem vagas correspondentes no momento</p>
+                                </div>
+                              )}
+                              {matches.length > INITIAL_ITEMS && (
+                                <div className="px-4 pb-4 flex justify-center bg-slate-50/50">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setExpandedAlerts(prev => {
+                                        const next = new Set(prev);
+                                        if (expanded) next.delete(a.id); else next.add(a.id);
+                                        return next;
+                                      });
+                                    }}
+                                    className="rounded-full border-2 border-indigo-200 bg-indigo-500/5 text-xs font-bold text-indigo-600 shadow-sm shadow-indigo-100 hover:border-indigo-400 hover:bg-indigo-500 hover:text-white hover:shadow-md hover:shadow-indigo-200 transition-all duration-300 h-8 px-4"
+                                  >
+                                    {expanded ? 'Ver menos' : `Ver mais (${matches.length - INITIAL_ITEMS})`}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
                       </div>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
 
@@ -959,66 +1191,93 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
-                <div className="rounded-2xl border-2 border-slate-200 bg-white shadow-sm overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300">
-                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/50 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-rose-100">
-                      <Heart className="w-4 h-4 text-rose-600" />
+                <Card className="rounded-[24px] border-[3px] border-pink-300 bg-white shadow-[0_18px_45px_rgba(236,72,153,0.12)]">
+                  <CardHeader className="border-b-[3px] border-pink-300 pb-4 bg-pink-50/70 rounded-t-[22px]">
+                    <div className="flex justify-between items-center gap-3">
+                      <CardTitle className="flex items-center text-base font-semibold text-pink-900">
+                        <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center shadow-sm border-2 border-pink-200">
+                          <Heart className="w-5 h-5 text-pink-600 stroke-[2.5]" />
+                        </div>
+                        Minhas Vagas Salvas
+                      </CardTitle>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-sm">Minhas Vagas Salvas</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Vagas que você favoritou</p>
-                    </div>
-                  </div>
-                  <div className="p-5">
+                  </CardHeader>
+                  <CardContent className="pt-5">
                     {savedJobs.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-8">
-                        <Heart className="w-8 h-8 text-slate-300" />
-                        <p className="text-sm font-medium text-slate-600">Nenhuma vaga salva</p>
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-pink-200 bg-pink-50/70 py-10">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-pink-500 ring-2 ring-pink-200">
+                          <Briefcase className="w-7 h-7" />
+                        </div>
+                        <p className="text-sm font-medium text-pink-900">Nenhuma vaga salva</p>
+                        <p className="text-xs text-slate-500">Salve vagas para acompanhar</p>
                         <Button 
                           asChild 
-                          className="rounded-lg border border-rose-200 bg-rose-500/5 text-xs font-semibold text-rose-600 hover:bg-rose-500 hover:text-white transition-all duration-300 h-8 px-3 mt-2"
+                          className="rounded-full border-2 border-pink-200 bg-pink-500/5 text-xs font-bold text-pink-600 shadow-sm shadow-pink-100 hover:border-pink-400 hover:bg-pink-500 hover:text-white hover:shadow-md hover:shadow-pink-200 transition-all duration-300 h-9 px-4 mt-2"
                         >
-                          <Link to="/jobs">Buscar Vagas</Link>
+                          <Link to="/jobs">
+                            <Search className="w-3.5 h-3.5 mr-1" />
+                            Buscar Vagas
+                          </Link>
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {savedJobs.slice(0, 5).map((job) => (
+                      <div className="space-y-4">
+                        {savedJobs.slice(0,6).map((job) => {
+                          const companyLogo = job.company_logo || job.companyLogo || job.company?.logo || job.company?.profile_image || null;
+                          const companyInitials = (job.company_name || 'E').split(' ').filter(Boolean).slice(0,2).map(w => w[0]?.toUpperCase()).join('') || 'E';
+                          return (
                           <div 
                             key={job.id}
-                            className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 hover:border-rose-300 hover:bg-rose-50 transition-all duration-300 group"
+                            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-pink-200 bg-white p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-pink-400 hover:shadow-lg hover:shadow-pink-200/50"
                           >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-900 text-sm truncate group-hover:text-rose-600">{job.title}</p>
-                              <p className="text-xs text-slate-500 mt-0.5 truncate">{job.company_name}{job.location && ` • ${job.location}`}</p>
+                            <div className="flex items-center gap-3">
+                              <div className="w-11 h-11 rounded-xl border-2 border-pink-200 shadow-sm overflow-hidden flex items-center justify-center bg-slate-50 flex-shrink-0">
+                                {companyLogo ? (
+                                  <img src={companyLogo} alt={job.company_name || 'Empresa'} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-sm font-bold text-pink-600">{companyInitials}</span>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">{job.title}</p>
+                                <p className="text-sm text-gray-600">
+                                  {job.company_name}
+                                  {job.location ? ` • ${job.location}` : ''}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Link to={`/job/${job.id}`}>
-                                <Button size="sm" className="rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:border-slate-300 h-7 px-2">Ver</Button>
-                              </Link>
+                            <div className="flex items-center gap-2">
+                              <Button asChild variant="outline" size="sm" className="rounded-full border-2 border-pink-200 bg-pink-500/5 px-4 text-[11px] font-bold text-pink-700 shadow-sm shadow-pink-100 hover:border-pink-400 hover:bg-pink-500 hover:text-white hover:shadow-md hover:shadow-pink-200 transition-all duration-300">
+                                <Link to={`/job/${job.id}`}>Ver</Link>
+                              </Button>
                               <Button 
+                                variant="outline" 
                                 size="sm"
+                                className="rounded-full border-2 border-red-200 bg-red-500/5 px-4 text-[11px] font-bold text-red-600 shadow-sm shadow-red-100 hover:border-red-400 hover:bg-red-500 hover:text-white hover:shadow-md hover:shadow-red-200 transition-all duration-300"
                                 onClick={async () => { await removeSavedJob(job.id); const jobs = await listSavedJobs(); setSavedJobs(jobs.sort((a,b) => (b.savedAt||0) - (a.savedAt||0))); }}
-                                className="rounded-lg border border-red-200 bg-red-500/5 text-xs font-semibold text-red-600 hover:bg-red-500 hover:text-white h-7 px-2"
+                                title="Remover"
                               >
-                                ✕
+                                Remover
                               </Button>
                             </div>
                           </div>
-                        ))}
-                        {savedJobs.length > 5 && (
+                          );
+                        })}
+                        <div className="pt-4 border-t border-slate-100">
                           <Button 
-                            asChild
-                            variant="ghost"
-                            className="w-full rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:border-slate-300 h-8 mt-2"
+                            asChild 
+                            variant="outline"
+                            className="w-full rounded-full border-2 border-pink-200 bg-pink-500/5 text-xs font-bold text-pink-700 shadow-sm shadow-pink-100 hover:border-pink-400 hover:bg-pink-500 hover:text-white hover:shadow-md hover:shadow-pink-200 transition-all duration-300 h-10"
                           >
-                            <Link to="/jobs">Ver todas as vagas salvas</Link>
+                            <Link to="/jobs">
+                              Ver mais vagas
+                            </Link>
                           </Button>
-                        )}
+                        </div>
                       </div>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
           </div>
