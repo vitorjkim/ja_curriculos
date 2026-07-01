@@ -1306,7 +1306,7 @@ const Dashboard = () => {
                     </div>
                     <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold shadow-lg ${
                       stats.totalResumes > 0
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-emerald-400 text-white'
                         : 'bg-amber-400 text-amber-900'
                     }`}>
                       {stats.totalResumes > 0 ? '✓ Concluído' : '⏳ Pendente'}
