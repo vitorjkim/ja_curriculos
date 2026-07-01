@@ -13,7 +13,7 @@ const SchoolClasses = () => {
   const [creating,setCreating]=useState(false);
   const [editing,setEditing]=useState(null);
   const [showCreate,setShowCreate]=useState(false);
-  const [form,setForm]=useState({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'', job_contract_type:'', job_experience_level:'' });
+  const [form,setForm]=useState({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'' });
   const [students,setStudents]=useState([]);
   const [loadingStudents,setLoadingStudents]=useState(false);
   const [featuredStudents, setFeaturedStudents] = useState([]);
@@ -123,7 +123,7 @@ const SchoolClasses = () => {
         await schoolApi.createClass(form); 
         setShowCreate(false);
       } 
-      setForm({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'', job_contract_type:'', job_experience_level:'' }); 
+        setForm({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'' }); 
       setEditing(null); 
       load(); 
     } catch(e){ 
@@ -133,7 +133,7 @@ const SchoolClasses = () => {
     } 
   };
 
-  const edit = cls => { setEditing(cls); setForm({ name:cls.name, description:cls.description||'', year:cls.year||'', shift:cls.shift||'', job_area:cls.job_area||'', job_subarea:cls.job_subarea||'', job_location:cls.job_location||'', job_work_type:cls.job_work_type||'', job_contract_type:cls.job_contract_type||'', job_experience_level:cls.job_experience_level||'' }); };
+  const edit = cls => { setEditing(cls); setForm({ name:cls.name, description:cls.description||'', year:cls.year||'', shift:cls.shift||'', job_area:cls.job_area||'', job_subarea:cls.job_subarea||'', job_location:cls.job_location||'', job_work_type:cls.job_work_type||'' }); };
   const del = async id => { if(!confirm('Remover esta turma? Alunos ficarão sem turma.')) return; try{ await schoolApi.deleteClass(id); load(); } catch(e){ setError(e.message);} };
 
   const openStudents = async cls => { try { setLoadingStudents(true); const st = await schoolApi.listClassStudents(cls.id); setStudents(st); setEditing(c=>c?{...c, showStudents:true}: { ...cls, showStudents:true}); } catch(e){ setError(e.message);} finally{ setLoadingStudents(false);} };
@@ -306,7 +306,6 @@ const SchoolClasses = () => {
                         <option value='remoto'>Remoto</option>
                       </select>
                     </div>
-                    
                   </div>
                   <p className='mt-2 text-[11px] text-gray-500'>Esses campos serão usados para pré-filtrar vagas na primeira vez que um aluno desta turma acessar a busca.</p>
                 </div>
@@ -409,7 +408,6 @@ const SchoolClasses = () => {
                         <option value='remoto'>Remoto</option>
                       </select>
                     </div>
-                    
                   </div>
                   <p className='mt-2 text-[11px] text-gray-500'>Esses campos serão usados para pré-filtrar vagas na primeira vez que um aluno desta turma acessar a busca.</p>
                 </div>
@@ -419,7 +417,7 @@ const SchoolClasses = () => {
                   {creating && <Loader2 className='w-4 h-4 animate-spin'/>}
                   Salvar Alterações
                 </button>
-                <button type='button' onClick={()=>{ setEditing(null); setForm({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'', job_contract_type:'', job_experience_level:'' }); }} className='text-sm px-4 py-2 rounded-md border bg-white hover:bg-gray-50'>Cancelar</button>
+                <button type='button' onClick={()=>{ setEditing(null); setForm({ name:'', description:'', year:'', shift:'', job_area:'', job_subarea:'', job_location:'', job_work_type:'' }); }} className='text-sm px-4 py-2 rounded-md border bg-white hover:bg-gray-50'>Cancelar</button>
               </div>
             </form>
           </div>
