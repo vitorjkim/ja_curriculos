@@ -786,7 +786,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="h-full"
               >
-                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm flex flex-col">
+                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm border border-gray-200 flex flex-col">
                   <CardHeader className="border-b border-gray-100 pb-4 bg-blue-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-blue-900">
@@ -872,7 +872,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="h-full"
               >
-                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm flex flex-col">
+                <Card className="h-full min-h-[360px] rounded-[24px] bg-white shadow-sm border border-gray-200 flex flex-col">
                   <CardHeader className="border-b border-gray-100 pb-4 bg-green-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-green-900">
@@ -992,7 +992,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.45 }}
               >
-                <Card className="h-full rounded-[24px] bg-white shadow-sm">
+                <Card className="h-full rounded-[24px] bg-white shadow-sm border border-gray-200">
                   <CardHeader className="border-b border-gray-100 pb-4 bg-indigo-50 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-indigo-900">
@@ -1191,7 +1191,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
-                <Card className="rounded-[24px] bg-white shadow-sm">
+                <Card className="rounded-[24px] bg-white shadow-sm border border-gray-200">
                   <CardHeader className="border-b-[3px] border-pink-300 pb-4 bg-pink-50/70 rounded-t-[22px]">
                     <div className="flex justify-between items-center gap-3">
                       <CardTitle className="flex items-center text-base font-semibold text-pink-900">
