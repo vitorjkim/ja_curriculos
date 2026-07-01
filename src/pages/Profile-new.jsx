@@ -172,20 +172,28 @@ const StudentProfile = () => {
   const handleSaveChanges = async () => {
     try {
       const payload = {
-        life_status: formData.formation_description,
-        instagram_url: formData.instagram_url,
-        linkedin_url: formData.linkedin_url,
+        lifeStatus: formData.formation_description,
+        instagramUrl: formData.instagram_url,
+        linkedinUrl: formData.linkedin_url,
         whatsapp: formData.whatsapp
       };
 
       // Use usersAPI.update (routes expect /api/users/:id)
-      const updated = await usersAPI.update(profile.id, payload);
+      const response = await usersAPI.update(profile.id, payload);
+
+      // Try to use returned user info, otherwise refetch to ensure we have latest data
+      let updatedUser = response?.user;
+      if (!updatedUser) {
+        const fresh = await usersAPI.get(profile.id);
+        updatedUser = fresh?.user || null;
+      }
+
       setProfile(prev => ({
         ...prev,
-        life_status: updated.life_status || formData.formation_description,
-        instagram_url: updated.instagram_url || formData.instagram_url,
-        linkedin_url: updated.linkedin_url || formData.linkedin_url,
-        whatsapp: updated.whatsapp || formData.whatsapp
+        life_status: updatedUser?.life_status || formData.formation_description,
+        instagram_url: updatedUser?.instagram_url || formData.instagram_url,
+        linkedin_url: updatedUser?.linkedin_url || formData.linkedin_url,
+        whatsapp: updatedUser?.whatsapp || formData.whatsapp
       }));
 
       setIsEditing(false);
