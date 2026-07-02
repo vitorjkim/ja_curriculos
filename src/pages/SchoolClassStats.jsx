@@ -709,6 +709,7 @@ export default function SchoolClassStats(){
                 setStepsFirstRender={setStepsFirstRender}
                 setDrilldown={setDrilldown}
                 setCompanyModal={setCompanyModal}
+                realData={realData}
               />
             )}
             {activeTab === 'funil' && (

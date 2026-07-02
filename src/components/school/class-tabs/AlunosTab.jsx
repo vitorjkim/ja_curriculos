@@ -11,21 +11,39 @@ const STEPS = [
   { key: 'hired',        label: 'Contratado',   icon: Briefcase,    color: 'bg-emerald-500', light: 'bg-emerald-100 text-emerald-600' },
 ];
 
-function getStudentSteps(s) {
+function getStudentSteps(s, realData = {}) {
+  // Calcular pré-aprovado verificando aplicações com status 'approved' ou 'interested'
+  const preApproved = (realData.applications || []).some(app => 
+    app.user_id === s.user_id && (app.status === 'approved' || app.status === 'interested')
+  );
+  // Calcular entrevista verificando se há entrevista ativa
+  const hasInterview = (realData.interviews || []).some(i => 
+    i.user_id === s.user_id && !i.interview_canceled_by_company && !i.interview_rejected_by_candidate
+  );
   return [
     !!s.has_resume,
     (s.applications_count || 0) > 0,
-    !!s.pre_approved,
-    !!s.has_interview,
+    preApproved,
+    hasInterview,
     !!s.final_approved,
   ];
 }
 
-function StudentSummary({ student, data }) {
+function StudentSummary({ student, data, realData = {} }) {
   const stats = data?.stats || {};
   const emp = data?.employability || {};
   const hier = data?.hierarchical_status || {};
   const intStats = data?.interview_stats || {};
+
+  // Calcular se tem pré-aprovado verificando aplicações
+  const preApprovedValue = (realData.applications || []).some(app => 
+    app.user_id === student.user_id && (app.status === 'approved' || app.status === 'interested')
+  );
+
+  // Calcular se tem entrevista verificando entrevistas ativas
+  const hasInterviewValue = (realData.interviews || []).some(i => 
+    i.user_id === student.user_id && !i.interview_canceled_by_company && !i.interview_rejected_by_candidate
+  );
 
   const sections = [
     { label: 'Funil', icon: Filter, items: [
@@ -51,8 +69,8 @@ function StudentSummary({ student, data }) {
     { label: 'Jornada', icon: Compass, items: [
       { k: 'Currículo', v: student.has_resume ? '✓' : '✗' },
       { k: 'Candidaturas', v: (student.applications_count||0) > 0 ? '✓' : '✗' },
-      { k: 'Pré-aprovado', v: student.pre_approved ? '✓' : '✗' },
-      { k: 'Entrevista', v: student.has_interview ? '✓' : '✗' },
+      { k: 'Pré-aprovado', v: preApprovedValue ? '✓' : '✗' },
+      { k: 'Entrevista', v: hasInterviewValue ? '✓' : '✗' },
       { k: 'Contratado', v: student.final_approved ? '✓' : '✗' },
     ]},
   ];
@@ -82,7 +100,7 @@ function StudentSummary({ student, data }) {
   );
 }
 
-function InfoButton({ student, data }) {
+function InfoButton({ student, data, realData = {} }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative shrink-0">
@@ -95,7 +113,7 @@ function InfoButton({ student, data }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={e => { e.stopPropagation(); setOpen(false); }} />
-          <StudentSummary student={student} data={data} />
+          <StudentSummary student={student} data={data} realData={realData} />
         </>
       )}
     </div>
@@ -149,7 +167,7 @@ function SortDropdown({ value, onChange }) {
   );
 }
 
-export default function AlunosTab({ id, data, studentFilter, setStudentFilter, globalStudentFilter, setGlobalStudentFilter, avatarTick, stepsFirstRender, setStepsFirstRender, setDrilldown, setCompanyModal }) {
+export default function AlunosTab({ id, data, studentFilter, setStudentFilter, globalStudentFilter, setGlobalStudentFilter, avatarTick, stepsFirstRender, setStepsFirstRender, setDrilldown, setCompanyModal, realData = {} }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortMode, setSortMode] = useState('alpha');
@@ -227,7 +245,7 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
           if (avatar && typeof avatar === 'string' && /^https?:\/\//i.test(avatar) && avatarTick>0) {
             avatar = `${avatar}${avatar.includes('?') ? '&' : '?'}v=${avatarTick}`;
           }
-          const steps = getStudentSteps(s);
+          const steps = getStudentSteps(s, realData);
           const stepsDone = steps.filter(Boolean).length;
           const pct = Math.round((stepsDone / 5) * 100);
           const isActive = globalStudentFilter?.user_id === s.user_id;
@@ -262,7 +280,7 @@ export default function AlunosTab({ id, data, studentFilter, setStudentFilter, g
                     {s.name}
                   </Link>
                   {s.is_featured && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />}
-                  <InfoButton student={s} data={data} />
+                  <InfoButton student={s} data={data} realData={realData} />
                 </div>
                 <span className="text-[11px] text-gray-400 truncate block">{s.email}</span>
               </div>
