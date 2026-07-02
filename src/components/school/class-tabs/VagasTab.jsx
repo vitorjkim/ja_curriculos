@@ -118,7 +118,7 @@ export default function VagasTab({ data, realData, globalStudentFilter, partners
       }
       
       stats[jobId].total++;
-      if (app.rejected_by_company || app.rejected_by_candidate) {
+      if (app.status === 'rejected') {
         stats[jobId].rejected++;
       } else if (app.final_approved) {
         stats[jobId].hired++;

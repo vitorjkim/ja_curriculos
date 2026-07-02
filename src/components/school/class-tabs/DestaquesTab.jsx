@@ -17,9 +17,19 @@ export default function DestaquesTab({ data, studentFilter, setStudentFilter, re
     );
   }
 
-  const score = (s) => (s.final_approved ? 100 : 0) + (s.pre_approved ? 50 : 0) + (s.has_interview ? 20 : 0) + Math.min(10, s.applications_count || 0);
+  // Calcular se aluno tem pré-aprovados (status approved ou interested)
+  const hasPreApproved = (studentId) => applicationsData.some(a => 
+    a.user_id === studentId && (a.status === 'approved' || a.status === 'interested')
+  );
+  
+  // Calcular se aluno tem entrevista ativa
+  const hasInterview = (studentId) => interviewsData.some(i =>
+    i.user_id === studentId && !i.interview_canceled_by_company && !i.interview_rejected_by_candidate
+  );
+
+  const score = (s) => (s.final_approved ? 100 : 0) + (hasPreApproved(s.user_id) ? 50 : 0) + (hasInterview(s.user_id) ? 20 : 0) + Math.min(10, s.applications_count || 0);
   const top = items
-    .filter(s => s.final_approved || s.pre_approved || s.has_interview || (s.applications_count || 0) > 0)
+    .filter(s => s.final_approved || hasPreApproved(s.user_id) || hasInterview(s.user_id) || (s.applications_count || 0) > 0)
     .sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))
     .slice(0, 8);
 
