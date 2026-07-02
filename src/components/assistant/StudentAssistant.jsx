@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { messages as messagesAPI, interactions as interactionsAPI, applications as applicationsAPI, resumes as resumesAPI } from '@/lib/api';
-import { Bot, Bell, MessageSquare, CheckCircle2, X, ChevronDown, ChevronUp, Circle, Lightbulb, Upload, FileText, Star } from 'lucide-react';
+import { Bot, Bell, MessageSquare, CheckCircle2, X, ChevronDown, ChevronUp, Circle, Lightbulb, Upload, FileText, Star, Calendar, Clock } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 // Pequeno assistente para alunos: avisa novas mensagens e respostas das empresas.
@@ -20,7 +20,7 @@ export default function StudentAssistant(){
   // Esconder DARA na página de mensagens para não bloquear o input
   const isMessagesPage = location.pathname === '/my-messages' || location.pathname.includes('/messages');
   const [loading, setLoading] = useState(false);
-  const [counts, setCounts] = useState({ messages: 0, interactions: 0, decisions: 0 });
+  const [counts, setCounts] = useState({ messages: 0, interactions: 0, decisions: 0, interviews: 0 });
   const [latestDecisionAt, setLatestDecisionAt] = useState(null);
   const [assistantName] = useState(getAssistantName());
   const [tab, setTab] = useState('notifications'); // 'notifications' | 'guide'
@@ -31,14 +31,14 @@ export default function StudentAssistant(){
   const [dataLoaded, setDataLoaded] = useState(false);
   const [guideLoaded, setGuideLoaded] = useState(false);
 
-  const total = useMemo(() => (counts.messages + counts.interactions + counts.decisions), [counts]);
+  const total = useMemo(() => (counts.messages + counts.interactions + counts.decisions + counts.interviews), [counts]);
 
   const fetchData = useCallback(async () => {
     if (!user || user.type !== 'candidate') return;
     setLoading(true);
     try {
       // Unread messages
-      let msg = 0; let inter = 0; let dec = 0; let latest = null;
+      let msg = 0; let inter = 0; let dec = 0; let interviews = 0; let latest = null;
       try {
         const r = await messagesAPI.getUnreadCount();
         msg = Number(r?.count || 0);
@@ -66,7 +66,14 @@ export default function StudentAssistant(){
         }
         dec = c; latest = latestFound;
       } catch {}
-      setCounts({ messages: msg, interactions: inter, decisions: dec });
+      // Pending interviews (to be confirmed)
+      try {
+        const interviewsResp = await applicationsAPI.listInterviews();
+        const upcoming = Array.isArray(interviewsResp?.upcoming) ? interviewsResp.upcoming : [];
+        // Count pending interviews (not yet confirmed)
+        interviews = upcoming.filter(i => !i.interview_confirmed && i.interview_date).length;
+      } catch {}
+      setCounts({ messages: msg, interactions: inter, decisions: dec, interviews });
       setLatestDecisionAt(latest ? latest.toISOString() : null);
       setDataLoaded(true);
     } finally {
@@ -281,6 +288,18 @@ export default function StudentAssistant(){
                     {counts.decisions > 0 && <BadgePill count={counts.decisions} color="emerald"/>}
                   </Link>
 
+                  {/* Entrevistas Agendadas */}
+                  <Link to="/dashboard" className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-orange-50 transition-all duration-200 group">
+                    <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-3.5 h-3.5 text-white"/>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-gray-800 group-hover:text-orange-600">Entrevistas Agendadas</div>
+                      <div className="text-[10px] text-gray-500">{counts.interviews > 0 ? `${counts.interviews} para confirmar` : 'Nenhuma pendente'}</div>
+                    </div>
+                    {counts.interviews > 0 && <BadgePill count={counts.interviews} color="orange"/>}
+                  </Link>
+
                   {/* Interações (opcional) */}
                   <Link to="/dashboard" className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-purple-50 transition-all duration-200 group">
                     <div className="w-8 h-8 rounded-xl bg-purple-500 flex items-center justify-center flex-shrink-0">
@@ -379,7 +398,8 @@ function BadgePill({ count, color='indigo' }){
   const map = {
     indigo: 'bg-blue-100 text-blue-700 border border-blue-200',
     emerald: 'bg-green-100 text-green-700 border border-green-200',
-    violet: 'bg-purple-100 text-purple-700 border border-purple-200'
+    violet: 'bg-purple-100 text-purple-700 border border-purple-200',
+    orange: 'bg-orange-100 text-orange-700 border border-orange-200'
   };
   return (
     <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${map[color] || map.indigo}`}>{count > 99 ? '99+' : count}</span>

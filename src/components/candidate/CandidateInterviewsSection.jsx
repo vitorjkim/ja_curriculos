@@ -3,6 +3,7 @@ import { applicationsAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle2, AlertCircle, RefreshCcw, Clock, Building, XCircle, Trash2, MessageCircle, Video, MapPin, FileText, Link as LinkIcon, ExternalLink, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -191,8 +192,16 @@ export default function CandidateInterviewsSection() {
         <CardHeader className="border-b border-gray-100 pb-4 bg-violet-50 rounded-t-[22px]">
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="flex items-center text-base font-semibold text-violet-900">
-              <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center shadow-sm border-2 border-violet-300">
+              <div className="mr-3 w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center shadow-sm border-2 border-violet-300 relative">
                 <Calendar className="w-5 h-5 text-violet-600 stroke-[2.5]" />
+                {!loading && interviews.filter(i => i.confirmation_status === 'pending').length > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs p-0 min-w-[20px] animate-pulse"
+                  >
+                    {interviews.filter(i => i.confirmation_status === 'pending').length}
+                  </Badge>
+                )}
               </div>
               Entrevistas Agendadas
             </CardTitle>
