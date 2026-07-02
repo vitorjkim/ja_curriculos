@@ -69,10 +69,10 @@ export default function FunilTab({ data, studentFilter, realData, globalStudentF
   applications.forEach(app => {
     if (app.user_id) {
       applicantIds.add(app.user_id);
-      if (app.rejected_by_company || app.rejected_by_candidate || app.status === 'rejected') {
+      if (app.status === 'rejected') {
         rejectedIds.add(app.user_id);
       }
-      if (app.pre_approved || app.status === 'approved') {
+      if (app.status === 'approved' || app.status === 'interested') {
         preApprovedIds.add(app.user_id);
       }
     }
