@@ -12,9 +12,9 @@ const STEPS = [
 ];
 
 function getStudentSteps(s, realData = {}) {
-  // Calcular pré-aprovado verificando aplicações com status 'approved' ou 'interested'
+  // Calcular pré-aprovado verificando aplicações com status 'approved', 'interested' ou 'interview'
   const preApproved = (realData.applications || []).some(app => 
-    app.user_id === s.user_id && (app.status === 'approved' || app.status === 'interested')
+    app.user_id === s.user_id && (app.status === 'approved' || app.status === 'interested' || app.status === 'interview')
   );
   // Calcular entrevista verificando se há entrevista ativa
   const hasInterview = (realData.interviews || []).some(i => 
@@ -35,9 +35,9 @@ function StudentSummary({ student, data, realData = {} }) {
   const hier = data?.hierarchical_status || {};
   const intStats = data?.interview_stats || {};
 
-  // Calcular se tem pré-aprovado verificando aplicações
+  // Calcular se tem pré-aprovado verificando aplicações (inclui interview)
   const preApprovedValue = (realData.applications || []).some(app => 
-    app.user_id === student.user_id && (app.status === 'approved' || app.status === 'interested')
+    app.user_id === student.user_id && (app.status === 'approved' || app.status === 'interested' || app.status === 'interview')
   );
 
   // Calcular se tem entrevista verificando entrevistas ativas

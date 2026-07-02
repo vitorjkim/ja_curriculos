@@ -17,9 +17,9 @@ export default function DestaquesTab({ data, studentFilter, setStudentFilter, re
     );
   }
 
-  // Calcular se aluno tem pré-aprovados (status approved ou interested)
+  // Calcular se aluno tem pré-aprovados (status approved, interested ou interview)
   const hasPreApproved = (studentId) => applicationsData.some(a => 
-    a.user_id === studentId && (a.status === 'approved' || a.status === 'interested')
+    a.user_id === studentId && (a.status === 'approved' || a.status === 'interested' || a.status === 'interview')
   );
   
   // Calcular se aluno tem entrevista ativa
