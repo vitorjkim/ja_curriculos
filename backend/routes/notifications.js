@@ -12,7 +12,7 @@
 
 import express from 'express';
 import pool from '../config/database.js';
-import authenticateToken from '../middleware/authenticateToken.js';
+import { authenticateToken } from '../middleware/auth.js';
 import {
   notifyApplicationStatusChange,
   sendEmail,
