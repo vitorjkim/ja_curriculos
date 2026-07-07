@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../config/database.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireCandidate } from '../middleware/auth.js';
 import { handleValidationErrors, validateResume } from '../middleware/validation.js';
 import debugUpload from '../middleware/upload.js';
 import path from 'path';
@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 import nodemailer from 'nodemailer';
 import { fileURLToPath } from 'url';
+import * as aiService from '../services/aiService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -792,6 +793,208 @@ router.post('/:id/send-email', async (req, res) => {
   } catch (error) {
     console.error('Erro ao enviar e-mail com currículo:', error);
     res.status(500).json({ error: 'Falha ao enviar e-mail', code: 'EMAIL_SEND_FAILED' });
+  }
+});
+
+/**
+ * ==========================================
+ * ROTAS DE IA - Análise e Reescrita
+ * ==========================================
+ */
+
+/**
+ * POST /api/resumes/:id/analyze
+ * Analisa um currículo usando OpenAI GPT-4o-mini
+ */
+router.post('/:id/analyze', requireCandidate, async (req, res) => {
+  const resumeId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    console.log(`📊 POST /api/resumes/${resumeId}/analyze - Usuário: ${userId}`);
+
+    // 1. Buscar currículo no banco
+    const resumeQuery = `
+      SELECT * FROM resumes 
+      WHERE id = $1 AND user_id = $2
+    `;
+    const resumeResult = await pool.query(resumeQuery, [resumeId, userId]);
+
+    if (resumeResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Currículo não encontrado',
+      });
+    }
+
+    const resume = resumeResult.rows[0];
+
+    // 2. Chamar serviço de IA
+    let analysis;
+    try {
+      analysis = await aiService.analyzeResume(resume);
+    } catch (aiError) {
+      console.error('❌ Erro da IA:', aiError.message);
+      return res.status(500).json({
+        success: false,
+        error: aiError.message,
+      });
+    }
+
+    // 3. Salvar análise no banco
+    const updateQuery = `
+      UPDATE resumes 
+      SET 
+        ai_score = $1,
+        ai_analysis = $2,
+        ai_analyzed_at = NOW()
+      WHERE id = $3 AND user_id = $4
+      RETURNING ai_score, ai_analysis, ai_analyzed_at
+    `;
+
+    const updateResult = await pool.query(updateQuery, [
+      analysis.score,
+      JSON.stringify(analysis),
+      resumeId,
+      userId,
+    ]);
+
+    if (updateResult.rows.length === 0) {
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao salvar análise no banco de dados',
+      });
+    }
+
+    // 4. Retornar análise ao cliente
+    res.json({
+      success: true,
+      score: analysis.score,
+      analysis: analysis,
+      analyzed_at: updateResult.rows[0].ai_analyzed_at,
+    });
+  } catch (error) {
+    console.error('❌ Erro na análise de currículo:', error);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao analisar currículo. Tente novamente em alguns momentos.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+});
+
+/**
+ * POST /api/resumes/:id/rewrite
+ * Reescreve um trecho de texto do currículo
+ */
+router.post('/:id/rewrite', requireCandidate, async (req, res) => {
+  const resumeId = req.params.id;
+  const userId = req.user.id;
+  const { text, context = 'general' } = req.body;
+
+  try {
+    console.log(`✏️ POST /api/resumes/${resumeId}/rewrite - Contexto: ${context}`);
+
+    // Validar entrada
+    if (!text || text.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Texto deve ter pelo menos 10 caracteres',
+      });
+    }
+
+    // Verificar propriedade do currículo
+    const resumeQuery = 'SELECT id FROM resumes WHERE id = $1 AND user_id = $2';
+    const resumeResult = await pool.query(resumeQuery, [resumeId, userId]);
+
+    if (resumeResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Currículo não encontrado',
+      });
+    }
+
+    // Chamar IA para reescrever
+    let rewritten;
+    try {
+      rewritten = await aiService.rewriteText(text, context);
+    } catch (aiError) {
+      console.error('❌ Erro ao reescrever:', aiError.message);
+      return res.status(500).json({
+        success: false,
+        error: aiError.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      original: text,
+      rewritten: rewritten,
+      context: context,
+    });
+  } catch (error) {
+    console.error('❌ Erro na reescrita:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao reescrever texto. Tente novamente.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+});
+
+/**
+ * GET /api/resumes/:id/keywords
+ * Gera sugestões de keywords para o currículo
+ */
+router.get('/:id/keywords', requireCandidate, async (req, res) => {
+  const resumeId = req.params.id;
+  const userId = req.user.id;
+
+  try {
+    console.log(`🔑 GET /api/resumes/${resumeId}/keywords`);
+
+    // 1. Buscar currículo
+    const resumeQuery = `
+      SELECT * FROM resumes 
+      WHERE id = $1 AND user_id = $2
+    `;
+    const resumeResult = await pool.query(resumeQuery, [resumeId, userId]);
+
+    if (resumeResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Currículo não encontrado',
+      });
+    }
+
+    const resume = resumeResult.rows[0];
+
+    // 2. Gerar keywords
+    let keywords;
+    try {
+      keywords = await aiService.suggestKeywords(resume);
+    } catch (aiError) {
+      console.error('❌ Erro ao gerar keywords:', aiError.message);
+      return res.status(500).json({
+        success: false,
+        error: aiError.message,
+        keywords: [],
+      });
+    }
+
+    res.json({
+      success: true,
+      keywords: keywords || [],
+    });
+  } catch (error) {
+    console.error('❌ Erro ao obter keywords:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao gerar keywords. Tente novamente.',
+      keywords: [],
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 });
 
