@@ -14,10 +14,14 @@ const getApiUrl = () => {
   console.log('  hostname:', window.location.hostname);
   
   // 1. Tentar usar variável de ambiente
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) {
-    console.log('📡 Usando VITE_API_URL:', envUrl);
-    return envUrl;
+  let apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl) {
+    // Garantir que tem /api no final
+    if (!apiUrl.endsWith('/api')) {
+      apiUrl = `${apiUrl}/api`;
+    }
+    console.log('📡 Usando VITE_API_URL (normalizado):', apiUrl);
+    return apiUrl;
   }
   
   // 2. Detectar baseado no hostname
@@ -30,13 +34,6 @@ const getApiUrl = () => {
   // 3. Para produção em ja-curriculos.vercel.app, usar Railway backend
   if (hostname.includes('vercel.app') || hostname.includes('ja-curriculos')) {
     console.log('🚀 Ambiente Vercel/produção detectado');
-    // Tentar obter URL do localStorage (definida no login)
-    const savedApiUrl = localStorage.getItem('api_url');
-    if (savedApiUrl) {
-      console.log('💾 URL do localStorage:', savedApiUrl);
-      return savedApiUrl;
-    }
-    // Fallback para URL padrão do Railway
     const railwayUrl = 'https://jacurriculos-production.up.railway.app/api';
     console.log('🚂 Usando Railway URL:', railwayUrl);
     return railwayUrl;
