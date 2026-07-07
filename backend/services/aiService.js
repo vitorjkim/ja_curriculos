@@ -250,7 +250,7 @@ export async function analyzeResume(resume) {
     console.log(`🤖 Analisando currículo ID: ${resume.id} com Google Gemini...`);
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro-latest',
+      model: 'gemini-1.5-flash',
       safetySettings,
       generationConfig: {
         responseMimeType: 'application/json',
