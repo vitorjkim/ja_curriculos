@@ -9,6 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Função para obter a URL da API baseada no ambiente
 const getApiUrl = () => {
+  console.log('🔍 getApiUrl() chamado');
+  console.log('  import.meta.env.VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('  hostname:', window.location.hostname);
+  
   // 1. Tentar usar variável de ambiente
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) {
@@ -29,13 +33,17 @@ const getApiUrl = () => {
     // Tentar obter URL do localStorage (definida no login)
     const savedApiUrl = localStorage.getItem('api_url');
     if (savedApiUrl) {
+      console.log('💾 URL do localStorage:', savedApiUrl);
       return savedApiUrl;
     }
     // Fallback para URL padrão do Railway
-    return 'https://jacurriculos-production.up.railway.app/api';
+    const railwayUrl = 'https://jacurriculos-production.up.railway.app/api';
+    console.log('🚂 Usando Railway URL:', railwayUrl);
+    return railwayUrl;
   }
   
   // Fallback padrão
+  console.log('⚠️ Usando fallback:', '/api');
   return '/api';
 };
 
