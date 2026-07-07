@@ -7,6 +7,38 @@ import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, AlertTriangle, Zap, RefreshCw, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Função para obter a URL da API baseada no ambiente
+const getApiUrl = () => {
+  // 1. Tentar usar variável de ambiente
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    console.log('📡 Usando VITE_API_URL:', envUrl);
+    return envUrl;
+  }
+  
+  // 2. Detectar baseado no hostname
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    console.log('🏠 Ambiente local detectado');
+    return 'http://localhost:3001/api';
+  }
+  
+  // 3. Para produção em ja-curriculos.vercel.app, usar Railway backend
+  if (hostname.includes('vercel.app') || hostname.includes('ja-curriculos')) {
+    console.log('🚀 Ambiente Vercel/produção detectado');
+    // Tentar obter URL do localStorage (definida no login)
+    const savedApiUrl = localStorage.getItem('api_url');
+    if (savedApiUrl) {
+      return savedApiUrl;
+    }
+    // Fallback para URL padrão do Railway
+    return 'https://ja-curriculos-backend.up.railway.app/api';
+  }
+  
+  // Fallback padrão
+  return '/api';
+};
+
 export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete }) {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +58,12 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
         throw new Error('Não autenticado. Faça login novamente.');
       }
 
-      const response = await fetch(`/api/resumes/${resumeId}/analyze`, {
+      // Obter URL da API baseada no ambiente
+      const apiUrl = getApiUrl();
+      const url = `${apiUrl}/resumes/${resumeId}/analyze`;
+      console.log('🔗 Fazendo requisição para:', url);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
