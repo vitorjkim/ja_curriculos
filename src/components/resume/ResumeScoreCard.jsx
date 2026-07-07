@@ -32,7 +32,7 @@ const getApiUrl = () => {
       return savedApiUrl;
     }
     // Fallback para URL padrão do Railway
-    return 'https://ja-curriculos-backend.up.railway.app/api';
+    return 'https://jacurriculos-production.up.railway.app/api';
   }
   
   // Fallback padrão
