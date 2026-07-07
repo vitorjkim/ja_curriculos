@@ -1,19 +1,29 @@
 /**
- * AI Service - Integração com OpenAI
- * 
+ * AI Service - Integração com Google Gemini
+ *
  * Responsável por:
- * - Chamar OpenAI GPT-4o-mini para análise de currículos
+ * - Chamar Google Gemini para análise de currículos
  * - Forçar resposta estruturada em JSON
  * - Fazer parse e validação de respostas
  * - Tratamento de erros e fallbacks
  */
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import OpenAI from 'openai'; // Mantido para outras funções que podem usar OpenAI
 
-import OpenAI from 'openai';
+// Inicializa o cliente do Google Generative AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Inicializar cliente Groq (compatível com SDK OpenAI)
-const groq = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: 'https://api.groq.com/openai/v1',
+// Configurações de segurança para o modelo Gemini
+const safetySettings = [
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+];
+
+// Mantém o cliente OpenAI para funções que ainda não foram migradas (se houver)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 /**
@@ -219,16 +229,16 @@ function formatResumeForAnalysis(resume) {
 }
 
 /**
- * Analisa um currículo usando OpenAI GPT-4o-mini
+ * Analisa um currículo usando Google Gemini
  * @param {Object} resume - Objeto do currículo
  * @returns {Promise<Object>} - Análise estruturada em JSON
  * @throws {Error} - Se houver erro na API ou validação
  */
 export async function analyzeResume(resume) {
   try {
-    // Validar que temos API key do Groq
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error('GROQ_API_KEY não configurada');
+    // Validar que temos API key do Gemini
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY não configurada');
     }
 
     // Formatar currículo para análise
@@ -238,52 +248,46 @@ export async function analyzeResume(resume) {
       throw new Error('Currículo insuficiente para análise (mínimo 50 caracteres)');
     }
 
-    console.log(`🤖 Analisando currículo ID: ${resume.id} com Groq Llama3...`);
+    console.log(`🤖 Analisando currículo ID: ${resume.id} com Google Gemini...`);
 
-    // Chamar Groq com resposta estruturada (JSON mode)
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant', // ✅ Modelo recomendado pelo Groq
-      temperature: 0.7,
-      max_tokens: 2000,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `Você é um especialista em recrutamento e currículos. Sua tarefa é analisar currículos em português e fornecer uma análise estruturada em JSON.
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      safetySettings,
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+    });
+
+    const prompt = `Você é um especialista em recrutamento e currículos. Sua tarefa é analisar o currículo em português a seguir e fornecer uma análise estruturada em JSON.
 
 IMPORTANTE: Você DEVE responder APENAS com um JSON válido, seguindo exatamente este esquema:
 
 ${JSON.stringify(RESUME_ANALYSIS_SCHEMA, null, 2)}
 
 Análise que você deve fazer:
-1. Score geral (0-100): Qualidade total do currículo
-2. Completeness (0-100): Tem todas as seções? (contato, resumo, experiência, educação, skills)
+1. Score geral (0-100): Qualidade total do currículo.
+2. Completeness (0-100): Tem todas as seções? (contato, resumo, experiência, educação, skills).
 3. Quality (0-100): Sem erros? Bem estruturado? Claro e objetivo?
 4. Relevance (0-100): Tem keywords de mercado? Skills atualizadas? Alinhado com mercado?
 5. Impact (0-100): Tem números? Resultados? Ações com impacto mensurável?
 
 Para sugestões:
-- CRITICAL: Faltam seções importantes ou há erros graves
-- IMPORTANT: Melhorias que aumentam relevância
-- RECOMMENDED: Ajustes menores de qualidade
+- CRITICAL: Faltam seções importantes ou há erros graves.
+- IMPORTANT: Melhorias que aumentam relevância.
+- RECOMMENDED: Ajustes menores de qualidade.
 
-Retorne APENAS o JSON, sem explicações adicionais.`,
-        },
-        {
-          role: 'user',
-          content: `Analise este currículo e retorne apenas JSON:\n\n${resumeText}`,
-        },
-      ],
-    });
+Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
 
-    // Extrair conteúdo da resposta
-    const content = response.choices[0]?.message?.content;
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const content = response.text();
 
     if (!content) {
-      throw new Error('Resposta vazia da Groq');
+      throw new Error('Resposta vazia do Gemini');
     }
 
-    // Parse do JSON retornado
     let analysis = JSON.parse(content);
 
     // Validar scores
@@ -297,10 +301,13 @@ Retorne APENAS o JSON, sem explicações adicionais.`,
       analysis.score = Math.min(100, Math.max(0, parseInt(analysis.score) || 50));
     }
 
-    console.log(`✅ Análise concluída: Score ${analysis.score}/100`);
+    console.log(`✅ Análise concluída com Gemini: Score ${analysis.score}/100`);
     return analysis;
   } catch (error) {
-    console.error('❌ Erro na análise de currículo com Groq:', error);
+    console.error('❌ Erro na análise de currículo com Gemini:', error);
+    if (error.message.includes('GoogleGenerativeAI')) {
+       throw new Error(`Erro na API do Gemini: ${error.message}`);
+    }
     throw new Error(`Erro ao analisar currículo: ${error.message}`);
   }
 }
