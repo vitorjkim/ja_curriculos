@@ -146,15 +146,23 @@ const Login = () => {
 
                 {/* Seção de Cadastro */}
                 <div className="pt-6 border-t-2 border-slate-200">
-                  <p className="text-center text-sm text-slate-600">
-                    Ainda não tem uma conta?{' '}
+                  <p className="text-center text-sm text-slate-600 mb-4 font-medium">
+                    Ainda não tem uma conta?
+                  </p>
+                  <div className="space-y-2">
+                    <Link 
+                      to="/student-register" 
+                      className="block w-full text-center py-2.5 px-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-600 font-medium hover:bg-emerald-100 transition-colors text-sm"
+                    >
+                      Sou Candidato/Aluno
+                    </Link>
                     <Link 
                       to="/company-register" 
-                      className="font-medium text-[#2563eb] hover:text-[#1d4ed8] underline transition-colors"
+                      className="block w-full text-center py-2.5 px-4 rounded-2xl border-2 border-[#2563eb] bg-blue-50 text-[#2563eb] font-medium hover:bg-blue-100 transition-colors text-sm"
                     >
-                      Cadastrar
+                      Sou Empresa
                     </Link>
-                  </p>
+                  </div>
                 </div>
               </form>
             </CardContent>

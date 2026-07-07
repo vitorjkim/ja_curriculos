@@ -52,6 +52,8 @@ import JourneyStage5 from '@/pages/journey/JourneyStage5';
 import JourneyStage6 from '@/pages/journey/JourneyStage6';
 import CompanyLanding from '@/pages/CompanyLanding';
 import CompanyRegister from '@/pages/CompanyRegister';
+import StudentRegister from '@/pages/StudentRegister';
+import StudentDashboard from '@/pages/StudentDashboard';
 import SubscriptionPlans from '@/pages/SubscriptionPlans';
 import PaymentPremium from '@/pages/PaymentPremium';
 import PaymentPro from '@/pages/PaymentPro';
@@ -116,6 +118,8 @@ function App() {
               <Route path="/register" element={<PublicRegister />} />
               <Route path="/company-landing" element={<CompanyLanding />} />
             <Route path="/company-register" element={<CompanyRegister />} />
+            <Route path="/student-register" element={<StudentRegister />} />
+            <Route path="/student-dashboard" element={<StudentDashboard />} />
             <Route path="/subscription-plans" element={<SubscriptionPlans />} />
             <Route path="/payment-premium" element={<PaymentPremium />} />
             <Route path="/payment-pro" element={<PaymentPro />} />
