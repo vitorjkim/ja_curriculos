@@ -10,8 +10,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 const { Pool } = pkg;
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe (lazy - only when needed)
+let stripe = null;
+
+function getStripe() {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error(
+        '❌ STRIPE_SECRET_KEY não configurada! ' +
+        'Adicione a variável de ambiente no Railway/servidor.'
+      );
+    }
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripe;
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -99,7 +112,7 @@ export async function createCheckoutSession(userId, plan, metadata = {}) {
     const planData = PLANS[plan];
 
     // Criar sessão de checkout Stripe
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       customer_email: user.email,
@@ -325,7 +338,7 @@ export async function updateUserSubscription(
     // Atualizar ou criar subscription
     if (stripeSubscriptionId) {
       // Get subscription details from Stripe
-      const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+      const subscription = await getStripe().subscriptions.retrieve(stripeSubscriptionId);
 
       await pool.query(
         `INSERT INTO subscriptions (
@@ -486,7 +499,7 @@ export async function cancelSubscription(userId) {
     const { gateway_subscription_id } = subResult.rows[0];
 
     // Cancelar no Stripe
-    await stripe.subscriptions.del(gateway_subscription_id);
+    await getStripe().subscriptions.del(gateway_subscription_id);
 
     // Downgrade para free
     await updateUserSubscription(userId, 'free', 'active');
