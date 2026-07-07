@@ -49,32 +49,51 @@ dotenv.config({ path: join(__dirname, '.env') });
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
-// Configurar CORS
+// ============================================================================
+// CORS - CONFIGURAÇÃO AGRESSIVA (coloca ANTES de qualquer middleware)
+// ============================================================================
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://ja-curriculos.vercel.app',
+  'http://localhost:3001',
 ];
 
+// Middleware de CORS customizado - executa ANTES de tudo
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Sempre permitir se houver uma origem autorizada ou se não houver origem
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '3600');
+  }
+  
+  // Responder automaticamente a requisições OPTIONS (pre-flight)
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  
+  next();
+});
+
+// Middleware cors padrão (redundante, mas reforça)
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Permitir requisições sem 'origin' (como Postman ou apps mobile)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: allowedOrigins,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Habilitar pre-flight para todas as rotas
 
-// Middlewares de segurança e otimização
-app.use(helmet());
+// Middlewares de segurança e otimização (APÓS CORS)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Permite CORS com helmet
+}));
 app.use(compression());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
@@ -161,6 +180,25 @@ app.get('/health', async (req, res) => {
       error: error.message
     });
   }
+});
+
+// Rota de teste CORS
+app.get('/api/cors-test', (req, res) => {
+  res.json({
+    status: 'CORS working',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    message: 'Se você vê isso, CORS está funcionando!'
+  });
+});
+
+app.post('/api/cors-test', (req, res) => {
+  res.json({
+    status: 'CORS POST working',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString(),
+    message: 'POST CORS está funcionando!'
+  });
 });
 
 // Rota raiz
