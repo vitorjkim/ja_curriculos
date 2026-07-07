@@ -1,5 +1,5 @@
 /**
- * AI Service - Integração com Google Gemini
+ * AI Service - Integração com Google Gemini (via REST API direta)
  *
  * Responsável por:
  * - Chamar Google Gemini para análise de currículos
@@ -7,19 +7,7 @@
  * - Fazer parse e validação de respostas
  * - Tratamento de erros e fallbacks
  */
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import OpenAI from 'openai'; // Mantido para outras funções que podem usar OpenAI
-
-// Inicializa o cliente do Google Generative AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
-// Configurações de segurança para o modelo Gemini
-const safetySettings = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-];
+import OpenAI from 'openai';
 
 // O cliente OpenAI será inicializado sob demanda dentro das funções que o utilizam.
 // Isso evita que o servidor quebre na inicialização se a chave não estiver definida.
@@ -247,17 +235,7 @@ export async function analyzeResume(resume) {
       throw new Error('Currículo insuficiente para análise (mínimo 50 caracteres)');
     }
 
-    console.log(`🤖 Analisando currículo ID: ${resume.id} com Google Gemini...`);
-
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      safetySettings,
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-      },
-    });
+    console.log(`🤖 Analisando currículo ID: ${resume.id} com Google Gemini (REST)...`);
 
     const prompt = `Você é um especialista em recrutamento e currículos. Sua tarefa é analisar o currículo em português a seguir e fornecer uma análise estruturada em JSON.
 
@@ -279,15 +257,42 @@ Para sugestões:
 
 Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const content = response.text();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+    const body = {
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini REST API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!content) {
       throw new Error('Resposta vazia do Gemini');
     }
 
-    let analysis = JSON.parse(content);
+    // Remove possíveis blocos de código markdown antes de parsear
+    const cleanContent = content.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
+
+    let analysis = JSON.parse(cleanContent);
 
     // Validar scores
     if (
@@ -304,10 +309,7 @@ Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
     return analysis;
   } catch (error) {
     console.error('❌ Erro na análise de currículo com Gemini:', error);
-    if (error.message.includes('GoogleGenerativeAI')) {
-       throw new Error(`Erro na API do Gemini: ${error.message}`);
-    }
-    throw new Error(`Erro ao analisar currículo: ${error.message}`);
+    throw new Error(`Erro na API do Gemini: ${error.message}`);
   }
 }
 
