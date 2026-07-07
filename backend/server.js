@@ -49,65 +49,36 @@ dotenv.config({ path: join(__dirname, '.env') });
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
-// Middlewares de segurança
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-  crossOriginEmbedderPolicy: false
-}));
-
-// CORS
-// Construir lista de origens permitidas:
-// 1. Se houver ALLOWED_ORIGINS, usar aquelas
-// 2. Senão, usar FRONTEND_URL se definida (para Railway/Vercel)
-// 3. Senão, usar defaults locais
-let allowedOrigins = [];
-
-if (process.env.ALLOWED_ORIGINS) {
-  allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
-} else if (process.env.FRONTEND_URL) {
-  allowedOrigins = [process.env.FRONTEND_URL];
-} else {
-  // Fallback para desenvolvimento local
-  allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000'
-  ];
-}
-
-// Garantir que a origem do Vercel esteja na lista
-const vercelOrigin = 'https://ja-curriculos.vercel.app';
-if (allowedOrigins.indexOf(vercelOrigin) === -1) allowedOrigins.push(vercelOrigin);
+// Configurar CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://ja-curriculos.vercel.app',
+];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir requisições sem origin (ex: mobile apps, Postman)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+  origin: (origin, callback) => {
+    // Permitir requisições sem 'origin' (como Postman ou apps mobile)
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Não permitido pelo CORS'));
+      callback(new Error('Not allowed by CORS'));
     }
   },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-// Responder OPTIONS (preflight) explicitamente
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Habilitar pre-flight para todas as rotas
 
-// Middlewares gerais
-app.use(compression()); // Compressão gzip
+// Middlewares de segurança e otimização
+app.use(helmet());
+app.use(compression());
+app.use(morgan('dev'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Função para verificar se a rota é de upload
 const isUploadRoute = (req) => {
