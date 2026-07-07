@@ -9,39 +9,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Função para obter a URL da API baseada no ambiente
 const getApiUrl = () => {
-  console.log('🔍 getApiUrl() chamado');
-  console.log('  import.meta.env.VITE_API_URL:', import.meta.env.VITE_API_URL);
-  console.log('  hostname:', window.location.hostname);
-  
-  // 1. Tentar usar variável de ambiente
-  let apiUrl = import.meta.env.VITE_API_URL;
-  if (apiUrl) {
-    // Garantir que tem /api no final
-    if (!apiUrl.endsWith('/api')) {
-      apiUrl = `${apiUrl}/api`;
-    }
-    console.log('📡 Usando VITE_API_URL (normalizado):', apiUrl);
-    return apiUrl;
-  }
-  
-  // 2. Detectar baseado no hostname
   const hostname = window.location.hostname;
+  
+  // Ambiente LOCAL (desenvolvimento)
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    console.log('🏠 Ambiente local detectado');
+    console.log('🏠 [LOCAL] Ambiente local detectado');
     return 'http://localhost:3001/api';
   }
   
-  // 3. Para produção em ja-curriculos.vercel.app, usar Railway backend
+  // Ambiente PRODUÇÃO (Vercel)
   if (hostname.includes('vercel.app') || hostname.includes('ja-curriculos')) {
-    console.log('🚀 Ambiente Vercel/produção detectado');
-    const railwayUrl = 'https://jacurriculos-production.up.railway.app/api';
-    console.log('🚂 Usando Railway URL:', railwayUrl);
-    return railwayUrl;
+    console.log('🚀 [PRODUÇÃO] Vercel detectado - usando Railway backend');
+    return 'https://jacurriculos-production.up.railway.app/api';
   }
   
-  // Fallback padrão
-  console.log('⚠️ Usando fallback:', '/api');
-  return '/api';
+  // Fallback
+  console.log('⚠️ [FALLBACK] Usando localhost');
+  return 'http://localhost:3001/api';
 };
 
 export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete }) {
