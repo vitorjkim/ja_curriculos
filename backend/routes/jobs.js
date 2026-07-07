@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult, param, query } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
-import { authenticateToken, optionalAuth, requireCompany } from '../middleware/auth.js';
+import { authenticateToken, optionalAuth, requireCompany, requireAdmin } from '../middleware/auth.js';
 import { JOB_TAXONOMY, ALL_AREAS, isValidArea, isValidSubarea } from '../config/jobTaxonomy.js';
 import { checkSubscriptionPlan, validateCompanyVerification, validateJobPostingLimit } from '../middleware/checkSubscriptionPlan.js';
 import { notifyNewJobAlert } from '../services/notificationService.js';
@@ -457,25 +457,7 @@ router.get('/highlights/mine', authenticateToken, async (req, res) => {
 });
 // router já inicializado acima
 
-// Middleware para validar se o usuário é uma empresa
-const requireCompany = (req, res, next) => {
-  if (req.user.type !== 'company') {
-    return res.status(403).json({ 
-      error: 'Acesso negado. Apenas empresas podem criar vagas.' 
-    });
-  }
-  next();
-};
-
-// Middleware para validar se o usuário é admin
-const requireAdmin = (req, res, next) => {
-  if (req.user.type !== 'admin') {
-    return res.status(403).json({
-      error: 'Acesso negado. Apenas admins.'
-    });
-  }
-  next();
-};
+// NOTE: `requireAdmin` is provided by backend/middleware/auth.js — imported above.
 
 // ===== Garantir colunas extras (lazy migration) =====
 let ensuredJobExtraColumns = false;
