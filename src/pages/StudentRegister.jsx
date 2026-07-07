@@ -133,8 +133,8 @@ const StudentRegister = () => {
             description: 'Sua conta foi criada com sucesso. Redirecionando...'
           });
           
-          // Redirecionar para student dashboard
-          navigate('/student-dashboard');
+          // Redirecionar para dashboard
+          navigate('/dashboard');
         } catch (loginError) {
           console.error('Erro no login automático:', loginError);
           toast({
