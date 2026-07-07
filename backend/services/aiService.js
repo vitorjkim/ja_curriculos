@@ -122,7 +122,21 @@ const RESUME_ANALYSIS_SCHEMA = {
 function formatResumeForAnalysis(resume) {
   const sections = [];
 
-  // Contato
+  // Informações Pessoais
+  if (resume.personal_info && typeof resume.personal_info === 'object') {
+    sections.push(`👤 INFORMAÇÕES PESSOAIS`);
+    const info = resume.personal_info;
+    if (info.full_name) sections.push(`Nome: ${info.full_name}`);
+    if (info.email) sections.push(`Email: ${info.email}`);
+    if (info.phone) sections.push(`Telefone: ${info.phone}`);
+    if (info.birth_date) sections.push(`Data de Nascimento: ${info.birth_date}`);
+    if (info.location) sections.push(`Localização: ${info.location}`);
+    if (info.city) sections.push(`Cidade: ${info.city}`);
+    if (info.bio) sections.push(`Bio: ${info.bio}`);
+    sections.push('');
+  }
+
+  // Contato (legacy)
   if (resume.contact_email || resume.phone) {
     sections.push(`📧 CONTATO`);
     if (resume.contact_email) sections.push(`Email: ${resume.contact_email}`);
@@ -176,6 +190,26 @@ function formatResumeForAnalysis(resume) {
     resume.certifications.forEach((cert, idx) => {
       sections.push(`${idx + 1}. ${cert.certification_name || 'Sem nome'}`);
       if (cert.issued_date) sections.push(`   Emitida em: ${cert.issued_date}`);
+    });
+    sections.push('');
+  }
+
+  // Cursos (se existirem)
+  if (resume.courses && Array.isArray(resume.courses) && resume.courses.length > 0) {
+    sections.push(`📚 CURSOS`);
+    resume.courses.forEach((course, idx) => {
+      sections.push(`${idx + 1}. ${course.course_name || course.name || 'Sem nome'}`);
+      if (course.platform) sections.push(`   Plataforma: ${course.platform}`);
+      if (course.completion_date) sections.push(`   Concluído em: ${course.completion_date}`);
+    });
+    sections.push('');
+  }
+
+  // Idiomas (se existirem)
+  if (resume.languages && Array.isArray(resume.languages) && resume.languages.length > 0) {
+    sections.push(`🌍 IDIOMAS`);
+    resume.languages.forEach((lang, idx) => {
+      sections.push(`${idx + 1}. ${lang.language || lang.name || 'Sem nome'} - ${lang.level || 'Sem nível'}`);
     });
     sections.push('');
   }
