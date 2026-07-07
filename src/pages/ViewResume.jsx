@@ -485,8 +485,16 @@ const ViewResume = () => {
               </Button>
             </div>
 
-            {/* Componente de Análise de IA */}
-            <ResumeScoreCard resumeId={id} isOwner={isOwner} />
+            {/* AI Resume Score Card */}
+            {isOwner && (
+              <div className="mb-8 no-print">
+                <ResumeScoreCard 
+                  resumeId={id}
+                  onAnalyzeStart={() => console.log('Iniciando análise...')}
+                  onAnalyzeComplete={(analysis) => console.log('Análise completa:', analysis)}
+                />
+              </div>
+            )}
 
             {!isInternalFixedTemplate && (
               <div className="mb-6 no-print">

@@ -1,378 +1,346 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, TrendingUp, AlertCircle, CheckCircle2, AlertTriangle, Sparkles, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import api from '@/lib/api';
-
 /**
- * ResumeScoreCard - Exibe análise de qualidade do currículo
- * Mostra: Score geral, 5 sub-scores, sugestões categorizadas por prioridade
+ * ResumeScoreCard - Componente para exibir análise de currículo com IA
+ * Mostra score geral (0-100) + breakdown de 5 métricas + sugestões
  */
-export default function ResumeScoreCard({ resumeId, isOwner = false }) {
+
+import React, { useState } from 'react';
+import { AlertCircle, CheckCircle, AlertTriangle, Zap, RefreshCw, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete }) {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expandedSuggestions, setExpandedSuggestions] = useState(false);
 
-  // Função para chamar API de análise
-  const analyzeResume = async () => {
+  // Função para analisar currículo
+  const handleAnalyze = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log(`🤖 Analisando currículo ${resumeId}...`);
-      
-      const response = await api.post(`/resumes/${resumeId}/analyze`);
-      
-      if (response?.data?.success || response?.success) {
-        setAnalysis(response.data.analysis || response.analysis);
-        console.log('✅ Análise recebida:', response.data.analysis || response.analysis);
-      } else {
-        throw new Error('Resposta inválida da API');
+      onAnalyzeStart?.();
+
+      const response = await fetch(`/api/resumes/${resumeId}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao analisar currículo');
       }
+
+      const data = await response.json();
+      setAnalysis(data);
+      onAnalyzeComplete?.(data);
     } catch (err) {
-      console.error('❌ Erro na análise:', err);
-      setError(err.response?.data?.error || err.message || 'Erro ao analisar currículo');
+      console.error('Erro na análise:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-load na primeira renderização se for dono
-  useEffect(() => {
-    if (isOwner && resumeId && !analysis && !loading) {
-      analyzeResume();
-    }
-  }, [resumeId, isOwner]);
-
-  if (!isOwner) {
-    return null; // Mostrar análise apenas para dono do currículo
-  }
-
-  if (error && !analysis) {
-    return (
-      <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 mb-6">
-        <div className="flex items-center gap-3 mb-3">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <h3 className="font-semibold text-red-800">Erro na Análise</h3>
-        </div>
-        <p className="text-sm text-red-700 mb-4">{error}</p>
-        {isOwner && (
-          <Button
-            onClick={analyzeResume}
-            disabled={loading}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            {loading ? 'Analisando...' : 'Tentar Novamente'}
-          </Button>
-        )}
-      </div>
-    );
-  }
-
-  if (!analysis) {
-    return (
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-blue-600 animate-pulse" />
-            <div>
-              <h3 className="font-semibold text-blue-800">Análise de IA Disponível</h3>
-              <p className="text-sm text-blue-700">Receba feedback detalhado sobre seu currículo</p>
-            </div>
-          </div>
-          {isOwner && (
-            <Button
-              onClick={analyzeResume}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Analisando...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Analisar Agora
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const score = analysis.score || 0;
-  const subscores = {
-    completeness: analysis.completeness_score || 0,
-    quality: analysis.quality_score || 0,
-    relevance: analysis.relevance_score || 0,
-    impact: analysis.impact_score || 0,
+  // Cor do score baseado na nota
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'from-emerald-500 to-teal-500';
+    if (score >= 60) return 'from-yellow-500 to-amber-500';
+    return 'from-red-500 to-orange-500';
   };
 
-  // Cores por score
-  const getScoreColor = (s) => {
-    if (s >= 80) return 'text-emerald-600';
-    if (s >= 60) return 'text-blue-600';
-    if (s >= 40) return 'text-amber-600';
-    return 'text-red-600';
-  };
-
-  const getScoreBg = (s) => {
-    if (s >= 80) return 'bg-emerald-50 border-emerald-200';
-    if (s >= 60) return 'bg-blue-50 border-blue-200';
-    if (s >= 40) return 'bg-amber-50 border-amber-200';
-    return 'bg-red-50 border-red-200';
-  };
-
-  const getProgressColor = (s) => {
-    if (s >= 80) return 'bg-emerald-500';
-    if (s >= 60) return 'bg-blue-500';
-    if (s >= 40) return 'bg-amber-500';
+  // Classe de barra de progresso
+  const getProgressColor = (score) => {
+    if (score >= 80) return 'bg-emerald-500';
+    if (score >= 60) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
-  // Filtrar sugestões por prioridade
-  const criticalSuggestions = (analysis.suggestions || []).filter(s => s.priority === 'critical');
-  const importantSuggestions = (analysis.suggestions || []).filter(s => s.priority === 'important');
-  const recommendedSuggestions = (analysis.suggestions || []).filter(s => s.priority === 'recommended');
+  // Ícone de sugestão por prioridade
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'critical':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      case 'important':
+        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+      case 'recommended':
+        return <Lightbulb className="w-4 h-4 text-blue-600" />;
+      default:
+        return null;
+    }
+  };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mb-6"
-    >
-      {/* Score Principal */}
-      <div className={`border-2 rounded-2xl p-8 mb-6 ${getScoreBg(score)}`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Score Circular */}
-          <div className="flex justify-center">
-            <div className="relative w-40 h-40">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
-                {/* Background circle */}
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  className="text-gray-200"
-                />
-                {/* Progress circle */}
-                <motion.circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  strokeDasharray={`${(score / 100) * 440} 440`}
-                  className={getProgressColor(score)}
-                  initial={{ strokeDasharray: '0 440' }}
-                  animate={{ strokeDasharray: `${(score / 100) * 440} 440` }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className={`text-5xl font-bold ${getScoreColor(score)}`}>{score}</div>
-                  <div className="text-sm text-gray-600">/ 100</div>
-                </div>
-              </div>
+  // Se não tem análise e não está carregando
+  if (!analysis && !loading && !error) {
+    return (
+      <div className="w-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Zap className="w-5 h-5 text-blue-600" />
             </div>
-          </div>
-
-          {/* Info + Sub-scores */}
-          <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">Qualidade do Seu Currículo</h2>
-              <p className="text-gray-600">{analysis.summary}</p>
-            </div>
-
-            {/* Sub-scores Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries({
-                'Completude': subscores.completeness,
-                'Qualidade': subscores.quality,
-                'Relevância': subscores.relevance,
-                'Impacto': subscores.impact,
-              }).map(([label, value]) => (
-                <div key={label} className="bg-white/70 rounded-lg p-3 backdrop-blur-sm border border-white/50">
-                  <div className="text-xs text-gray-600 mb-1">{label}</div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        className={getProgressColor(value)}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${value}%` }}
-                        transition={{ duration: 1, delay: 0.2 }}
-                      />
-                    </div>
-                    <div className={`text-sm font-bold ${getScoreColor(value)} w-10 text-right`}>{value}</div>
-                  </div>
-                </div>
-              ))}
+              <h3 className="font-bold text-gray-900">Análise de Qualidade</h3>
+              <p className="text-xs text-gray-600">Descubra como melhorar seu currículo</p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Strengths */}
-      {analysis.key_strengths && analysis.key_strengths.length > 0 && (
-        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            <h3 className="font-semibold text-emerald-800">Seus Pontos Fortes</h3>
-          </div>
-          <ul className="space-y-2">
-            {analysis.key_strengths.map((strength, idx) => (
-              <li key={idx} className="text-sm text-emerald-700 flex items-start gap-2">
-                <span className="text-emerald-500 font-bold mt-0.5">•</span>
-                <span>{strength}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Sugestões por Prioridade */}
-      <div className="space-y-4">
-        {/* CRITICAL */}
-        {criticalSuggestions.length > 0 && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h3 className="font-semibold text-red-800">
-                Crítico ({criticalSuggestions.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {criticalSuggestions.map((sug, idx) => (
-                <div key={idx} className="bg-white/50 rounded-lg p-4 backdrop-blur-sm border border-red-100">
-                  <div className="flex items-start justify-between mb-1">
-                    <h4 className="font-semibold text-gray-900 text-sm">{sug.title}</h4>
-                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-                      +{sug.impact} pts
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700">{sug.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* IMPORTANT */}
-        {importantSuggestions.length > 0 && (
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
-              <h3 className="font-semibold text-amber-800">
-                Importante ({importantSuggestions.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {importantSuggestions.map((sug, idx) => (
-                <div key={idx} className="bg-white/50 rounded-lg p-4 backdrop-blur-sm border border-amber-100">
-                  <div className="flex items-start justify-between mb-1">
-                    <h4 className="font-semibold text-gray-900 text-sm">{sug.title}</h4>
-                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">
-                      +{sug.impact} pts
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700">{sug.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* RECOMMENDED - Colapsável */}
-        {recommendedSuggestions.length > 0 && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="w-full bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-left hover:bg-blue-100 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800">
-                  Recomendado ({recommendedSuggestions.length})
-                </h3>
-              </div>
-              <motion.div
-                animate={{ rotate: expanded ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                ▼
-              </motion.div>
-            </div>
-
-            {expanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 space-y-3 pt-4 border-t border-blue-200"
-              >
-                {recommendedSuggestions.map((sug, idx) => (
-                  <div key={idx} className="bg-white/50 rounded-lg p-4 backdrop-blur-sm border border-blue-100">
-                    <div className="flex items-start justify-between mb-1">
-                      <h4 className="font-semibold text-gray-900 text-sm">{sug.title}</h4>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                        +{sug.impact} pts
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700">{sug.description}</p>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* Keywords */}
-      {analysis.keywords_suggested && analysis.keywords_suggested.length > 0 && (
-        <div className="bg-purple-50 border-2 border-purple-200 rounded-2xl p-6 mt-6">
-          <h3 className="font-semibold text-purple-800 mb-3">Keywords Sugeridas</h3>
-          <div className="flex flex-wrap gap-2">
-            {analysis.keywords_suggested.map((keyword, idx) => (
-              <span
-                key={idx}
-                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium border border-purple-200"
-              >
-                #{keyword}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Botão para reanalisar */}
-      {isOwner && (
-        <Button
-          onClick={analyzeResume}
+        <button
+          onClick={handleAnalyze}
           disabled={loading}
-          className="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3"
+          className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              Reanalisa ndo...
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Analisando currículo...
             </>
           ) : (
             <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Reanalisar Currículo
+              <Zap className="w-4 h-4" />
+              Analisar agora
             </>
           )}
-        </Button>
+        </button>
+      </div>
+    );
+  }
+
+  // Se houver erro
+  if (error) {
+    return (
+      <div className="w-full bg-red-50 rounded-2xl p-6 border border-red-200">
+        <div className="flex items-start gap-3 mb-4">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-red-900">Erro na análise</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+        <button
+          onClick={handleAnalyze}
+          disabled={loading}
+          className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  // Análise completa
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full space-y-6"
+    >
+      {/* Card Principal - Score Geral */}
+      <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Score de Qualidade</h3>
+            <p className="text-sm text-gray-600">{analysis?.summary || 'Análise concluída'}</p>
+          </div>
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Reanalizar"
+          >
+            <RefreshCw className={`w-5 h-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {/* Score Visual Circular */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="relative w-32 h-32">
+            {/* Background círculo */}
+            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="8"
+              />
+              {/* Progresso */}
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
+                fill="none"
+                stroke="url(#scoreGradient)"
+                strokeWidth="8"
+                strokeDasharray={`${(analysis?.score / 100) * 339.29} 339.29`}
+                strokeLinecap="round"
+                className="transition-all duration-1000"
+              />
+              <defs>
+                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={analysis?.score >= 80 ? '#10b981' : analysis?.score >= 60 ? '#eab308' : '#ef4444'} />
+                  <stop offset="100%" stopColor={analysis?.score >= 80 ? '#14b8a6' : analysis?.score >= 60 ? '#f59e0b' : '#f97316'} />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* Texto no centro */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-4xl font-black text-gray-900">{Math.round(analysis?.score || 0)}</span>
+              <span className="text-xs text-gray-600">/100</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Grid de 5 Scores */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: 'Completude', key: 'completeness_score', icon: '📝' },
+            { label: 'Qualidade', key: 'quality_score', icon: '✨' },
+            { label: 'Relevância', key: 'relevance_score', icon: '🎯' },
+            { label: 'Impacto', key: 'impact_score', icon: '⚡' },
+            { label: 'Geral', key: 'score', icon: '🏆' }
+          ].map((metric) => (
+            <div key={metric.key} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-200">
+              <div className="text-xl mb-1">{metric.icon}</div>
+              <div className="text-2xl font-bold text-gray-900">{analysis?.[metric.key] || 0}</div>
+              <div className="text-xs text-gray-600 mt-1">{metric.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sugestões */}
+      {analysis?.suggestions && analysis.suggestions.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <button
+            onClick={() => setExpandedSuggestions(!expandedSuggestions)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Lightbulb className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="text-left">
+                <h4 className="font-semibold text-gray-900">Sugestões de Melhoria</h4>
+                <p className="text-xs text-gray-600">{analysis.suggestions.length} recomendações</p>
+              </div>
+            </div>
+            {expandedSuggestions ? (
+              <ChevronUp className="w-5 h-5 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {expandedSuggestions && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="border-t border-gray-200 overflow-hidden"
+              >
+                <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
+                  {analysis.suggestions.map((suggestion, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-lg border ${
+                        suggestion.priority === 'critical'
+                          ? 'bg-red-50 border-red-200'
+                          : suggestion.priority === 'important'
+                          ? 'bg-yellow-50 border-yellow-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex-shrink-0">
+                          {getPriorityIcon(suggestion.priority)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm text-gray-900">
+                            {suggestion.title}
+                          </div>
+                          <p className="text-xs text-gray-700 mt-1">
+                            {suggestion.description}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-gray-600">
+                              Categoria: <span className="font-medium">{suggestion.category}</span>
+                            </span>
+                            <span className="text-xs font-semibold text-gray-700 bg-white/50 px-2 py-1 rounded">
+                              +{suggestion.impact} pts
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Pontos Fortes e Seções Faltando */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {analysis?.key_strengths && analysis.key_strengths.length > 0 && (
+          <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <h5 className="font-semibold text-emerald-900">Pontos Fortes</h5>
+            </div>
+            <ul className="space-y-2">
+              {analysis.key_strengths.map((strength, idx) => (
+                <li key={idx} className="text-sm text-emerald-800 flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">•</span>
+                  <span>{strength}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {analysis?.missing_sections && analysis.missing_sections.length > 0 && (
+          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="w-5 h-5 text-orange-600" />
+              <h5 className="font-semibold text-orange-900">Seções Faltando</h5>
+            </div>
+            <ul className="space-y-2">
+              {analysis.missing_sections.map((section, idx) => (
+                <li key={idx} className="text-sm text-orange-800 flex items-start gap-2">
+                  <span className="text-orange-600 mt-0.5">•</span>
+                  <span>{section}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Keywords Sugeridas */}
+      {analysis?.keywords_suggested && analysis.keywords_suggested.length > 0 && (
+        <div className="bg-white rounded-2xl p-4 border border-gray-200">
+          <h5 className="font-semibold text-gray-900 mb-3">Keywords Sugeridas</h5>
+          <div className="flex flex-wrap gap-2">
+            {analysis.keywords_suggested.slice(0, 10).map((keyword, idx) => (
+              <span
+                key={idx}
+                className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full"
+              >
+                {keyword}
+              </span>
+            ))}
+            {analysis.keywords_suggested.length > 10 && (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                +{analysis.keywords_suggested.length - 10} mais
+              </span>
+            )}
+          </div>
+        </div>
       )}
     </motion.div>
   );
