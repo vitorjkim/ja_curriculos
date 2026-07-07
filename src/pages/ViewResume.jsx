@@ -10,6 +10,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useAuth } from '@/contexts/AuthContext';
 import { resumes } from '@/lib/api';
+import ResumeScoreCard from '@/components/resume/ResumeScoreCard';
 
 // Helpers to parse and format birthdate and age
 const parseBirthdate = (raw) => {
@@ -483,6 +484,9 @@ const ViewResume = () => {
                 Baixar PDF
               </Button>
             </div>
+
+            {/* Componente de Análise de IA */}
+            <ResumeScoreCard resumeId={id} isOwner={isOwner} />
 
             {!isInternalFixedTemplate && (
               <div className="mb-6 no-print">
