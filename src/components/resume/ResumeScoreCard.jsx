@@ -53,6 +53,12 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
   const [error, setError] = useState(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState(false);
 
+  // Log do ambiente
+  console.log('🔧 ResumeScoreCard loaded');
+  console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('  hostname:', window.location.hostname);
+  console.log('  env.MODE:', import.meta.env.MODE);
+
   // Função para analisar currículo
   const handleAnalyze = async () => {
     try {
