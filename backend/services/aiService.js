@@ -21,10 +21,9 @@ const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
 ];
 
-// Mantém o cliente OpenAI para funções que ainda não foram migradas (se houver)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// O cliente OpenAI será inicializado sob demanda dentro das funções que o utilizam.
+// Isso evita que o servidor quebre na inicialização se a chave não estiver definida.
+let openai;
 
 /**
  * Esquema JSON esperado da análise de currículo
@@ -316,21 +315,18 @@ Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
  * Reescreve um trecho de texto usando IA
  * Mantém informação mas melhora qualidade e impacto
  * @param {String} text - Texto original
- * @param {String} context - Contexto (ex: job_title, experience, education)
- * @returns {Promise<String>} - Texto reescrito
+ * @returns {String} - Texto reescrito
  */
-export async function rewriteText(text, context = 'general') {
+export async function rewriteText(text) {
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn('OPENAI_API_KEY não definida. Usando texto original.');
+    return text;
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY não configurada');
-    }
-
-    if (!text || text.trim().length < 10) {
-      throw new Error('Texto muito curto para reescrever (mínimo 10 caracteres)');
-    }
-
-    console.log(`📝 Reescrevendo texto (contexto: ${context})...`);
-
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.8,
@@ -374,19 +370,19 @@ Retorne APENAS o texto reescrito, sem explicações.`,
 
 /**
  * Gera sugestões de keywords para um currículo
- * @param {Object} resume - Objeto do currículo
- * @returns {Promise<Array<String>>} - Lista de keywords sugeridas
+ * @param {String} text - Texto para extrair keywords
+ * @returns {Array<String>} - Lista de keywords
  */
-export async function suggestKeywords(resume) {
+export async function suggestKeywords(text) {
+  if (!process.env.OPENAI_API_KEY) {
+    console.warn('OPENAI_API_KEY não definida. Retornando array vazio.');
+    return [];
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY não configurada');
-    }
-
-    const resumeText = formatResumeForAnalysis(resume);
-
-    console.log('🔑 Gerando keywords sugeridas...');
-
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.5,
@@ -403,7 +399,7 @@ Retorne APENAS JSON válido.`,
         },
         {
           role: 'user',
-          content: `Currículo:\n\n${resumeText}`,
+          content: `Currículo:\n\n${text}`,
         },
       ],
     });
