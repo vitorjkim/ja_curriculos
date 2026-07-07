@@ -371,6 +371,9 @@ const CreateResume = () => {
         description: 'Seu currículo foi salvo e está pronto para ser enviado.'
       });
 
+      // Notificar navbar de que um novo currículo foi criado
+      window.dispatchEvent(new Event('resume-created'));
+
       navigate('/my-resumes');
     } catch (error) {
       console.error('❌ Erro ao criar currículo:', error);
@@ -395,6 +398,9 @@ const CreateResume = () => {
           title: 'Currículo criado com sucesso!',
           description: 'Seu currículo foi salvo localmente.'
         });
+
+        // Notificar navbar de que um novo currículo foi criado
+        window.dispatchEvent(new Event('resume-created'));
 
         navigate('/my-resumes');
       } catch (fallbackError) {
