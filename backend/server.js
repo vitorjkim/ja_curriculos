@@ -30,6 +30,10 @@ import journeyRoutes from './routes/journey.js';
 import jobAlertsRoutes from './routes/jobAlerts.js';
 import savedJobsRoutes from './routes/savedJobs.js';
 import agencyRoutes from './routes/agency.js';
+import aiRoutes from './routes/ai.js';
+import notificationRoutes from './routes/notifications.js';
+import paymentRoutes from './routes/payments.js';
+import adminRoutes from './routes/admin.js';
 
 // Importar scripts
 import createTables from './scripts/initDatabase.js';
@@ -146,7 +150,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
-  app.use('/api/favorites', favoritesRoutes);
+app.use('/api/favorites', favoritesRoutes);
 app.use('/api/interactions', interactionsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/chat', chatRoutes);
@@ -160,6 +164,10 @@ app.use('/api/journey', journeyRoutes);
 app.use('/api/job-alerts', jobAlertsRoutes);
 app.use('/api/saved-jobs', savedJobsRoutes);
 app.use('/api/agency', agencyRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Rota de healthcheck
 app.get('/health', async (req, res) => {

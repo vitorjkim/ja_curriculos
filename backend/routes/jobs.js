@@ -2,8 +2,10 @@ import express from 'express';
 import { body, validationResult, param, query } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
-import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { authenticateToken, optionalAuth, requireCompany } from '../middleware/auth.js';
 import { JOB_TAXONOMY, ALL_AREAS, isValidArea, isValidSubarea } from '../config/jobTaxonomy.js';
+import { checkSubscriptionPlan, validateCompanyVerification, validateJobPostingLimit } from '../middleware/checkSubscriptionPlan.js';
+import { notifyNewJobAlert } from '../services/notificationService.js';
 
 // Inicializar router antes de qualquer uso
 const router = express.Router();
@@ -891,6 +893,8 @@ router.get('/company', authenticateToken, requireCompany, async (req, res) => {
 router.post('/', [
   authenticateToken,
   requireCompany,
+  checkSubscriptionPlan('free'),
+  validateCompanyVerification,
   body('title').notEmpty().withMessage('Título é obrigatório'),
   body('description').notEmpty().withMessage('Descrição é obrigatória'),
   body('requirements').optional().isString(),
@@ -924,6 +928,33 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // ─────────────────────────────────────────────────────────
+    // BLOCO 3: Validações de Plano e Verificação
+    // ─────────────────────────────────────────────────────────
+    
+    // Se empresa não verificada, salvar como rascunho
+    if (req.needsVerification) {
+      return res.status(403).json({
+        success: false,
+        error: 'Sua empresa está em análise. Vagas serão publicadas após aprovação.',
+        status: 'pending_verification',
+        action: 'contact_support',
+      });
+    }
+
+    // Validar limite de vagas para plano free
+    const jobLimitResult = await validateJobPostingLimit(req.user.id, req.user.type);
+    if (jobLimitResult !== true) {
+      return res.status(403).json({
+        success: false,
+        error: jobLimitResult.reason,
+        current: jobLimitResult.current,
+        limit: jobLimitResult.limit,
+        upgradePlan: jobLimitResult.upgradePlan,
+        upgradeUrl: '/pricing',
+      });
+    }
+
     const {
       title,
       description,
@@ -941,7 +972,7 @@ router.post('/', [
   subarea
     } = req.body;
 
-    // Limites de vagas removidos - todas empresas têm acesso ilimitado (plano premium para todas)
+    // Limites de vagas implementados via plano (free: 2/mês, pro: ilimitado)
 
     const query = `
       INSERT INTO jobs (

@@ -2,6 +2,8 @@ import express from 'express';
 import { body, param, validationResult } from 'express-validator';
 import pool from '../config/database.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireActiveSubscription } from '../middleware/checkSubscriptionPlan.js';
+import { notifyApplicationStatusChange } from '../services/notificationService.js';
 
 const router = express.Router();
 
@@ -820,6 +822,47 @@ router.put('/:id/status', authenticateToken, [
       const jt = await pool.query('SELECT j.title FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=$1',[id]);
       jobTitle = jt.rows[0]?.title || null;
     } catch {}
+
+    // 🔔 ENVIAR NOTIFICAÇÃO AO CANDIDATO
+    try {
+      // Buscar dados do candidato e empresa
+      const candidateQuery = await pool.query(`
+        SELECT u.email, u.name, u.phone, u.consent_privacy_policy, u.consent_whatsapp
+        FROM applications a
+        JOIN users u ON a.candidate_id = u.id
+        WHERE a.id = $1
+      `, [id]);
+
+      const companyQuery = await pool.query(`
+        SELECT c.name as company_name
+        FROM applications a
+        JOIN jobs j ON a.job_id = j.id
+        JOIN users c ON j.company_id = c.id
+        WHERE a.id = $1
+      `, [id]);
+
+      if (candidateQuery.rows.length > 0 && companyQuery.rows.length > 0) {
+        const candidate = candidateQuery.rows[0];
+        const company = companyQuery.rows[0];
+
+        // Enviar notificação de mudança de status
+        await notifyApplicationStatusChange({
+          candidateEmail: candidate.email,
+          candidateName: candidate.name,
+          jobTitle: jobTitle || 'Vaga',
+          companyName: company.company_name || 'Empresa',
+          newStatus: result.rows[0].status,
+          user: candidate,
+          interviewDate: result.rows[0].interview_date || null,
+        });
+
+        console.log(`✅ Notificação enviada para ${candidate.email} - Status: ${result.rows[0].status}`);
+      }
+    } catch (notificationError) {
+      // Não bloqueia a resposta se houver erro ao enviar notificação
+      console.warn('⚠️ Erro ao enviar notificação:', notificationError.message);
+    }
+
     res.json({
       success: true,
       application: { ...result.rows[0], job_title: jobTitle },
