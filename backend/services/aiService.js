@@ -10,9 +10,10 @@
 
 import OpenAI from 'openai';
 
-// Inicializar cliente OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Inicializar cliente Groq (compatível com SDK OpenAI)
+const groq = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 });
 
 /**
@@ -225,9 +226,9 @@ function formatResumeForAnalysis(resume) {
  */
 export async function analyzeResume(resume) {
   try {
-    // Validar que temos API key
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY não configurada');
+    // Validar que temos API key do Groq
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY não configurada');
     }
 
     // Formatar currículo para análise
@@ -237,11 +238,11 @@ export async function analyzeResume(resume) {
       throw new Error('Currículo insuficiente para análise (mínimo 50 caracteres)');
     }
 
-    console.log(`🤖 Analisando currículo ID: ${resume.id} com OpenAI GPT-4o-mini...`);
+    console.log(`🤖 Analisando currículo ID: ${resume.id} com Groq Llama3...`);
 
-    // Chamar OpenAI com resposta estruturada (JSON mode)
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // ✅ Modelo recomendado: rápido e eficiente
+    // Chamar Groq com resposta estruturada (JSON mode)
+    const response = await groq.chat.completions.create({
+      model: 'llama3-8b-8192',
       temperature: 0.7,
       max_tokens: 2000,
       response_format: { type: 'json_object' },
@@ -279,7 +280,7 @@ Retorne APENAS o JSON, sem explicações adicionais.`,
     const content = response.choices[0]?.message?.content;
 
     if (!content) {
-      throw new Error('Resposta vazia da OpenAI');
+      throw new Error('Resposta vazia da Groq');
     }
 
     // Parse do JSON retornado
@@ -297,32 +298,9 @@ Retorne APENAS o JSON, sem explicações adicionais.`,
     }
 
     console.log(`✅ Análise concluída: Score ${analysis.score}/100`);
-
     return analysis;
   } catch (error) {
-    // Tratamento específico de erros
-    if (error.message.includes('API key')) {
-      console.error('❌ Erro: Chave OpenAI não configurada');
-      throw new Error('Serviço de IA não configurado. Aguarde enquanto configuramos.');
-    }
-
-    if (error.message.includes('invalid_request_error')) {
-      console.error('❌ Erro na solicitação OpenAI:', error.message);
-      throw new Error('Erro ao processar currículo. Tente novamente.');
-    }
-
-    if (error.code === 'ERR_MODULE_NOT_FOUND') {
-      console.error('❌ Módulo OpenAI não instalado');
-      throw new Error('Dependência de IA não encontrada.');
-    }
-
-    // Timeout ou conexão
-    if (error.message.includes('timeout') || error.message.includes('ECONNREFUSED')) {
-      console.error('❌ Timeout ou erro de conexão com OpenAI');
-      throw new Error('Serviço de IA indisponível. Tente novamente em alguns segundos.');
-    }
-
-    console.error('❌ Erro inesperado na análise:', error.message);
+    console.error('❌ Erro na análise de currículo com Groq:', error);
     throw new Error(`Erro ao analisar currículo: ${error.message}`);
   }
 }
