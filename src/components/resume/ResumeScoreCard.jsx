@@ -20,14 +20,30 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
       setError(null);
       onAnalyzeStart?.();
 
+      // Obter token do localStorage
+      const token = localStorage.getItem('curriculoja_token');
+      if (!token) {
+        throw new Error('Não autenticado. Faça login novamente.');
+      }
+
       const response = await fetch(`/api/resumes/${resumeId}/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao analisar currículo');
+        let errorMessage = 'Erro ao analisar currículo';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Se não conseguir fazer parse do JSON, usar mensagem padrão
+          errorMessage = `Erro ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
