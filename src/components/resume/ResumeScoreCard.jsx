@@ -30,59 +30,57 @@ const getApiUrl = () => {
 
 export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete, initialAnalysis }) {
   const [analysis, setAnalysis] = useState(initialAnalysis || null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!initialAnalysis);
   const [error, setError] = useState(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState(false);
-
-  // Log do ambiente
-  console.log('🔧 ResumeScoreCard loaded');
-  console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
-  console.log('  hostname:', window.location.hostname);
-  console.log('  env.MODE:', import.meta.env.MODE);
-  console.log('  initialAnalysis:', initialAnalysis);
 
   // Carregar análise existente ao montar o componente
   useEffect(() => {
     if (resumeId && !initialAnalysis) {
       loadAnalysis();
+    } else if (initialAnalysis) {
+      setLoading(false);
     }
-  }, [resumeId]);
+  }, [resumeId, initialAnalysis]);
 
-  // Função para carregar análise existente
+  // Função para carregar análise existente via endpoint de análise
   const loadAnalysis = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('curriculoja_token');
-      if (!token) return;
-
-      const apiUrl = getApiUrl();
-      const url = `${apiUrl}/resumes/${resumeId}`;
-      console.log('🔗 Carregando análise do currículo:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        console.warn('Análise não encontrada ou erro ao carregar');
+      if (!token) {
+        setLoading(false);
         return;
       }
 
-      const resume = await response.json();
-      console.log('📊 Dados do currículo carregados:', resume);
+      const apiUrl = getApiUrl();
+      // Busca o currículo para pegar ai_analysis já armazenado
+      const url = `${apiUrl}/resumes/${resumeId}`;
 
-      if (resume.ai_analysis) {
-        console.log('✅ Análise encontrada:', resume.ai_analysis);
-        // Se ai_analysis for string, fazer parse
-        const analysisData = typeof resume.ai_analysis === 'string' 
-          ? JSON.parse(resume.ai_analysis) 
-          : resume.ai_analysis;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      // A resposta pode ser { resume: {...} } ou direto o objeto
+      const resumeData = data.resume || data;
+
+      if (resumeData.ai_analysis) {
+        const analysisData = typeof resumeData.ai_analysis === 'string'
+          ? JSON.parse(resumeData.ai_analysis)
+          : resumeData.ai_analysis;
         setAnalysis(analysisData);
       }
     } catch (err) {
       console.warn('Erro ao carregar análise:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,9 +161,19 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
     }
   };
 
-  // Se não tem análise e não está carregando
+  // Se não tem análise, não está carregando e sem erro → não mostrar nada
   if (!analysis && !loading && !error) {
     return null;
+  }
+
+  // Enquanto carrega, mostra spinner
+  if (loading && !analysis) {
+    return (
+      <div className="w-full bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-center gap-3">
+        <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
+        <span className="text-sm text-gray-500">Carregando score de qualidade...</span>
+      </div>
+    );
   }
 
   // Se houver erro

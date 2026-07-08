@@ -499,17 +499,16 @@ const ViewResume = () => {
               </Button>
             </div>
 
-            {/* AI Resume Score Card */}
-            {isOwner && (
-              <div className="mb-8 no-print">
-                <ResumeScoreCard 
-                  resumeId={id}
-                  initialAnalysis={typeof resume.ai_analysis === 'string' ? JSON.parse(resume.ai_analysis) : resume.ai_analysis}
-                  onAnalyzeStart={() => console.log('Iniciando análise...')}
-                  onAnalyzeComplete={(analysis) => console.log('Análise completa:', analysis)}
-                />
-              </div>
-            )}
+            {/* AI Resume Score Card - exibir quando há análise disponível */}
+            <div className="mb-8 no-print">
+              <ResumeScoreCard 
+                resumeId={id}
+                initialAnalysis={resume.ai_analysis
+                  ? (typeof resume.ai_analysis === 'string' ? JSON.parse(resume.ai_analysis) : resume.ai_analysis)
+                  : null
+                }
+              />
+            </div>
 
             {!isInternalFixedTemplate && (
               <div className="mb-6 no-print">
