@@ -17,6 +17,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { schoolApi } from '@/lib/schoolApi';
 import { getSavedJobIds, saveJob as saveJobLocal, removeJob as removeJobLocal } from '@/lib/savedJobs';
 import { useAuth } from '@/contexts/AuthContext';
+import JobMatchCard from '@/components/jobs/JobMatchCard';
 
 // Evitar chamadas duplicadas ao carregar a vaga (React StrictMode monta/ desmonta e pode disparar 2x em dev)
 // Mantém um cache temporário por ID para reutilizar a mesma promessa
@@ -1346,6 +1347,17 @@ const ViewJob = () => {
                     </div>
                   </CardHeader>
                 </Card>
+
+                {/* Job Match Score - exibe compatibilidade para candidatos logados */}
+                {user && user.type === 'candidate' && userResumes && userResumes.length > 0 && (() => {
+                  // Usa o currículo com maior score de IA, ou o primeiro disponível
+                  const bestResume = [...userResumes].sort((a, b) => (b.ai_analysis_score || 0) - (a.ai_analysis_score || 0))[0];
+                  return (
+                    <div className="mb-2">
+                      <JobMatchCard jobId={id} resumeId={bestResume.id} />
+                    </div>
+                  );
+                })()}
 
                 {/* Descrição da vaga */}
                 <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">

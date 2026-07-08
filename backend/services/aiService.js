@@ -52,7 +52,7 @@ const RESUME_ANALYSIS_SCHEMA = {
  * @param {Object} resume - Objeto do currículo
  * @returns {String} - Texto formatado para análise
  */
-function formatResumeForAnalysis(resume) {
+export function formatResumeForAnalysis(resume) {
   const sections = [];
 
   // Informações Pessoais
@@ -289,6 +289,95 @@ const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-
     console.error('❌ Erro na análise de currículo com Gemini:', error);
     throw new Error(`Erro na API do Gemini: ${error.message}`);
   }
+}
+
+/**
+ * Calcula o Match Score entre um currículo e uma vaga de emprego
+ * @param {String} resumeText - Texto formatado do currículo
+ * @param {String} jobDescription - Descrição completa da vaga
+ * @returns {Promise<Object>} - { matchScore, jobDifficulty, candidateLevel, reasons, gapAnalysis }
+ */
+export async function calculateJobMatch(resumeText, jobDescription) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY não configurada');
+  }
+
+  if (!resumeText || resumeText.trim().length < 20) {
+    throw new Error('Currículo insuficiente para análise');
+  }
+
+  if (!jobDescription || jobDescription.trim().length < 20) {
+    throw new Error('Descrição da vaga insuficiente para análise');
+  }
+
+  const prompt = `Você é um especialista em recrutamento. Analise a compatibilidade entre o CURRÍCULO e a VAGA abaixo e responda APENAS com JSON válido, sem markdown.
+
+=== CURRÍCULO ===
+${resumeText}
+
+=== VAGA ===
+${jobDescription}
+
+Retorne SOMENTE este JSON (sem texto antes ou depois):
+{
+  "matchScore": <número 0-100 representando % de compatibilidade>,
+  "jobDifficulty": <número 1-10 representando dificuldade da vaga: 1=estágio básico, 5=pleno, 10=especialista sênior>,
+  "candidateLevel": <número 1-10 representando nível do candidato pelo currículo>,
+  "reasons": [
+    "<ponto positivo ou neutro de compatibilidade>",
+    "<outro ponto>",
+    "<terceiro ponto>"
+  ],
+  "gapAnalysis": [
+    "<o que falta para atingir 100% de match>",
+    "<segunda lacuna se existir>"
+  ]
+}
+
+Cálculo do matchScore:
+- 60% do peso: compatibilidade de skills/habilidades exigidas vs. presentes no currículo
+- 40% do peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
+- Se jobDifficulty <= candidateLevel, sineridade = 100%. Se jobDifficulty = candidateLevel+2, sineridade = 60%. Se jobDifficulty > candidateLevel+3, sineridade = 20%.`;
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!content) throw new Error('Resposta vazia do Gemini');
+
+  // Limpa markdown se houver
+  let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Extrai JSON entre chaves se necessário
+  const jsonMatch = clean.match(/\{[\s\S]*\}/);
+  if (jsonMatch) clean = jsonMatch[0];
+
+  const result = JSON.parse(clean);
+
+  // Garante faixas válidas
+  result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
+  result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
+  result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
+  result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
+  result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+
+  console.log(`✅ Job Match Score: ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
+  return result;
 }
 
 /**

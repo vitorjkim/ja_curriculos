@@ -6,6 +6,7 @@ import { authenticateToken, optionalAuth, requireCompany, requireAdmin } from '.
 import { JOB_TAXONOMY, ALL_AREAS, isValidArea, isValidSubarea } from '../config/jobTaxonomy.js';
 import { checkSubscriptionPlan, validateCompanyVerification, validateJobPostingLimit } from '../middleware/checkSubscriptionPlan.js';
 import { notifyNewJobAlert } from '../services/notificationService.js';
+import { calculateJobMatch, formatResumeForAnalysis } from '../services/aiService.js';
 
 // Inicializar router antes de qualquer uso
 const router = express.Router();
@@ -1975,6 +1976,71 @@ router.get('/:id', [
   } catch (error) {
     console.error('Erro ao buscar vaga:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/jobs/match - Calcular compatibilidade entre currículo e vaga
+router.post('/match', authenticateToken, async (req, res) => {
+  try {
+    const { jobId, resumeId } = req.body;
+    const userId = req.user.id;
+
+    if (!jobId || !resumeId) {
+      return res.status(400).json({ error: 'jobId e resumeId são obrigatórios' });
+    }
+
+    // Busca vaga
+    const jobResult = await pool.query('SELECT * FROM jobs WHERE id = $1', [jobId]);
+    if (jobResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Vaga não encontrada' });
+    }
+    const job = jobResult.rows[0];
+
+    // Busca currículo (verifica que pertence ao usuário)
+    const resumeResult = await pool.query(
+      'SELECT * FROM resumes WHERE id = $1 AND user_id = $2',
+      [resumeId, userId]
+    );
+    if (resumeResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Currículo não encontrado' });
+    }
+    const resume = resumeResult.rows[0];
+
+    // Monta texto da vaga
+    const jobText = [
+      `Título: ${job.title || ''}`,
+      `Empresa: ${job.company_name || ''}`,
+      `Área: ${job.area || ''} ${job.subarea ? '/ ' + job.subarea : ''}`,
+      `Tipo: ${job.job_type || ''} | Nível: ${job.experience_level || ''}`,
+      `Localização: ${job.location || ''}`,
+      `Descrição: ${(job.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}`,
+      job.requirements ? `Requisitos: ${(job.requirements || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}` : '',
+    ].filter(Boolean).join('\n');
+
+    // Formata texto do currículo
+    let resumeData = resume;
+    // Faz parse dos campos JSONB se vierem como string
+    for (const field of ['personal_info', 'education', 'experience', 'courses', 'languages', 'skills', 'certifications']) {
+      if (typeof resume[field] === 'string') {
+        try { resumeData[field] = JSON.parse(resume[field]); } catch {}
+      }
+    }
+    const resumeText = formatResumeForAnalysis(resumeData);
+
+    console.log(`🔍 Calculando Job Match: vaga="${job.title}" resumeId=${resumeId}`);
+
+    const matchResult = await calculateJobMatch(resumeText, jobText);
+
+    res.json({
+      success: true,
+      jobId,
+      resumeId,
+      ...matchResult,
+    });
+
+  } catch (error) {
+    console.error('❌ Erro no cálculo de job match:', error);
+    res.status(500).json({ error: 'Erro ao calcular compatibilidade: ' + error.message });
   }
 });
 
