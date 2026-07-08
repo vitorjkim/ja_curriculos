@@ -291,6 +291,22 @@ const ViewJob = () => {
     loadFollowStatus();
   }, [job?.company_id, job?.is_community, user?.type, user?.id]);
 
+  // Carregar currículos do usuário se for candidato
+  useEffect(() => {
+    const loadUserResumes = async () => {
+      if (user && user.type === 'candidate') {
+        try {
+          const response = await resumes.list();
+          setUserResumes(response.resumes || []);
+        } catch (error) {
+          console.error("Erro ao carregar currículos do usuário:", error);
+          setUserResumes([]);
+        }
+      }
+    };
+    loadUserResumes();
+  }, [user]);
+
   // Carregar candidaturas da vaga (empresa dona ou escola)
   useEffect(() => {
     const loadJobApplications = async () => {
@@ -1349,9 +1365,10 @@ const ViewJob = () => {
                 </Card>
 
                 {/* Job Match Score - exibe compatibilidade para candidatos logados */}
-                {user && user.type === 'candidate' && userResumes && userResumes.length > 0 && (() => {
+                {user && user.type === 'candidate' && userResumes && userResumes.length > 0 && job && job.source !== 'agency' && (() => {
                   // Usa o currículo com maior score de IA, ou o primeiro disponível
                   const bestResume = [...userResumes].sort((a, b) => (b.ai_analysis_score || 0) - (a.ai_analysis_score || 0))[0];
+                  console.log("Renderizando JobMatchCard com:", { jobId: id, resumeId: bestResume.id, jobSource: job.source });
                   return (
                     <div className="mb-2">
                       <JobMatchCard jobId={id} resumeId={bestResume.id} />

@@ -75,9 +75,26 @@ const getAuthToken = () => {
 };
 
 // Função principal para fazer requisições com timeout e retry exponencial
-const apiRequest = async (endpoint, options = {}) => {
+const apiRequest = async (endpoint, options = {}, useAuth = true) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = getAuthToken();
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  if (useAuth) {
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      // Se a autenticação é necessária mas não há token, rejeitar
+      return Promise.reject({
+        response: { status: 401 },
+        message: 'Token de acesso requerido',
+      });
+    }
+  }
 
   // Fallback: se token é local (modo offline) e rota admin sensível, retornar dummy
   const isLocalToken = token && token.startsWith('local_token_');

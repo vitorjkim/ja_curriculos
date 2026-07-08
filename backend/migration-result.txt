@@ -1,0 +1,14 @@
+============================================================
+MIGRACAO: Corrigir constraint de resume_id
+============================================================
+Constraints FK encontradas:
+  - applications_job_id_fkey: FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+  - applications_candidate_id_fkey: FOREIGN KEY (candidate_id) REFERENCES users(id) ON DELETE CASCADE
+  - applications_resume_id_fkey: FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE
+Encontrada: applications_resume_id_fkey
+Removendo constraint antiga...
+Adicionando nova constraint com SET NULL...
+SUCESSO: Constraint atualizada para SET NULL
+============================================================
+MIGRACAO CONCLUIDA COM SUCESSO!
+============================================================
