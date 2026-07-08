@@ -516,6 +516,23 @@ const MyResumes = () => {
                           <span className="font-semibold text-indigo-600">{templateLabel}</span>
                         </div>
                       )}
+                      {resume.ai_analysis_score !== null && resume.ai_analysis_score !== undefined && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                            resume.ai_analysis_score >= 75 ? 'bg-green-500' :
+                            resume.ai_analysis_score >= 50 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}>
+                            🤖
+                          </div>
+                          <span className="text-slate-600">Score de IA:</span>
+                          <span className={`font-bold ${
+                            resume.ai_analysis_score >= 75 ? 'text-green-600' :
+                            resume.ai_analysis_score >= 50 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>{resume.ai_analysis_score}/100</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Botões de Ação */}
