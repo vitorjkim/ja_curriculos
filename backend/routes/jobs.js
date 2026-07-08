@@ -1979,6 +1979,10 @@ router.get('/:id', [
   }
 });
 
+// Cache em memória para job match (TTL de 1 hora) - evita chamadas repetidas à API de IA
+const jobMatchCache = new Map();
+const JOB_MATCH_CACHE_TTL = 60 * 60 * 1000; // 1 hora em ms
+
 // POST /api/jobs/match - Calcular compatibilidade entre currículo e vaga
 router.post('/match', authenticateToken, async (req, res) => {
   try {
@@ -1987,6 +1991,14 @@ router.post('/match', authenticateToken, async (req, res) => {
 
     if (!jobId || !resumeId) {
       return res.status(400).json({ error: 'jobId e resumeId são obrigatórios' });
+    }
+
+    // Verifica cache primeiro
+    const cacheKey = `${jobId}:${resumeId}`;
+    const cached = jobMatchCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < JOB_MATCH_CACHE_TTL) {
+      console.log(`✅ Job Match servido do cache: ${cacheKey}`);
+      return res.json({ success: true, jobId, resumeId, fromCache: true, ...cached.data });
     }
 
     // Busca vaga
@@ -2030,6 +2042,9 @@ router.post('/match', authenticateToken, async (req, res) => {
     console.log(`🔍 Calculando Job Match: vaga="${job.title}" resumeId=${resumeId}`);
 
     const matchResult = await calculateJobMatch(resumeText, jobText);
+
+    // Salva no cache
+    jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: matchResult });
 
     res.json({
       success: true,
