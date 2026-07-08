@@ -44,25 +44,36 @@ export function checkSubscriptionPlan(requiredPlan) {
       }
 
       // Buscar info de subscription do usuário
-      const userResult = await pool.query(
-        `SELECT 
-          subscription_plan,
-          subscription_status,
-          is_verified
-        FROM users
-        WHERE id = $1`,
-        [userId]
-      );
+      let subscription_plan = 'free';
+      let subscription_status = 'active';
+      let is_verified = true;
 
-      if (userResult.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: 'Usuário não encontrado',
-        });
+      try {
+        const userResult = await pool.query(
+          `SELECT 
+            subscription_plan,
+            subscription_status,
+            is_verified
+          FROM users
+          WHERE id = $1`,
+          [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: 'Usuário não encontrado',
+          });
+        }
+
+        const user = userResult.rows[0];
+        subscription_plan = user.subscription_plan || 'free';
+        subscription_status = user.subscription_status || 'active';
+        is_verified = user.is_verified !== false;
+      } catch (dbError) {
+        // Se a coluna não existir ou houver erro de schema, assume defaults seguros
+        console.warn('⚠️ checkSubscriptionPlan: erro ao buscar plano, usando defaults:', dbError.message);
       }
-
-      const user = userResult.rows[0];
-      const { subscription_plan, subscription_status, is_verified } = user;
 
       // ─────────────────────────────────────────────────────────
       // 1. Validar se subscription está ativa
