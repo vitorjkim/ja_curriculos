@@ -219,7 +219,7 @@ export const authAPI = {
     return apiRequest('/auth/register', {
       method: 'POST',
       body: userData
-    });
+    }, false);
   },
 
   // Login
@@ -227,7 +227,7 @@ export const authAPI = {
     return apiRequest('/auth/login', {
       method: 'POST',
       body: { email, password }
-    });
+    }, false);
   },
 
   // Logout
@@ -236,7 +236,7 @@ export const authAPI = {
     return apiRequest('/auth/logout', {
       method: 'POST',
       body: { refreshToken }
-    });
+    }, false);
   },
 
   // Obter dados do usuário atual
@@ -249,7 +249,7 @@ export const authAPI = {
     return apiRequest('/auth/refresh', {
       method: 'POST',
       body: { refreshToken }
-    });
+    }, false);
   }
 };
 
