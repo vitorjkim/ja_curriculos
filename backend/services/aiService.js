@@ -18,98 +18,33 @@ let openai;
  * Define a estrutura que a IA deve retornar
  */
 const RESUME_ANALYSIS_SCHEMA = {
-  type: 'object',
+  type: "object",
   properties: {
-    score: {
-      type: 'integer',
-      description: 'Score geral de 0 a 100',
-      minimum: 0,
-      maximum: 100,
-    },
-    completeness_score: {
-      type: 'integer',
-      description: 'Score de completude (seções preenchidas)',
-      minimum: 0,
-      maximum: 100,
-    },
-    quality_score: {
-      type: 'integer',
-      description: 'Score de qualidade (gramática, estrutura)',
-      minimum: 0,
-      maximum: 100,
-    },
-    relevance_score: {
-      type: 'integer',
-      description: 'Score de relevância (skills, keywords)',
-      minimum: 0,
-      maximum: 100,
-    },
-    impact_score: {
-      type: 'integer',
-      description: 'Score de impacto (números, resultados)',
-      minimum: 0,
-      maximum: 100,
+    score: { type: "number", description: "Pontuação geral de 0 a 100" },
+    scores: {
+      type: "object",
+      properties: {
+        completude: { type: "number", description: "Pontuação de 0 a 100 para a completude do currículo" },
+        qualidade: { type: "number", description: "Pontuação de 0 a 100 para a qualidade da escrita e formatação" },
+        relevancia: { type: "number", description: "Pontuação de 0 a 100 para a relevância das informações para o mercado" },
+        impacto: { type: "number", description: "Pontuação de 0 a 100 para a demonstração de resultados e impacto" },
+        geral: { type: "number", description: "Uma avaliação holística da força do currículo de 0 a 100" }
+      },
+      required: ["completude", "qualidade", "relevancia", "impacto", "geral"]
     },
     suggestions: {
-      type: 'array',
-      description: 'Lista de sugestões de melhorias',
+      type: "array",
       items: {
-        type: 'object',
+        type: "object",
         properties: {
-          priority: {
-            type: 'string',
-            enum: ['critical', 'important', 'recommended'],
-            description: 'Nível de prioridade',
-          },
-          category: {
-            type: 'string',
-            description: 'Categoria (completeness, quality, skills, etc)',
-          },
-          title: {
-            type: 'string',
-            description: 'Título curto da sugestão',
-          },
-          description: {
-            type: 'string',
-            description: 'Descrição detalhada',
-          },
-          impact: {
-            type: 'integer',
-            description: 'Pontos de impacto esperado no score',
-          },
+          type: { type: "string", enum: ["CRITICAL", "IMPORTANT", "RECOMMENDED"] },
+          message: { type: "string" }
         },
-        required: ['priority', 'category', 'title', 'description', 'impact'],
-      },
-    },
-    missing_sections: {
-      type: 'array',
-      description: 'Seções importantes que faltam',
-      items: { type: 'string' },
-    },
-    key_strengths: {
-      type: 'array',
-      description: 'Pontos fortes identificados',
-      items: { type: 'string' },
-    },
-    keywords_suggested: {
-      type: 'array',
-      description: 'Keywords recomendadas para o currículo',
-      items: { type: 'string' },
-    },
-    summary: {
-      type: 'string',
-      description: 'Resumo geral em 2-3 linhas',
-    },
+        required: ["type", "message"]
+      }
+    }
   },
-  required: [
-    'score',
-    'completeness_score',
-    'quality_score',
-    'relevance_score',
-    'impact_score',
-    'suggestions',
-    'summary',
-  ],
+  required: ["score", "scores", "suggestions"]
 };
 
 /**
@@ -245,15 +180,16 @@ ${JSON.stringify(RESUME_ANALYSIS_SCHEMA, null, 2)}
 
 Análise que você deve fazer:
 1. Score geral (0-100): Qualidade total do currículo.
-2. Completeness (0-100): Tem todas as seções? (contato, resumo, experiência, educação, skills).
-3. Quality (0-100): Sem erros? Bem estruturado? Claro e objetivo?
-4. Relevance (0-100): Tem keywords de mercado? Skills atualizadas? Alinhado com mercado?
-5. Impact (0-100): Tem números? Resultados? Ações com impacto mensurável?
+2. completude (0-100): O currículo tem todas as seções essenciais (contato, experiência, educação, habilidades)?
+3. qualidade (0-100): O texto é claro, conciso e sem erros de português? A formatação é profissional?
+4. relevancia (0-100): As informações são relevantes para uma vaga de tecnologia/mercado atual? Contém palavras-chave de mercado?
+5. impacto (0-100): O candidato demonstra resultados e conquistas com números ou exemplos concretos?
+6. geral (0-100): Uma avaliação holística da força do currículo.
 
 Para sugestões:
-- CRITICAL: Faltam seções importantes ou há erros graves.
-- IMPORTANT: Melhorias que aumentam relevância.
-- RECOMMENDED: Ajustes menores de qualidade.
+- CRITICAL: Erros graves ou seções faltando que prejudicam muito a avaliação.
+- IMPORTANT: Melhorias de alto impacto que podem aumentar significativamente a chance do candidato.
+- RECOMMENDED: Ajustes finos e dicas de boas práticas.
 
 Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
 
