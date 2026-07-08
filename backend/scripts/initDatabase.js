@@ -79,6 +79,11 @@ const createTables = async () => {
       )
     `);
 
+    // Adicionar colunas de análise de IA se não existirem
+    await client.query(`ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ai_analysis JSONB`);
+    await client.query(`ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE resumes ADD COLUMN IF NOT EXISTS ai_analysis_score INTEGER`);
+
     // Tabela de vagas
     await client.query(`
       CREATE TABLE IF NOT EXISTS jobs (
