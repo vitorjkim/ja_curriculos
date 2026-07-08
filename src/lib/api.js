@@ -83,8 +83,9 @@ const apiRequest = async (endpoint, options = {}, useAuth = true) => {
     ...options.headers,
   };
 
+  const token = getAuthToken();
+
   if (useAuth) {
-    const token = getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     } else {
