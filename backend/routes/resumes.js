@@ -40,6 +40,9 @@ router.get('/', async (req, res) => {
         courses,
         original_file_path,
         original_file_name,
+        ai_analysis_score,
+        ai_analyzed_at,
+        ai_analysis,
         created_at, 
         updated_at 
       FROM resumes 
