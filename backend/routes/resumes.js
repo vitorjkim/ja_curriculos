@@ -845,11 +845,11 @@ router.post('/:id/analyze', requireCandidate, async (req, res) => {
     const updateQuery = `
       UPDATE resumes 
       SET 
-        ai_score = $1,
+        ai_analysis_score = $1,
         ai_analysis = $2,
         ai_analyzed_at = NOW()
       WHERE id = $3 AND user_id = $4
-      RETURNING ai_score, ai_analysis, ai_analyzed_at
+      RETURNING ai_analysis_score, ai_analysis, ai_analyzed_at
     `;
 
     const updateResult = await pool.query(updateQuery, [
