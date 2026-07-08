@@ -23,6 +23,7 @@ import {
 const MyResumes = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedScoreId, setExpandedScoreId] = useState(null);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
@@ -517,20 +518,55 @@ const MyResumes = () => {
                         </div>
                       )}
                       {resume.ai_analysis_score !== null && resume.ai_analysis_score !== undefined && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                            resume.ai_analysis_score >= 75 ? 'bg-green-500' :
-                            resume.ai_analysis_score >= 50 ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}>
-                            🤖
-                          </div>
-                          <span className="text-slate-600">Score de IA:</span>
-                          <span className={`font-bold ${
-                            resume.ai_analysis_score >= 75 ? 'text-green-600' :
-                            resume.ai_analysis_score >= 50 ? 'text-yellow-600' :
-                            'text-red-600'
-                          }`}>{resume.ai_analysis_score}/100</span>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => setExpandedScoreId(expandedScoreId === resume.id ? null : resume.id)}
+                            className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity text-left"
+                          >
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                              resume.ai_analysis_score >= 75 ? 'bg-green-500' :
+                              resume.ai_analysis_score >= 50 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}>
+                              🤖
+                            </div>
+                            <span className="text-slate-600">Score de IA:</span>
+                            <span className={`font-bold ${
+                              resume.ai_analysis_score >= 75 ? 'text-green-600' :
+                              resume.ai_analysis_score >= 50 ? 'text-yellow-600' :
+                              'text-red-600'
+                            }`}>{resume.ai_analysis_score}/100</span>
+                            <span className="text-slate-400 text-xs ml-auto">{expandedScoreId === resume.id ? '▲' : '▼'}</span>
+                          </button>
+                          {expandedScoreId === resume.id && (() => {
+                            const analysis = typeof resume.ai_analysis === 'string' ? JSON.parse(resume.ai_analysis) : resume.ai_analysis;
+                            const scores = analysis?.scores || {};
+                            const metrics = [
+                              { key: 'completude', label: 'Completude', icon: '📝' },
+                              { key: 'qualidade', label: 'Qualidade', icon: '✨' },
+                              { key: 'relevancia', label: 'Relevância', icon: '🎯' },
+                              { key: 'impacto', label: 'Impacto', icon: '⚡' },
+                              { key: 'geral', label: 'Geral', icon: '🏆' },
+                            ];
+                            return (
+                              <div className="mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <p className="text-xs text-slate-500 mb-2 font-medium">Score de Qualidade</p>
+                                <div className="grid grid-cols-5 gap-1 text-center">
+                                  {metrics.map(({ key, label, icon }) => (
+                                    <div key={key} className="flex flex-col items-center gap-0.5">
+                                      <span className="text-base">{icon}</span>
+                                      <span className={`text-sm font-bold ${
+                                        (scores[key] ?? 0) >= 75 ? 'text-green-600' :
+                                        (scores[key] ?? 0) >= 50 ? 'text-yellow-600' :
+                                        'text-red-600'
+                                      }`}>{scores[key] ?? 0}</span>
+                                      <span className="text-[10px] text-slate-500 leading-tight">{label}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
