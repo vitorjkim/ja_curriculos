@@ -269,12 +269,48 @@ router.post('/', validateResume, handleValidationErrors, async (req, res) => {
     );
 
     console.log('✅ Currículo criado:', result.rows[0].id);
-
-    res.status(201).json({
-      success: true,
-      message: 'Currículo criado com sucesso',
-      resume: result.rows[0]
-    });
+    
+    // Auto-analisar currículo com IA logo após criar
+    const createdResume = result.rows[0];
+    try {
+      console.log('🤖 Iniciando análise automática do currículo...');
+      const analysis = await aiService.analyzeResume(createdResume);
+      
+      // Salvar análise no banco
+      await pool.query(
+        `UPDATE resumes 
+        SET 
+          ai_analysis_score = $1,
+          ai_analysis = $2,
+          ai_analyzed_at = NOW()
+        WHERE id = $3`,
+        [analysis.score, JSON.stringify(analysis), createdResume.id]
+      );
+      
+      console.log('✅ Análise automática concluída:', analysis.score);
+      
+      // Retornar currículo com análise
+      const updatedResume = await pool.query(
+        'SELECT * FROM resumes WHERE id = $1',
+        [createdResume.id]
+      );
+      
+      res.status(201).json({
+        success: true,
+        message: 'Currículo criado e analisado com sucesso',
+        resume: updatedResume.rows[0],
+        analysis: analysis
+      });
+    } catch (aiError) {
+      console.error('⚠️  Erro na análise automática:', aiError.message);
+      // Ainda assim retornar o currículo criado, mesmo que a análise falhe
+      res.status(201).json({
+        success: true,
+        message: 'Currículo criado, mas análise automática falhou',
+        resume: createdResume,
+        analysis_error: aiError.message
+      });
+    }
   } catch (error) {
     console.error('❌ Erro ao criar currículo:', error);
     res.status(500).json({
@@ -327,7 +363,10 @@ router.put('/:id', validateResume, handleValidationErrors, async (req, res) => {
         languages = $8, 
         projects = $9, 
         courses = $10,
-        updated_at = CURRENT_TIMESTAMP
+        updated_at = CURRENT_TIMESTAMP,
+        ai_analysis = NULL,
+        ai_analyzed_at = NULL,
+        ai_analysis_score = NULL
       WHERE id = $11 AND user_id = $12
       RETURNING *`,
       [
@@ -829,8 +868,28 @@ router.post('/:id/analyze', requireCandidate, async (req, res) => {
 
     const resume = resumeResult.rows[0];
 
-    // 2. Chamar serviço de IA
+    // 2. Verificar se já foi analisado e não foi editado desde então
     let analysis;
+    if (resume.ai_analysis && resume.ai_analyzed_at) {
+      const analysisDate = new Date(resume.ai_analyzed_at);
+      const resumeUpdateDate = new Date(resume.updated_at);
+      
+      if (analysisDate >= resumeUpdateDate) {
+        // Análise está atualizada, reutilizar
+        console.log('♻️  Análise anterior encontrada, reutilizando...');
+        analysis = resume.ai_analysis;
+        
+        return res.json({
+          success: true,
+          score: analysis.score,
+          analysis: analysis,
+          analyzed_at: resume.ai_analyzed_at,
+          cached: true
+        });
+      }
+    }
+
+    // 3. Chamar serviço de IA (nova análise)
     try {
       analysis = await aiService.analyzeResume(resume);
     } catch (aiError) {
@@ -841,7 +900,7 @@ router.post('/:id/analyze', requireCandidate, async (req, res) => {
       });
     }
 
-    // 3. Salvar análise no banco
+    // 4. Salvar análise no banco
     const updateQuery = `
       UPDATE resumes 
       SET 
