@@ -3,7 +3,7 @@
  * Mostra score geral (0-100) + breakdown de 5 métricas + sugestões
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, AlertTriangle, Zap, RefreshCw, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,8 +28,8 @@ const getApiUrl = () => {
   return 'http://localhost:3001/api';
 };
 
-export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete }) {
-  const [analysis, setAnalysis] = useState(null);
+export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeComplete, initialAnalysis }) {
+  const [analysis, setAnalysis] = useState(initialAnalysis || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState(false);
@@ -39,6 +39,52 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
   console.log('  VITE_API_URL:', import.meta.env.VITE_API_URL);
   console.log('  hostname:', window.location.hostname);
   console.log('  env.MODE:', import.meta.env.MODE);
+  console.log('  initialAnalysis:', initialAnalysis);
+
+  // Carregar análise existente ao montar o componente
+  useEffect(() => {
+    if (resumeId && !initialAnalysis) {
+      loadAnalysis();
+    }
+  }, [resumeId]);
+
+  // Função para carregar análise existente
+  const loadAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('curriculoja_token');
+      if (!token) return;
+
+      const apiUrl = getApiUrl();
+      const url = `${apiUrl}/resumes/${resumeId}`;
+      console.log('🔗 Carregando análise do currículo:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Análise não encontrada ou erro ao carregar');
+        return;
+      }
+
+      const resume = await response.json();
+      console.log('📊 Dados do currículo carregados:', resume);
+
+      if (resume.ai_analysis) {
+        console.log('✅ Análise encontrada:', resume.ai_analysis);
+        // Se ai_analysis for string, fazer parse
+        const analysisData = typeof resume.ai_analysis === 'string' 
+          ? JSON.parse(resume.ai_analysis) 
+          : resume.ai_analysis;
+        setAnalysis(analysisData);
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar análise:', err);
+    }
+  };
 
   // Função para analisar currículo
   const handleAnalyze = async () => {
