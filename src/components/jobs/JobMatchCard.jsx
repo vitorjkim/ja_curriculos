@@ -8,7 +8,10 @@ import { ChevronDown, ChevronUp, Zap, AlertTriangle, CheckCircle, RefreshCw, Tar
 
 const getApiUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
-  if (apiUrl) return apiUrl.replace(/\/$/, '');
+  if (apiUrl) {
+    const base = apiUrl.replace(/\/$/, '');
+    return base.endsWith('/api') ? base : `${base}/api`;
+  }
   return window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : 'https://jacurriculos-production.up.railway.app/api';
 };
 
