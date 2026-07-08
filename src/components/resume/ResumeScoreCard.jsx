@@ -258,15 +258,15 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
         {/* Grid de 5 Scores */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: 'Completude', key: 'completeness_score', icon: '📝' },
-            { label: 'Qualidade', key: 'quality_score', icon: '✨' },
-            { label: 'Relevância', key: 'relevance_score', icon: '🎯' },
-            { label: 'Impacto', key: 'impact_score', icon: '⚡' },
-            { label: 'Geral', key: 'score', icon: '🏆' }
+            { label: 'Completude', key: 'completude', icon: '📝' },
+            { label: 'Qualidade', key: 'qualidade', icon: '✨' },
+            { label: 'Relevância', key: 'relevancia', icon: '🎯' },
+            { label: 'Impacto', key: 'impacto', icon: '⚡' },
+            { label: 'Geral', key: 'geral', icon: '🏆' }
           ].map((metric) => (
             <div key={metric.key} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-200">
               <div className="text-xl mb-1">{metric.icon}</div>
-              <div className="text-2xl font-bold text-gray-900">{analysis?.[metric.key] || 0}</div>
+              <div className="text-2xl font-bold text-gray-900">{analysis?.scores?.[metric.key] ?? analysis?.[metric.key] ?? 0}</div>
               <div className="text-xs text-gray-600 mt-1">{metric.label}</div>
             </div>
           ))}

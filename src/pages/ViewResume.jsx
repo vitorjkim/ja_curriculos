@@ -386,8 +386,22 @@ const ViewResume = () => {
     const fetchResume = async () => {
       try {
         setLoading(true);
-        const response = await resumes.getById(id);
-        const data = response.resume || response;
+        // Tenta buscar sem token primeiro (para visualização pública)
+        let data;
+        try {
+          const response = await resumes.getById(id);
+          data = response.resume || response;
+        } catch (error) {
+          // Se falhar, tenta com token (para o dono ou empresa)
+          if (error.response && error.response.status === 401 && localStorage.getItem('curriculoja_token')) {
+            console.log('Acesso público falhou, tentando com token...');
+            const response = await resumes.getById(id, true); // Passa `true` para forçar o uso do token
+            data = response.resume || response;
+          } else {
+            throw error; // Se não for 401 ou não tiver token, relança o erro
+          }
+        }
+
         setResume(data);
         const isUploaded = !!data.original_file_path || data.template === 'uploaded';
         if (!isUploaded) {
@@ -490,6 +504,7 @@ const ViewResume = () => {
               <div className="mb-8 no-print">
                 <ResumeScoreCard 
                   resumeId={id}
+                  initialAnalysis={typeof resume.ai_analysis === 'string' ? JSON.parse(resume.ai_analysis) : resume.ai_analysis}
                   onAnalyzeStart={() => console.log('Iniciando análise...')}
                   onAnalyzeComplete={(analysis) => console.log('Análise completa:', analysis)}
                 />
