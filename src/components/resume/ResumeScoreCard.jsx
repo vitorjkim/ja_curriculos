@@ -33,6 +33,7 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
   const [loading, setLoading] = useState(!initialAnalysis);
   const [error, setError] = useState(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState(false);
+  const [expandedScores, setExpandedScores] = useState(false);
 
   // Carregar análise existente ao montar o componente
   useEffect(() => {
@@ -206,79 +207,94 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
       className="w-full space-y-6"
     >
       {/* Card Principal - Score Geral */}
-      <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Score de Qualidade</h3>
-            <p className="text-sm text-gray-600">{analysis?.summary || 'Análise concluída'}</p>
-          </div>
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Reanalizar"
-          >
-            <RefreshCw className={`w-5 h-5 text-gray-600 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-
-        {/* Score Visual Circular */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="relative w-32 h-32">
-            {/* Background círculo */}
-            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-              <circle
-                cx="60"
-                cy="60"
-                r="54"
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth="8"
-              />
-              {/* Progresso */}
-              <circle
-                cx="60"
-                cy="60"
-                r="54"
-                fill="none"
-                stroke="url(#scoreGradient)"
-                strokeWidth="8"
-                strokeDasharray={`${(analysis?.score / 100) * 339.29} 339.29`}
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-              <defs>
-                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor={analysis?.score >= 80 ? '#10b981' : analysis?.score >= 60 ? '#eab308' : '#ef4444'} />
-                  <stop offset="100%" stopColor={analysis?.score >= 80 ? '#14b8a6' : analysis?.score >= 60 ? '#f59e0b' : '#f97316'} />
-                </linearGradient>
-              </defs>
-            </svg>
-
-            {/* Texto no centro */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-black text-gray-900">{Math.round(analysis?.score || 0)}</span>
-              <span className="text-xs text-gray-600">/100</span>
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Header clicável */}
+        <button
+          onClick={() => setExpandedScores(!expandedScores)}
+          className="w-full px-8 py-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            {/* Score circular compacto */}
+            <div className="relative w-12 h-12 flex-shrink-0">
+              <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" strokeWidth="10" />
+                <circle
+                  cx="60" cy="60" r="54" fill="none"
+                  stroke={analysis?.score >= 80 ? '#10b981' : analysis?.score >= 60 ? '#eab308' : '#ef4444'}
+                  strokeWidth="10"
+                  strokeDasharray={`${(analysis?.score / 100) * 339.29} 339.29`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-black text-gray-900">{Math.round(analysis?.score || 0)}</span>
+              </div>
+            </div>
+            <div className="text-left">
+              <h3 className="text-base font-bold text-gray-900">Score de Qualidade</h3>
+              <p className="text-xs text-gray-500">{analysis?.summary || 'Análise concluída'}</p>
             </div>
           </div>
-        </div>
+          {expandedScores ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        </button>
 
-        {/* Grid de 5 Scores */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[
-            { label: 'Completude', key: 'completude', icon: '📝' },
-            { label: 'Qualidade', key: 'qualidade', icon: '✨' },
-            { label: 'Relevância', key: 'relevancia', icon: '🎯' },
-            { label: 'Impacto', key: 'impacto', icon: '⚡' },
-            { label: 'Geral', key: 'geral', icon: '🏆' }
-          ].map((metric) => (
-            <div key={metric.key} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-200">
-              <div className="text-xl mb-1">{metric.icon}</div>
-              <div className="text-2xl font-bold text-gray-900">{analysis?.scores?.[metric.key] ?? analysis?.[metric.key] ?? 0}</div>
-              <div className="text-xs text-gray-600 mt-1">{metric.label}</div>
-            </div>
-          ))}
-        </div>
+        {/* Conteúdo expandido */}
+        <AnimatePresence>
+          {expandedScores && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="border-t border-gray-200 overflow-hidden"
+            >
+              <div className="px-8 py-6">
+                {/* Score Visual Circular grande */}
+                <div className="flex items-center justify-center mb-6">
+                  <div className="relative w-28 h-28">
+                    <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+                      <circle
+                        cx="60" cy="60" r="54" fill="none"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="8"
+                        strokeDasharray={`${(analysis?.score / 100) * 339.29} 339.29`}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                      <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={analysis?.score >= 80 ? '#10b981' : analysis?.score >= 60 ? '#eab308' : '#ef4444'} />
+                          <stop offset="100%" stopColor={analysis?.score >= 80 ? '#14b8a6' : analysis?.score >= 60 ? '#f59e0b' : '#f97316'} />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-3xl font-black text-gray-900">{Math.round(analysis?.score || 0)}</span>
+                      <span className="text-xs text-gray-600">/100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid de 5 Scores */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    { label: 'Completude', key: 'completude', icon: '📝' },
+                    { label: 'Qualidade', key: 'qualidade', icon: '✨' },
+                    { label: 'Relevância', key: 'relevancia', icon: '🎯' },
+                    { label: 'Impacto', key: 'impacto', icon: '⚡' },
+                    { label: 'Geral', key: 'geral', icon: '🏆' }
+                  ].map((metric) => (
+                    <div key={metric.key} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-center border border-gray-200">
+                      <div className="text-xl mb-1">{metric.icon}</div>
+                      <div className="text-2xl font-bold text-gray-900">{analysis?.scores?.[metric.key] ?? analysis?.[metric.key] ?? 0}</div>
+                      <div className="text-xs text-gray-600 mt-1">{metric.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Sugestões */}
@@ -313,40 +329,35 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
                 className="border-t border-gray-200 overflow-hidden"
               >
                 <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto">
-                  {analysis.suggestions.map((suggestion, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3 rounded-lg border ${
-                        suggestion.priority === 'critical'
-                          ? 'bg-red-50 border-red-200'
-                          : suggestion.priority === 'important'
-                          ? 'bg-yellow-50 border-yellow-200'
-                          : 'bg-blue-50 border-blue-200'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex-shrink-0">
-                          {getPriorityIcon(suggestion.priority)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm text-gray-900">
-                            {suggestion.title}
+                  {analysis.suggestions.map((suggestion, idx) => {
+                    // Suporta dois formatos: {type, message} (schema da IA) e {priority, title, description, ...} (formato legado)
+                    const typeMap = { CRITICAL: 'critical', IMPORTANT: 'important', RECOMMENDED: 'recommended' };
+                    const priority = suggestion.priority || typeMap[suggestion.type] || 'recommended';
+                    const title = suggestion.title || suggestion.message || '';
+                    const description = suggestion.description || '';
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-lg border ${
+                          priority === 'critical'
+                            ? 'bg-red-50 border-red-200'
+                            : priority === 'important'
+                            ? 'bg-yellow-50 border-yellow-200'
+                            : 'bg-blue-50 border-blue-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 flex-shrink-0">
+                            {getPriorityIcon(priority)}
                           </div>
-                          <p className="text-xs text-gray-700 mt-1">
-                            {suggestion.description}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-600">
-                              Categoria: <span className="font-medium">{suggestion.category}</span>
-                            </span>
-                            <span className="text-xs font-semibold text-gray-700 bg-white/50 px-2 py-1 rounded">
-                              +{suggestion.impact} pts
-                            </span>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-800">{title}</p>
+                            {description && <p className="text-xs text-gray-600 mt-1">{description}</p>}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
             )}
