@@ -266,7 +266,8 @@ const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-
       ],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
       },
     };
 
