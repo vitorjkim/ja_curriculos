@@ -339,14 +339,14 @@ Cálculo do matchScore:
 - 40% do peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
 - Se jobDifficulty <= candidateLevel, sineridade = 100%. Se jobDifficulty = candidateLevel+2, sineridade = 60%. Se jobDifficulty > candidateLevel+3, sineridade = 20%.`;
 
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+      generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
     }),
   });
 
@@ -356,11 +356,15 @@ Cálculo do matchScore:
   }
 
   const data = await response.json();
-  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const candidate = data?.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+  const content = candidate?.content?.parts?.[0]?.text;
 
-  if (!content) throw new Error('Resposta vazia do Gemini');
+  console.log(`📊 Job Match - finishReason: ${finishReason}, tamanho: ${content?.length || 0} chars`);
 
-  console.log(`📊 Job Match - Resposta bruta (${content.length} chars): ${content.substring(0, 300)}`);
+  if (!content) throw new Error(`Resposta vazia do Gemini (finishReason: ${finishReason})`);
+
+  console.log(`📊 Job Match - Resposta bruta: ${content.substring(0, 300)}`);
 
   // Limpa markdown se houver
   let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
