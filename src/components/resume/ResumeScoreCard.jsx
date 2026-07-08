@@ -119,39 +119,7 @@ export default function ResumeScoreCard({ resumeId, onAnalyzeStart, onAnalyzeCom
 
   // Se não tem análise e não está carregando
   if (!analysis && !loading && !error) {
-    return (
-      <div className="w-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Zap className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">Análise de Qualidade</h3>
-              <p className="text-xs text-gray-600">Descubra como melhorar seu currículo</p>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleAnalyze}
-          disabled={loading}
-          className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Analisando currículo...
-            </>
-          ) : (
-            <>
-              <Zap className="w-4 h-4" />
-              Analisar agora
-            </>
-          )}
-        </button>
-      </div>
-    );
+    return null;
   }
 
   // Se houver erro
