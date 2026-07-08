@@ -266,8 +266,7 @@ const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-
       ],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 16384,
-        responseMimeType: 'application/json',
+        maxOutputTokens: 20000,
       },
     };
 
@@ -292,19 +291,49 @@ const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-
     // Log tamanho para debug
     console.log(`📊 Tamanho da resposta Gemini: ${content.length} caracteres`);
 
-    // Remove possíveis blocos de código markdown antes de parsear
-    const cleanContent = content.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
+    // Limpeza agressiva de markdown e caracteres problemáticos
+    let cleanContent = content
+      .replace(/^```(?:json)?\s*/i, '')      // Remove bloco de código markdown
+      .replace(/\s*```$/i, '')                // Remove fechamento markdown
+      .trim();
+    
+    // Se está envolvido em "json...", extrai o conteúdo
+    if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
+      try {
+        cleanContent = JSON.parse(cleanContent);
+        if (typeof cleanContent === 'string') {
+          cleanContent = cleanContent.trim();
+        }
+      } catch (e) {
+        // Se falhar, continua com o texto original
+      }
+    }
     
     // Mais um log de debug
     console.log(`📊 Tamanho após limpeza: ${cleanContent.length} caracteres`);
+    console.log(`📊 Primeiros 200 chars: ${cleanContent.substring(0, 200)}`);
 
     let analysis;
     try {
       analysis = JSON.parse(cleanContent);
     } catch (parseError) {
-      console.error(`❌ Erro ao parsear JSON. Primeiros 500 chars: ${cleanContent.substring(0, 500)}`);
-      console.error(`❌ Últimos 500 chars: ${cleanContent.substring(Math.max(0, cleanContent.length - 500))}`);
-      throw parseError;
+      console.error(`❌ Erro ao parsear JSON na posição: ${parseError.message}`);
+      console.error(`❌ Primeiros 300 chars: ${cleanContent.substring(0, 300)}`);
+      console.error(`❌ Últimos 300 chars: ${cleanContent.substring(Math.max(0, cleanContent.length - 300))}`);
+      
+      // Tenta extrair JSON entre chaves se parser falhar
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          console.log('🔄 Tentando extrair JSON entre chaves...');
+          analysis = JSON.parse(jsonMatch[0]);
+          console.log('✅ Extração bem-sucedida!');
+        } catch (e2) {
+          throw parseError;
+        }
+      } else {
+        throw parseError;
+      }
     }
 
     // Validar scores
