@@ -360,14 +360,37 @@ Cálculo do matchScore:
 
   if (!content) throw new Error('Resposta vazia do Gemini');
 
+  console.log(`📊 Job Match - Resposta bruta (${content.length} chars): ${content.substring(0, 300)}`);
+
   // Limpa markdown se houver
   let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-  // Extrai JSON entre chaves se necessário
-  const jsonMatch = clean.match(/\{[\s\S]*\}/);
-  if (jsonMatch) clean = jsonMatch[0];
+  // Extrai apenas o primeiro objeto JSON completo e válido (não greedy no final)
+  const jsonStart = clean.indexOf('{');
+  let jsonEnd = -1;
+  if (jsonStart !== -1) {
+    let depth = 0;
+    for (let i = jsonStart; i < clean.length; i++) {
+      if (clean[i] === '{') depth++;
+      else if (clean[i] === '}') {
+        depth--;
+        if (depth === 0) { jsonEnd = i; break; }
+      }
+    }
+  }
 
-  const result = JSON.parse(clean);
+  if (jsonStart !== -1 && jsonEnd !== -1) {
+    clean = clean.substring(jsonStart, jsonEnd + 1);
+  }
+
+  let result;
+  try {
+    result = JSON.parse(clean);
+  } catch (parseError) {
+    console.error('❌ Job Match JSON parse error:', parseError.message);
+    console.error('❌ Conteúdo que falhou:', clean.substring(0, 500));
+    throw new Error(`Erro ao parsear resposta do Gemini: ${parseError.message}`);
+  }
 
   // Garante faixas válidas
   result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
