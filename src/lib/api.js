@@ -428,6 +428,13 @@ export const resumesAPI = {
       method: 'POST',
       body: { to, subject, body }
     });
+  },
+
+  // Analisar currículo com IA (força recálculo)
+  analyze: async (id) => {
+    return apiRequest(`/resumes/${id}/analyze`, {
+      method: 'POST'
+    });
   }
 };
 

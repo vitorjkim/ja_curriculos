@@ -24,6 +24,8 @@ const MyResumes = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedScoreId, setExpandedScoreId] = useState(null);
+  const [analyzingResumes, setAnalyzingResumes] = useState(new Set()); // Rastrear quais estão sendo analisados
+  const [reloadingScore, setReloadingScore] = useState(null); // Qual está sendo recarregado
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
@@ -77,6 +79,51 @@ const MyResumes = () => {
       setResumes(localResumes);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Polling para currículos sem score (análise em andamento)
+  useEffect(() => {
+    if (!user?.id || resumes.length === 0) return;
+    
+    const pendingResumes = resumes.filter(r => !r.ai_analysis_score && r.ai_analysis_score !== 0);
+    if (pendingResumes.length === 0) return;
+    
+    console.log(`⏳ Polling ${pendingResumes.length} currículos sem score...`);
+    setAnalyzingResumes(new Set(pendingResumes.map(r => r.id)));
+    
+    const pollInterval = setInterval(() => {
+      fetchResumes();
+    }, 5000); // Verifica a cada 5 segundos
+    
+    return () => clearInterval(pollInterval);
+  }, [user?.id, resumes]);
+
+  // Função para recarregar o score de um currículo
+  const reloadResumeScore = async (resumeId) => {
+    try {
+      setReloadingScore(resumeId);
+      const response = await resumesAPI.analyze(resumeId);
+      console.log('✅ Score recarregado:', response);
+      
+      // Atualizar o currículo na lista
+      setResumes(prevResumes => prevResumes.map(r => 
+        r.id === resumeId ? { ...r, ...response.analysis, ai_analysis_score: response.score } : r
+      ));
+      
+      toast({
+        title: 'Score atualizado!',
+        description: `Novo score: ${response.score}/100`
+      });
+    } catch (error) {
+      console.error('Erro ao recarregar score:', error);
+      toast({
+        title: 'Erro ao recarregar score',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setReloadingScore(null);
     }
   };
 
@@ -517,7 +564,9 @@ const MyResumes = () => {
                           <span className="font-semibold text-indigo-600">{templateLabel}</span>
                         </div>
                       )}
-                      {resume.ai_analysis_score !== null && resume.ai_analysis_score !== undefined && (
+                      {resume.ai_analysis_score !== null && resume.ai_analysis_score !== undefined ? (
+                        // Score já calculado
+
                         <div className="flex flex-col gap-1">
                           <button
                             onClick={() => setExpandedScoreId(expandedScoreId === resume.id ? null : resume.id)}
@@ -567,8 +616,22 @@ const MyResumes = () => {
                               </div>
                             );
                           })()}
-                        </div>
-                      )}
+                        </div>                      ) : (
+                        // Análise em andamento
+                        <div className="flex flex-col gap-1.5 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs animate-spin">⏳</div>
+                            <span className="text-sm font-semibold text-blue-700">Análise em andamento...</span>
+                          </div>
+                          <p className="text-xs text-blue-600">Estamos analisando seu currículo com IA.</p>
+                          <button
+                            onClick={() => reloadResumeScore(resume.id)}
+                            disabled={reloadingScore === resume.id}
+                            className="mt-1 text-xs font-bold text-blue-600 hover:text-blue-700 underline disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            {reloadingScore === resume.id ? 'Recarregando...' : 'Recarregar agora'}
+                          </button>
+                        </div>                      )}
                     </div>
 
                     {/* Botões de Ação */}
