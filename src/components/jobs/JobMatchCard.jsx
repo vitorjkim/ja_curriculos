@@ -163,7 +163,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
       {/* Header clicável */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left"
+        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left outline-none focus:outline-none"
       >
         {/* Score circular compacto */}
         <div className="relative w-14 h-14 flex-shrink-0">

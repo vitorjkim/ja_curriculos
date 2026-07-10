@@ -158,13 +158,17 @@ const apiRequest = async (endpoint, options = {}, useAuth = true) => {
     const signal = controller.signal;
     const fetchConfig = { ...config, signal };
 
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let timerHandle = null;
+    timerHandle = setTimeout(() => {
+      console.warn(`⏱️ Timeout (${timeoutMs}ms) acionado para ${config.method || 'GET'} ${endpoint}`);
+      controller.abort();
+    }, timeoutMs);
 
     try {
       const attemptStart = Date.now();
       const response = await fetch(url, fetchConfig);
       const duration = Date.now() - attemptStart;
-      clearTimeout(timer);
+      clearTimeout(timerHandle);
 
       // Ler como texto primeiro para evitar throws em JSON inválido
       const text = await response.text().catch(() => '');
@@ -190,14 +194,15 @@ const apiRequest = async (endpoint, options = {}, useAuth = true) => {
       // Erro não recuperável (4xx) - lançar
       throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
     } catch (err) {
-      clearTimeout(timer);
+      clearTimeout(timerHandle);
       const durationErr = (() => { try { return Date.now() - (typeof attemptStart !== 'undefined' ? attemptStart : Date.now()); } catch { return 0; } })();
 
       // Apenas fazer retry em erros de rede REAIS, não em AbortError de timeout
       const isNetworkError = err instanceof TypeError && /network|failed|fetch/i.test(err.message || '');
+      const isAbortError = err.name === 'AbortError';
       
       try {
-        console.warn(`[api] ${fetchConfig.method || 'GET'} ${endpoint} attempt=${attempt} error=${err.name || err.message} duration=${durationErr}ms`);
+        console.warn(`[api] ${fetchConfig.method || 'GET'} ${endpoint} attempt=${attempt} error=${err.name || err.message} duration=${durationErr}ms${isAbortError ? ' (aborted)' : ''}`);
       } catch {}
 
       if (isNetworkError && attempt <= maxRetries) {
@@ -355,7 +360,8 @@ export const resumesAPI = {
   create: async (resumeData) => {
     return apiRequest('/resumes', {
       method: 'POST',
-      body: resumeData
+      body: resumeData,
+      timeout: 60000 // 60 segundos para criar currículo (pode ser requisição grande)
     });
   },
 

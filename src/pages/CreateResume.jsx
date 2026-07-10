@@ -362,9 +362,16 @@ const CreateResume = () => {
       };
 
       console.log('📋 Dados do currículo a serem enviados:', resumeData);
+      console.log(`📊 Tamanho dos dados: ${JSON.stringify(resumeData).length} bytes`);
 
       // Usar a API ao invés do localStorage
-      const response = await resumes.create(resumeData);
+      try {
+        const response = await resumes.create(resumeData);
+        console.log('✅ Currículo criado com sucesso:', response);
+      } catch (apiError) {
+        console.error('❌ Erro ao criar currículo na API:', apiError);
+        throw apiError;
+      }
 
       toast({
         title: 'Currículo criado com sucesso!',
