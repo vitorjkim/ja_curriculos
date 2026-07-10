@@ -339,6 +339,36 @@ Cálculo do matchScore:
 - 40% do peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
 - Se jobDifficulty <= candidateLevel, sineridade = 100%. Se jobDifficulty = candidateLevel+2, sineridade = 60%. Se jobDifficulty > candidateLevel+3, sineridade = 20%.`;
 
+  // Tenta Gemini primeiro
+  let geminiError = null;
+  try {
+    const result = await tryGeminiMatch(prompt);
+    return result;
+  } catch (error) {
+    const isQuotaError = error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED');
+    geminiError = error;
+    console.warn(`⚠️ Gemini falhou${isQuotaError ? ' (quota)' : ''}: ${error.message.substring(0, 100)}`);
+    
+    // Se for erro de quota, tenta OpenAI
+    if (isQuotaError && process.env.OPENAI_API_KEY) {
+      console.log('🔄 Tentando fallback com OpenAI...');
+      try {
+        const result = await tryOpenAIMatch(prompt);
+        console.log('✅ OpenAI funcionou como fallback');
+        return result;
+      } catch (openaiError) {
+        console.error('❌ OpenAI também falhou:', openaiError.message.substring(0, 100));
+        throw new Error(`Ambas as APIs falharam. Gemini: ${geminiError.message.substring(0, 50)}. OpenAI: ${openaiError.message.substring(0, 50)}`);
+      }
+    }
+    throw geminiError;
+  }
+}
+
+/**
+ * Tenta calcular match com Gemini
+ */
+async function tryGeminiMatch(prompt) {
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
 
   // Retry com backoff exponencial para erros transitórios (503/429)
@@ -346,82 +376,143 @@ Cálculo do matchScore:
   for (let attempt = 1; attempt <= 3; attempt++) {
     if (attempt > 1) {
       const delay = attempt === 2 ? 3000 : 7000;
-      console.log(`🔄 Job Match retry ${attempt}/3 após ${delay}ms...`);
+      console.log(`🔄 Gemini retry ${attempt}/3 após ${delay}ms...`);
       await new Promise(r => setTimeout(r, delay));
     }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
-    }),
-  });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+      }),
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
+    if (!response.ok) {
+      const errText = await response.text();
       const status = response.status;
       if ((status === 503 || status === 429) && attempt < 3) {
         lastError = new Error(`Gemini API error ${status}: ${errText}`);
         continue; // retry
       }
-    throw new Error(`Gemini API error ${status}: ${errText}`);
-  }
+      throw new Error(`Gemini API error ${status}: ${errText}`);
+    }
 
-  const data = await response.json();
-  const candidate = data?.candidates?.[0];
-  const finishReason = candidate?.finishReason;
-  const content = candidate?.content?.parts?.[0]?.text;
+    const data = await response.json();
+    const candidate = data?.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+    const content = candidate?.content?.parts?.[0]?.text;
 
-  console.log(`📊 Job Match - finishReason: ${finishReason}, tamanho: ${content?.length || 0} chars`);
+    console.log(`📊 Gemini - finishReason: ${finishReason}, tamanho: ${content?.length || 0} chars`);
 
-  if (!content) throw new Error(`Resposta vazia do Gemini (finishReason: ${finishReason})`);
+    if (!content) throw new Error(`Resposta vazia do Gemini (finishReason: ${finishReason})`);
 
-  console.log(`📊 Job Match - Resposta bruta: ${content.substring(0, 300)}`);
+    // Limpa markdown se houver
+    let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-  // Limpa markdown se houver
-  let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-
-  // Extrai apenas o primeiro objeto JSON completo e válido (não greedy no final)
-  const jsonStart = clean.indexOf('{');
-  let jsonEnd = -1;
-  if (jsonStart !== -1) {
-    let depth = 0;
-    for (let i = jsonStart; i < clean.length; i++) {
-      if (clean[i] === '{') depth++;
-      else if (clean[i] === '}') {
-        depth--;
-        if (depth === 0) { jsonEnd = i; break; }
+    // Extrai apenas o primeiro objeto JSON completo e válido (não greedy no final)
+    const jsonStart = clean.indexOf('{');
+    let jsonEnd = -1;
+    if (jsonStart !== -1) {
+      let depth = 0;
+      for (let i = jsonStart; i < clean.length; i++) {
+        if (clean[i] === '{') depth++;
+        else if (clean[i] === '}') {
+          depth--;
+          if (depth === 0) { jsonEnd = i; break; }
+        }
       }
     }
+
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      clean = clean.substring(jsonStart, jsonEnd + 1);
+    }
+
+    let result;
+    try {
+      result = JSON.parse(clean);
+    } catch (parseError) {
+      console.error('❌ Gemini JSON parse error:', parseError.message);
+      throw new Error(`Erro ao parsear resposta do Gemini: ${parseError.message}`);
+    }
+
+    // Garante faixas válidas
+    result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
+    result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
+    result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
+    result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
+    result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+
+    console.log(`✅ Job Match Score (Gemini): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
+    return result;
   }
-
-  if (jsonStart !== -1 && jsonEnd !== -1) {
-    clean = clean.substring(jsonStart, jsonEnd + 1);
-  }
-
-  let result;
-  try {
-    result = JSON.parse(clean);
-  } catch (parseError) {
-    console.error('❌ Job Match JSON parse error:', parseError.message);
-    console.error('❌ Conteúdo que falhou:', clean.substring(0, 500));
-    throw new Error(`Erro ao parsear resposta do Gemini: ${parseError.message}`);
-  }
-
-  // Garante faixas válidas
-  result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
-  result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
-  result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
-  result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
-  result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
-
-  console.log(`✅ Job Match Score: ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
-  return result;
-  } // end retry loop
-  throw lastError || new Error('Falha após 3 tentativas');
+  throw lastError || new Error('Gemini: Falha após 3 tentativas');
 }
+
+/**
+ * Fallback: Calcula match com OpenAI
+ */
+async function tryOpenAIMatch(prompt) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+
+  let openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    if (attempt > 1) {
+      console.log(`🔄 OpenAI retry ${attempt}/2 após 2000ms...`);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4,
+        max_tokens: 2048,
+      });
+
+      const content = response.choices?.[0]?.message?.content;
+      if (!content) throw new Error('Resposta vazia do OpenAI');
+
+      // Extrai JSON
+      let clean = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const jsonStart = clean.indexOf('{');
+      let jsonEnd = -1;
+      if (jsonStart !== -1) {
+        let depth = 0;
+        for (let i = jsonStart; i < clean.length; i++) {
+          if (clean[i] === '{') depth++;
+          else if (clean[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i; break; }
+          }
+        }
+      }
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        clean = clean.substring(jsonStart, jsonEnd + 1);
+      }
+
+      let result = JSON.parse(clean);
+
+      // Garante faixas válidas
+      result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
+      result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
+      result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
+      result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
+      result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+
+      console.log(`✅ Job Match Score (OpenAI): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
+      return result;
+    } catch (error) {
+      if (attempt === 1) continue;
+      throw error;
+    }
+  }
+}
+
 
 /**
  * Reescreve um trecho de texto usando IA

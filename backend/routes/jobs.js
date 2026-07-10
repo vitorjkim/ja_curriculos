@@ -2041,21 +2041,59 @@ router.post('/match', authenticateToken, async (req, res) => {
 
     console.log(`🔍 Calculando Job Match: vaga="${job.title}" resumeId=${resumeId}`);
 
-    const matchResult = await calculateJobMatch(resumeText, jobText);
+    try {
+      const matchResult = await calculateJobMatch(resumeText, jobText);
 
-    // Salva no cache
-    jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: matchResult });
+      // Salva no cache
+      jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: matchResult });
 
-    res.json({
-      success: true,
-      jobId,
-      resumeId,
-      ...matchResult,
-    });
+      res.json({
+        success: true,
+        jobId,
+        resumeId,
+        ...matchResult,
+      });
+    } catch (aiError) {
+      const isQuotaError = aiError.message.includes('429') || aiError.message.includes('RESOURCE_EXHAUSTED');
+      
+      console.error(`❌ Erro na IA${isQuotaError ? ' (quota)' : ''}: ${aiError.message.substring(0, 100)}`);
+      
+      // Se for erro de quota e tiver cache antigo, usa o cache como fallback
+      if (isQuotaError && cached) {
+        console.log(`⚠️ Usando cache antigo como fallback (${Math.round((Date.now() - cached.timestamp) / 1000)}s ago)`);
+        return res.json({ 
+          success: true, 
+          jobId, 
+          resumeId, 
+          fromCache: true,
+          staleCache: true,
+          ...cached.data 
+        });
+      }
+      
+      // Se for quota mas não tem cache, retorna score genérico
+      if (isQuotaError) {
+        console.log('⚠️ Quota atingida, retornando score genérico');
+        return res.json({
+          success: true,
+          jobId,
+          resumeId,
+          matchScore: 50,
+          jobDifficulty: 5,
+          candidateLevel: 5,
+          reasons: ['Análise indisponível temporariamente devido a alta demanda da IA'],
+          gapAnalysis: ['Tente novamente em alguns minutos'],
+          quotaExhausted: true,
+        });
+      }
+      
+      // Para outros erros, retorna 500
+      res.status(500).json({ error: 'Erro ao calcular compatibilidade: ' + aiError.message });
+    }
 
   } catch (error) {
-    console.error('❌ Erro no cálculo de job match:', error);
-    res.status(500).json({ error: 'Erro ao calcular compatibilidade: ' + error.message });
+    console.error('❌ Erro no cálculo de job match (setup):', error);
+    res.status(500).json({ error: 'Erro ao processar requisição: ' + error.message });
   }
 });
 
