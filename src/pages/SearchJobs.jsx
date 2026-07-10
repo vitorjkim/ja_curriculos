@@ -592,16 +592,17 @@ const SearchJobs = () => {
   // Highlights & classes (escola) + perfil do candidato (lazy, só busca quando aba é aberta)
   useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
 
-  // Busca perfil do candidato SOMENTE quando entra na aba "Para Você"
+  // Busca perfil do candidato logo após jobs carregarem (não-bloqueante, para o badge da aba ficar correto)
   useEffect(() => {
-    if (!isCandidate || !user || candidateProfileLoaded) return;
-    if (schoolTab !== 'destaques') return;
+    if (!isCandidate || !user || candidateProfileLoaded || loading) return;
     (async () => {
       try {
         const resumeResp = await resumesAPI.list();
         const resumeList = resumeResp?.resumes || [];
         if (resumeList.length > 0) {
-          const primary = resumeList.find(r => r.is_default) || resumeList[0];
+          // Sempre usa o currículo com maior score de IA
+          const sorted = [...resumeList].sort((a, b) => (b.ai_analysis_score || 0) - (a.ai_analysis_score || 0));
+          const primary = sorted[0];
           const info = typeof primary.personal_info === 'string' ? JSON.parse(primary.personal_info || '{}') : (primary.personal_info || {});
           const city = info.city || info.location || '';
           const score = primary.ai_analysis_score || 0;
@@ -611,7 +612,7 @@ const SearchJobs = () => {
         setCandidateProfileLoaded(true);
       } catch(e) { console.warn('Falha ao carregar perfil candidato', e); setCandidateProfileLoaded(true); }
     })();
-  }, [isCandidate, user, schoolTab, candidateProfileLoaded]);
+  }, [isCandidate, user, loading, candidateProfileLoaded]);
 
   // Carregar destaques da escola (para aba "Vagas destacadas")
   const loadSchoolHighlights = async () => {
