@@ -403,8 +403,9 @@ const SearchJobs = () => {
   const [loadingExternal, setLoadingExternal] = useState(false);
   const [loadingExternalRecommended, setLoadingExternalRecommended] = useState(false);
   const [hideHighlights, setHideHighlights] = useState(false);
-  // Perfil do candidato para cálculo de compatibilidade
+  // Perfil do candidato para cálculo de compatibilidade (carregado lazy na 1ª vez que abre a aba)
   const [candidateProfile, setCandidateProfile] = useState({ city: null, level: null });
+  const [candidateProfileLoaded, setCandidateProfileLoaded] = useState(false);
   // Removido estado dangerChip após retorno ao comportamento anterior (ícone troca por X só no hover)
   // Paginação vagas externas
   const [externalPage, setExternalPage] = useState(1);
@@ -588,22 +589,29 @@ const SearchJobs = () => {
 
   // Efeito anterior de seleção automática de subárea removido (flatten aplicado)
 
-  // Highlights & classes (escola) + perfil do candidato para compatibilidade
-  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isCandidate){ // Buscar perfil/resumo para pegar cidade e nível do candidato
-        try {
-          const resumeResp = await resumesAPI.list();
-          const resumeList = resumeResp?.resumes || [];
-          if (resumeList.length > 0) {
-            // Pegar o currículo padrão ou o primeiro disponível
-            const primary = resumeList.find(r => r.is_default) || resumeList[0];
-            const info = typeof primary.personal_info === 'string' ? JSON.parse(primary.personal_info || '{}') : (primary.personal_info || {});
-            const city = info.city || info.location || '';
-            // Derivar nível a partir do score de IA (proxy)
-            const score = primary.ai_analysis_score || 0;
-            const level = score >= 70 ? 'pleno' : score >= 40 ? 'junior' : 'estagio';
-            setCandidateProfile({ city, level });
-          }
-        } catch(e) { console.warn('Falha ao carregar perfil candidato para compatibilidade', e); } } if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
+  // Highlights & classes (escola) + perfil do candidato (lazy, só busca quando aba é aberta)
+  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
+
+  // Busca perfil do candidato SOMENTE quando entra na aba "Para Você"
+  useEffect(() => {
+    if (!isCandidate || !user || candidateProfileLoaded) return;
+    if (schoolTab !== 'destaques') return;
+    (async () => {
+      try {
+        const resumeResp = await resumesAPI.list();
+        const resumeList = resumeResp?.resumes || [];
+        if (resumeList.length > 0) {
+          const primary = resumeList.find(r => r.is_default) || resumeList[0];
+          const info = typeof primary.personal_info === 'string' ? JSON.parse(primary.personal_info || '{}') : (primary.personal_info || {});
+          const city = info.city || info.location || '';
+          const score = primary.ai_analysis_score || 0;
+          const level = score >= 70 ? 'pleno' : score >= 40 ? 'junior' : 'estagio';
+          setCandidateProfile({ city, level });
+        }
+        setCandidateProfileLoaded(true);
+      } catch(e) { console.warn('Falha ao carregar perfil candidato', e); setCandidateProfileLoaded(true); }
+    })();
+  }, [isCandidate, user, schoolTab, candidateProfileLoaded]);
 
   // Carregar destaques da escola (para aba "Vagas destacadas")
   const loadSchoolHighlights = async () => {

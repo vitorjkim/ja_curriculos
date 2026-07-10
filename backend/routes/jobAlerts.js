@@ -5,6 +5,19 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Garante que a tabela existe (cría na primeira execução se não existir)
+pool.query(`
+  CREATE TABLE IF NOT EXISTS job_alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    filters JSONB DEFAULT '{}',
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  )
+`).catch(err => console.warn('⚠️ job_alerts table creation warning:', err.message));
+
 // GET /api/job-alerts - Listar alertas do usuário
 router.get('/', authenticateToken, async (req, res) => {
   try {
