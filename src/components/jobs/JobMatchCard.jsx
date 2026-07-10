@@ -78,7 +78,10 @@ export default function JobMatchCard({ jobId, resumeId }) {
       const data = await response.json();
       setMatch(data);
     } catch (err) {
-      setError(err.message);
+      // Erros transitórios (503/sobrecarga) não devem mostrar mensagem de erro ao usuário
+      const isTransient = err.message?.includes('503') || err.message?.includes('sobrecarga') || err.message?.includes('high demand') || err.message?.includes('UNAVAILABLE');
+      if (!isTransient) setError(err.message);
+      // Para erros transitórios: simplesmente não exibe o card (setMatch permanece null)
     } finally {
       setLoading(false);
     }

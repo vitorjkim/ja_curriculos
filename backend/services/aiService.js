@@ -341,6 +341,15 @@ Cálculo do matchScore:
 
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
 
+  // Retry com backoff exponencial para erros transitórios (503/429)
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    if (attempt > 1) {
+      const delay = attempt === 2 ? 3000 : 7000;
+      console.log(`🔄 Job Match retry ${attempt}/3 após ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -352,7 +361,12 @@ Cálculo do matchScore:
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Gemini API error ${response.status}: ${errText}`);
+      const status = response.status;
+      if ((status === 503 || status === 429) && attempt < 3) {
+        lastError = new Error(`Gemini API error ${status}: ${errText}`);
+        continue; // retry
+      }
+    throw new Error(`Gemini API error ${status}: ${errText}`);
   }
 
   const data = await response.json();
@@ -405,6 +419,8 @@ Cálculo do matchScore:
 
   console.log(`✅ Job Match Score: ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
   return result;
+  } // end retry loop
+  throw lastError || new Error('Falha após 3 tentativas');
 }
 
 /**
