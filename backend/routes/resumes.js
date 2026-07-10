@@ -273,47 +273,52 @@ router.post('/', validateResume, handleValidationErrors, async (req, res) => {
 
     console.log('✅ Currículo criado:', result.rows[0].id);
     
-    // Auto-analisar currículo com IA logo após criar
     const createdResume = result.rows[0];
-    try {
-      console.log('🤖 Iniciando análise automática do currículo...');
-      const analysis = await aiService.analyzeResume(createdResume);
-      
-      // Salvar análise no banco
-      await pool.query(
-        `UPDATE resumes 
-        SET 
-          ai_analysis_score = $1,
-          ai_analysis = $2,
-          ai_analyzed_at = NOW()
-        WHERE id = $3`,
-        [analysis.score, JSON.stringify(analysis), createdResume.id]
-      );
-      
-      console.log('✅ Análise automática concluída:', analysis.score);
-      
-      // Retornar currículo com análise
-      const updatedResume = await pool.query(
-        'SELECT * FROM resumes WHERE id = $1',
-        [createdResume.id]
-      );
-      
-      res.status(201).json({
-        success: true,
-        message: 'Currículo criado e analisado com sucesso',
-        resume: updatedResume.rows[0],
-        analysis: analysis
-      });
-    } catch (aiError) {
-      console.error('⚠️  Erro na análise automática:', aiError.message);
-      // Ainda assim retornar o currículo criado, mesmo que a análise falhe
-      res.status(201).json({
-        success: true,
-        message: 'Currículo criado, mas análise automática falhou',
-        resume: createdResume,
-        analysis_error: aiError.message
-      });
-    }
+
+    // Responder imediatamente com o currículo criado
+    res.status(201).json({
+      success: true,
+      message: 'Currículo criado com sucesso. Análise de IA em andamento...',
+      resume: createdResume
+    });
+
+    // Fazer análise em background (não bloqueia resposta)
+    setImmediate(async () => {
+      try {
+        console.log('🤖 Iniciando análise automática do currículo em background...');
+        const analysis = await aiService.analyzeResume(createdResume);
+        
+        // Salvar análise no banco
+        await pool.query(
+          `UPDATE resumes 
+          SET 
+            ai_analysis_score = $1,
+            ai_analysis = $2,
+            ai_analyzed_at = NOW()
+          WHERE id = $3`,
+          [analysis.score, JSON.stringify(analysis), createdResume.id]
+        );
+        
+        console.log('✅ Análise automática concluída com sucesso:', analysis.score);
+      } catch (aiError) {
+        console.error('⚠️  Erro na análise automática:', aiError.message);
+        // Salvar score genérico como fallback
+        try {
+          await pool.query(
+            `UPDATE resumes 
+            SET 
+              ai_analysis_score = $1,
+              ai_analysis = $2,
+              ai_analyzed_at = NOW()
+            WHERE id = $3`,
+            [50, JSON.stringify({ score: 50, reason: 'Análise postponida - API sobrecarregada' }), createdResume.id]
+          );
+          console.log('⚠️  Salvo score genérico (50) como fallback');
+        } catch (fallbackError) {
+          console.error('❌ Erro ao salvar score fallback:', fallbackError.message);
+        }
+      }
+    });
   } catch (error) {
     console.error('❌ Erro ao criar currículo:', error);
     res.status(500).json({
