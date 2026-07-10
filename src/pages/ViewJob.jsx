@@ -1368,10 +1368,10 @@ const ViewJob = () => {
                 {user && user.type === 'candidate' && userResumes && userResumes.length > 0 && job && job.source !== 'agency' && (() => {
                   // Usa o currículo com maior score de IA, ou o primeiro disponível
                   const bestResume = [...userResumes].sort((a, b) => (b.ai_analysis_score || 0) - (a.ai_analysis_score || 0))[0];
-                  console.log("Renderizando JobMatchCard com:", { jobId: id, resumeId: bestResume.id, jobSource: job.source });
+                  console.log("Renderizando JobMatchCard com:", { jobId: id, resumeId: bestResume.id, resumeScore: bestResume.ai_analysis_score, jobSource: job.source });
                   return (
                     <div className="mb-2">
-                      <JobMatchCard jobId={id} resumeId={bestResume.id} />
+                      <JobMatchCard jobId={id} resumeId={bestResume.id} resumeScore={bestResume.ai_analysis_score || 0} />
                     </div>
                   );
                 })()}

@@ -39,31 +39,47 @@ const getDifficultyLabel = (level) => {
 
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas em ms
 
-const getCachedMatch = (jobId, resumeId) => {
+const getCachedMatch = (jobId, resumeId, resumeScore) => {
   try {
     const raw = localStorage.getItem(`jobmatch_${jobId}_${resumeId}`);
     if (!raw) return null;
-    const { data, timestamp } = JSON.parse(raw);
-    if (Date.now() - timestamp > CACHE_TTL) { localStorage.removeItem(`jobmatch_${jobId}_${resumeId}`); return null; }
+    const { data, timestamp, scoreUsed } = JSON.parse(raw);
+    // Valida TTL
+    if (Date.now() - timestamp > CACHE_TTL) { 
+      localStorage.removeItem(`jobmatch_${jobId}_${resumeId}`); 
+      return null; 
+    }
+    // Só usa cache se o currículo não melhorou
+    if (resumeScore > (scoreUsed || 0)) return null;
     return data;
   } catch { return null; }
 };
 
-const setCachedMatch = (jobId, resumeId, data) => {
-  try { localStorage.setItem(`jobmatch_${jobId}_${resumeId}`, JSON.stringify({ data, timestamp: Date.now() })); } catch {}
+const setCachedMatch = (jobId, resumeId, resumeScore, data) => {
+  try { 
+    localStorage.setItem(
+      `jobmatch_${jobId}_${resumeId}`, 
+      JSON.stringify({ data, timestamp: Date.now(), scoreUsed: resumeScore })
+    ); 
+  } catch {}
 };
 
-export default function JobMatchCard({ jobId, resumeId }) {
-  const [match, setMatch] = useState(() => getCachedMatch(jobId, resumeId));
-  const [loading, setLoading] = useState(false);
+export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
+  const [match, setMatch] = useState(() => getCachedMatch(jobId, resumeId, resumeScore));
+  const [loading, setLoading] = useState(!match); // Só carrega se não tiver cache
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (jobId && resumeId && !getCachedMatch(jobId, resumeId)) {
+    const cached = getCachedMatch(jobId, resumeId, resumeScore);
+    if (!cached) {
+      setLoading(true);
       fetchMatch();
+    } else {
+      setMatch(cached);
+      setLoading(false);
     }
-  }, [jobId, resumeId]);
+  }, [jobId, resumeId, resumeScore]);
 
   const fetchMatch = async () => {
     try {
@@ -92,7 +108,7 @@ export default function JobMatchCard({ jobId, resumeId }) {
       }
 
       const data = await response.json();
-      setCachedMatch(jobId, resumeId, data);
+      setCachedMatch(jobId, resumeId, resumeScore, data);
       setMatch(data);
     } catch (err) {
       // Erros transitórios (503/sobrecarga) não devem mostrar mensagem de erro ao usuário
