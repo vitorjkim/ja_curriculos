@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { jobsAPI, companiesAPI, usersAPI, externalJobsAPI, chatAPI } from '@/lib/api';
+import { jobsAPI, companiesAPI, usersAPI, externalJobsAPI, chatAPI, resumesAPI } from '@/lib/api';
 import { stripHtml } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -403,6 +403,8 @@ const SearchJobs = () => {
   const [loadingExternal, setLoadingExternal] = useState(false);
   const [loadingExternalRecommended, setLoadingExternalRecommended] = useState(false);
   const [hideHighlights, setHideHighlights] = useState(false);
+  // Perfil do candidato para cálculo de compatibilidade
+  const [candidateProfile, setCandidateProfile] = useState({ city: null, level: null });
   // Removido estado dangerChip após retorno ao comportamento anterior (ícone troca por X só no hover)
   // Paginação vagas externas
   const [externalPage, setExternalPage] = useState(1);
@@ -461,24 +463,57 @@ const SearchJobs = () => {
     return list.slice(start, start + INTERNAL_PER_PAGE);
   }, [visibleInternalJobsForRender, internalPage]);
 
-  // Destaques filtrados (aplicam mesmos filtros já usados em filteredJobs)
-  const schoolHighlightedFiltered = isCandidate && !hideHighlights
-    ? filteredJobs.filter(j => highlightedSchoolJobIds.includes(j.id))
-    : [];
-  const companyHighlightedFiltered = isCandidate && !hideHighlights
-    ? filteredJobs.filter(j => companyHighlightedJobIds.includes(j.id))
-    : [];
-  // Lista combinada de destaques (sem duplicatas) para o aluno
-  const allHighlightedFiltered = isCandidate && !hideHighlights
-    ? filteredJobs.filter(j => highlightedSchoolJobIds.includes(j.id) || companyHighlightedJobIds.includes(j.id))
-    : [];
-  // Flags para avisos
-  const hasHiddenHighlights = isCandidate && !hideHighlights && (highlightedSchoolJobIds.length>0 || companyHighlightedJobIds.length>0) && allHighlightedFiltered.length===0;
-  // Contagens para cabeçalhos/tabs
+  // ── Compatibilidade de vagas (substitui destaques da escola para candidatos) ──────────
+  // Normaliza string de localização para comparação
+  const normalizeCity = (str = '') => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[-–,/|].*/,'').trim();
+
+  // Score de compatibilidade: localidade obrigatória, nível e modalidade como bônus
+  const calcCompatibility = React.useCallback((job) => {
+    const LEVELS = { estagio: 1, junior: 2, pleno: 3, senior: 4 };
+    const isRemote = (job.work_type || '').toLowerCase() === 'remoto';
+
+    // Localidade (obrigatória para vagas presenciais/híbridas)
+    const city = normalizeCity(candidateProfile.city || '');
+    const jobLoc = normalizeCity(job.location || '');
+    const locationMatch = isRemote || (city && jobLoc && (jobLoc.includes(city) || city.includes(jobLoc.split(' ')[0])));
+
+    if (!locationMatch) return 0;
+
+    let score = isRemote ? 35 : 50; // base
+
+    // Nível de experiência
+    if (candidateProfile.level && job.experience_level) {
+      const ul = LEVELS[candidateProfile.level] || 0;
+      const jl = LEVELS[job.experience_level] || 0;
+      if (ul && jl) {
+        if (ul === jl) score += 25;
+        else if (Math.abs(ul - jl) === 1) score += 10;
+      }
+    }
+
+    return score;
+  }, [candidateProfile]);
+
+  // Lista de vagas com alta/boa compatibilidade (score >= 50)
+  const compatibleJobs = React.useMemo(() => {
+    if (!isCandidate || hideHighlights || !candidateProfile.city) return [];
+    return filteredJobs
+      .filter(j => !j.is_agency_job) // vagas de agência não participam
+      .map(j => ({ ...j, _compatScore: calcCompatibility(j) }))
+      .filter(j => j._compatScore >= 50)
+      .sort((a, b) => b._compatScore - a._compatScore)
+      .slice(0, 20); // máximo 20 vagas para não sobrecarregar
+  }, [isCandidate, hideHighlights, filteredJobs, candidateProfile, calcCompatibility]);
+
+  // Manter compatibilidade reversa com código que usa as variáveis antigas
+  const allHighlightedFiltered = compatibleJobs;
+  const schoolHighlightedFiltered = [];
+  const companyHighlightedFiltered = [];
+  const hasHiddenHighlights = false;
   const isTabbedUser = isSchool || isCandidate;
-  const candidateSchoolCount = schoolHighlightedFiltered.length;
-  const candidateCompanyCount = companyHighlightedFiltered.length;
-  const totalCandidateHighlights = allHighlightedFiltered.length;
+  const candidateSchoolCount = 0;
+  const candidateCompanyCount = 0;
+  const totalCandidateHighlights = compatibleJobs.length;
 
   // Load data
   useEffect(()=>{ (async()=>{ try{ setLoading(true); const [jobsResp, companiesResp] = await Promise.all([ jobsAPI.list(), companiesAPI.list() ]); if(jobsResp?.jobs){ setJobs(jobsResp.jobs); setFilteredJobs(jobsResp.jobs);} 
@@ -553,8 +588,22 @@ const SearchJobs = () => {
 
   // Efeito anterior de seleção automática de subárea removido (flatten aplicado)
 
-  // Highlights & classes
-  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isCandidate){ const r=await fetch(base+'/jobs/highlights/mine',{ headers:{ Authorization:`Bearer ${token}` }}); if(r.ok){ const d=await r.json(); setHighlightedJobIds(d.jobs||[]); setHighlightedSchoolJobIds(d.schoolJobs||[]); setCompanyHighlightedJobIds(d.companyJobs||[]); } } if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
+  // Highlights & classes (escola) + perfil do candidato para compatibilidade
+  useEffect(()=>{ (async()=>{ if(!user) return; try{ const base=getAPIBaseURL(); const token=localStorage.getItem('curriculoja_token'); if(isCandidate){ // Buscar perfil/resumo para pegar cidade e nível do candidato
+        try {
+          const resumeResp = await resumesAPI.list();
+          const resumeList = resumeResp?.resumes || [];
+          if (resumeList.length > 0) {
+            // Pegar o currículo padrão ou o primeiro disponível
+            const primary = resumeList.find(r => r.is_default) || resumeList[0];
+            const info = typeof primary.personal_info === 'string' ? JSON.parse(primary.personal_info || '{}') : (primary.personal_info || {});
+            const city = info.city || info.location || '';
+            // Derivar nível a partir do score de IA (proxy)
+            const score = primary.ai_analysis_score || 0;
+            const level = score >= 70 ? 'pleno' : score >= 40 ? 'junior' : 'estagio';
+            setCandidateProfile({ city, level });
+          }
+        } catch(e) { console.warn('Falha ao carregar perfil candidato para compatibilidade', e); } } if(isSchool){ const r2=await fetch(base+'/schools/classes',{ headers:{ Authorization:`Bearer ${token}` }}); if(r2.ok){ const d2=await r2.json(); setClassOptions(d2.classes||[]);} } }catch(e){ console.warn('Falha destaques', e);} })(); }, [user,isCandidate,isSchool]);
 
   // Carregar destaques da escola (para aba "Vagas destacadas")
   const loadSchoolHighlights = async () => {
@@ -1724,23 +1773,31 @@ const SearchJobs = () => {
                       <div className="min-w-0 flex-1">
                         <h2 className={`text-base md:text-lg font-bold ${(isTabbedUser && schoolTab==='destaques') ? 'text-amber-700' : 'text-gray-900'}`}>
                           {(isTabbedUser && schoolTab==='destaques')
-                            ? `Vagas destacadas (${isSchool ? ((filteredSchoolHighlights?.length||0) + (filteredSchoolCompanyHighlights?.length||0)) : totalCandidateHighlights})`
+                          ? `${isSchool ? 'Vagas destacadas' : 'Vagas para Você'} (${isSchool ? ((filteredSchoolHighlights?.length||0) + (filteredSchoolCompanyHighlights?.length||0)) : totalCandidateHighlights})`
                             : internalJobsHeading}
                         </h2>
                         {!loading && schoolTab==='vagas' && filteredJobs.length>0 && (
                           <p className="text-gray-600 text-xs md:text-sm">Mostrando resultados {searchTerm && <span>para "{searchTerm}"</span>}</p>
                         )}
-                        {(isTabbedUser && schoolTab==='destaques') && (
+                        {(isTabbedUser && schoolTab==='destaques') && isCandidate && (
+                          <p className="text-gray-600 text-xs md:text-sm">
+                            {!candidateProfile.city
+                              ? 'Complete seu currículo com sua cidade para ver vagas compatíveis.'
+                              : `Vagas próximas de ${candidateProfile.city} com boa compatibilidade ao seu perfil.`
+                            }
+                          </p>
+                        )}
+                        {(isTabbedUser && schoolTab==='destaques') && isSchool && (
                           <p className="text-gray-600 text-xs md:text-sm">
                             {(() => {
-                              const s = isSchool ? (filteredSchoolHighlights?.length||0) : candidateSchoolCount;
-                              const c = isSchool ? (filteredSchoolCompanyHighlights?.length||0) : candidateCompanyCount;
+                              const s = filteredSchoolHighlights?.length||0;
+                              const c = filteredSchoolCompanyHighlights?.length||0;
                               const base = s && c ? 'Vagas destacadas pela sua escola e por empresas'
                                 : s ? 'Vagas destacadas pela sua escola'
-                                : c ? (isSchool ? 'Vagas destacadas por empresas para a sua escola' : 'Vagas destacadas por empresas')
+                                : c ? 'Vagas destacadas por empresas para a sua escola'
                                 : null;
                               if (!base) return null;
-                              if (isSchool && schoolClassFilter && schoolClassFilter !== 'all') {
+                              if (schoolClassFilter && schoolClassFilter !== 'all') {
                                 const cls = (classOptions || []).find(x => String(x.id) === String(schoolClassFilter));
                                 const name = cls?.class_name || cls?.name || schoolClassFilter;
                                 return `${base} — Turma: ${name}`;
@@ -1793,7 +1850,7 @@ const SearchJobs = () => {
                               )}
                               <span className="relative z-10 inline-flex items-center gap-1.5">
                                 <Star className={`w-4 h-4 ${schoolTab==='destaques' ? 'opacity-100 text-white' : 'opacity-80 text-amber-700'}`} />
-                                <span>Destacadas</span>
+                                <span>{isCandidate ? 'Para Você' : 'Destacadas'}</span>
                                 <span className={`inline-flex items-center justify-center min-w-[1.25rem] px-1.5 h-5 text-[11px] rounded-full font-bold ${schoolTab==='destaques' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'}`}>
                                   { isSchool
                                     ? ((loadingSchoolHighlights || loadingSchoolCompanyHighlights) ? '…' : ((filteredSchoolHighlights?.length||0) + (filteredSchoolCompanyHighlights?.length||0)))
@@ -2018,7 +2075,14 @@ const SearchJobs = () => {
                           ))}
                         </div>
                       ) : (
-                        <Card className="shadow-lg border-2 border-gray-200"><CardContent className="p-10 text-center text-gray-600">Nenhuma vaga destacada para os filtros atuais.</CardContent></Card>
+                        <Card className="shadow-lg border-2 border-gray-200">
+                          <CardContent className="p-10 text-center text-gray-600">
+                            {!candidateProfile.city
+                              ? <><p className="font-semibold mb-1">Nenhuma vaga encontrada</p><p className="text-sm">Adicione sua cidade no currículo para vermos vagas próximas de você.</p></>
+                              : <><p className="font-semibold mb-1">Nenhuma vaga com alta compatibilidade</p><p className="text-sm">Ainda não há vagas próximas de <b>{candidateProfile.city}</b> nos filtros atuais.</p></>
+                            }
+                          </CardContent>
+                        </Card>
                       )}
                     </motion.div>
                   )}
