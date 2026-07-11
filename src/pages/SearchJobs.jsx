@@ -1792,7 +1792,7 @@ const SearchJobs = () => {
                           <p className="text-gray-600 text-xs md:text-sm">
                             {!candidateProfile.city
                               ? 'Complete seu currículo com sua cidade para ver vagas compatíveis.'
-                              : `Vagas próximas de ${candidateProfile.city} com boa compatibilidade ao seu perfil.`
+                              : `Vagas em ${candidateProfile.city} compatíveis com seu perfil.`
                             }
                           </p>
                         )}
