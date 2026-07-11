@@ -1983,6 +1983,26 @@ router.get('/:id', [
 const jobMatchCache = new Map();
 const JOB_MATCH_CACHE_TTL = 60 * 60 * 1000; // 1 hora em ms
 
+// Garante que a tabela de cache de match existe no banco
+async function ensureJobMatchCacheTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS job_match_cache (
+        job_id UUID NOT NULL,
+        resume_id UUID NOT NULL,
+        result JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (job_id, resume_id)
+      )
+    `);
+  } catch (e) {
+    console.warn('Aviso: não foi possível criar tabela job_match_cache:', e?.message);
+  }
+}
+ensureJobMatchCacheTable();
+
+const DB_MATCH_CACHE_TTL_DAYS = 7; // Resultado válido por 7 dias no banco
+
 // POST /api/jobs/match - Calcular compatibilidade entre currículo e vaga
 router.post('/match', authenticateToken, async (req, res) => {
   try {
@@ -1993,12 +2013,31 @@ router.post('/match', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'jobId e resumeId são obrigatórios' });
     }
 
-    // Verifica cache primeiro
+    // 1) Verifica cache em memória (rápido)
     const cacheKey = `${jobId}:${resumeId}`;
     const cached = jobMatchCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < JOB_MATCH_CACHE_TTL) {
-      console.log(`✅ Job Match servido do cache: ${cacheKey}`);
+      console.log(`✅ Job Match servido do cache memória: ${cacheKey}`);
       return res.json({ success: true, jobId, resumeId, fromCache: true, ...cached.data });
+    }
+
+    // 2) Verifica cache no banco de dados (persiste entre dispositivos e restarts)
+    try {
+      const dbCached = await pool.query(
+        `SELECT result, created_at FROM job_match_cache
+         WHERE job_id = $1 AND resume_id = $2
+           AND created_at > NOW() - INTERVAL '${DB_MATCH_CACHE_TTL_DAYS} days'`,
+        [jobId, resumeId]
+      );
+      if (dbCached.rows.length > 0) {
+        const dbResult = dbCached.rows[0].result;
+        // Atualiza cache em memória também
+        jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: dbResult });
+        console.log(`✅ Job Match servido do cache banco: ${cacheKey}`);
+        return res.json({ success: true, jobId, resumeId, fromCache: true, ...dbResult });
+      }
+    } catch (e) {
+      console.warn('Aviso: erro ao consultar job_match_cache no banco:', e?.message);
     }
 
     // Busca vaga
@@ -2044,8 +2083,20 @@ router.post('/match', authenticateToken, async (req, res) => {
     try {
       const matchResult = await calculateJobMatch(resumeText, jobText);
 
-      // Salva no cache
+      // Salva no cache em memória
       jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: matchResult });
+
+      // Salva no banco de dados (persiste entre dispositivos)
+      try {
+        await pool.query(
+          `INSERT INTO job_match_cache (job_id, resume_id, result, created_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT (job_id, resume_id) DO UPDATE SET result = $3, created_at = NOW()`,
+          [jobId, resumeId, JSON.stringify(matchResult)]
+        );
+      } catch (e) {
+        console.warn('Aviso: erro ao salvar job_match_cache no banco:', e?.message);
+      }
 
       res.json({
         success: true,

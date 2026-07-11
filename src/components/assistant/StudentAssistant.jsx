@@ -30,81 +30,8 @@ export default function StudentAssistant(){
   const [tourStep, setTourStep] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [guideLoaded, setGuideLoaded] = useState(false);
-  
-  // Drag & position
-  const [position, setPosition] = useState({ bottom: 20, right: 20 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, startBottom: 20, startRight: 20 });
-  const containerRef = React.useRef(null);
 
   const total = useMemo(() => (counts.messages + counts.interactions + counts.decisions + counts.interviews), [counts]);
-
-  // Recuperar posição salva no localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('dara.position');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setPosition(parsed);
-      }
-    } catch {}
-  }, []);
-
-  // Salvar posição no localStorage
-  const savePosition = useCallback((newPos) => {
-    try {
-      localStorage.setItem('dara.position', JSON.stringify(newPos));
-    } catch {}
-  }, []);
-
-  // Mouse down no botão FAB
-  const handleMouseDown = (e) => {
-    if (open) return; // Não arrastar se o painel estiver aberto
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY,
-      startBottom: position.bottom,
-      startRight: position.right
-    });
-    e.preventDefault();
-  };
-
-  // Mouse move global
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e) => {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-
-      let newBottom = dragStart.startBottom - deltaY;
-      let newRight = dragStart.startRight - deltaX;
-
-      // Limites da tela (com margem)
-      const minPos = 20;
-      const maxBottom = window.innerHeight - 70 - minPos;
-      const maxRight = window.innerWidth - 70 - minPos;
-
-      newBottom = Math.max(minPos, Math.min(newBottom, maxBottom));
-      newRight = Math.max(minPos, Math.min(newRight, maxRight));
-
-      setPosition({ bottom: newBottom, right: newRight });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      savePosition({ bottom: position.bottom, right: position.right });
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart, position, savePosition]);
 
   const fetchData = useCallback(async () => {
     if (!user || user.type !== 'candidate') return;
@@ -289,15 +216,7 @@ export default function StudentAssistant(){
   if (isMessagesPage) return null;
 
   return (
-    <div 
-      ref={containerRef}
-      className="fixed z-50 select-none flex flex-col items-end transition-all duration-75"
-      style={{
-        bottom: `${position.bottom}px`,
-        right: `${position.right}px`,
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
-    >
+    <div className="fixed bottom-5 right-5 z-50 select-none flex flex-col items-end">
       {/* Painel */}
       {open && (
         <div className="mb-3 w-72 max-w-[90vw] rounded-2xl shadow-lg border border-gray-200 bg-white overflow-hidden self-end">
@@ -461,9 +380,7 @@ export default function StudentAssistant(){
       <button
         aria-label="Assistente de notificações"
         onClick={()=> setOpen(o=>!o)}
-        onMouseDown={handleMouseDown}
-        className="relative h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-300 hover:shadow-xl active:shadow-md"
-        style={{ cursor: open ? 'default' : isDragging ? 'grabbing' : 'grab' }}
+        className="relative h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-300 hover:shadow-xl"
       >
         <Bot className="w-6 h-6"/>
         {total > 0 && (
