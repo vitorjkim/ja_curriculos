@@ -1377,7 +1377,7 @@ const ViewJob = () => {
                 })()}
 
                 {/* Descrição da vaga */}
-                <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
+                <Card className="shadow-lg rounded-2xl border-4 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100">
                   <CardHeader>
                     <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                       <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
@@ -1396,7 +1396,7 @@ const ViewJob = () => {
 
                 {/* Requisitos */}
                 {job.requirements && (
-                  <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
+                  <Card className="shadow-lg rounded-2xl border-4 border-green-300 bg-gradient-to-br from-green-50 to-green-100">
                     <CardHeader>
                       <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                         <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-600" />
@@ -1416,7 +1416,7 @@ const ViewJob = () => {
 
                 {/* Benefícios */}
                 {job.benefits && (
-                  <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
+                  <Card className="shadow-lg rounded-2xl border-4 border-red-300 bg-gradient-to-br from-red-50 to-red-100">
                     <CardHeader>
                       <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                         <Heart className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-red-500" />
@@ -1608,7 +1608,7 @@ const ViewJob = () => {
                 )}
 
                 {/* Informações da empresa */}
-                <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
+                <Card className="shadow-lg rounded-2xl border-4 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100">
                   <CardHeader className="pb-3 sm:pb-6">
                     <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                       {(() => { const shape = (typeof window !== 'undefined' && job?.company_id) ? (localStorage.getItem('company_avatar_shape_'+job.company_id) || 'square') : 'square'; return (
