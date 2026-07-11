@@ -1377,7 +1377,7 @@ const ViewJob = () => {
                 })()}
 
                 {/* Descrição da vaga */}
-                <Card className="shadow-lg rounded-2xl border-4 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100">
+                <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
                   <CardHeader>
                     <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                       <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
@@ -1385,7 +1385,7 @@ const ViewJob = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 sm:px-6">
-                    <div className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100">
+                    <div className="bg-blue-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
                       <div 
                         className="rich-content prose prose-gray prose-sm sm:prose max-w-none text-gray-700 leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: job.description }}
@@ -1396,7 +1396,7 @@ const ViewJob = () => {
 
                 {/* Requisitos */}
                 {job.requirements && (
-                  <Card className="shadow-lg rounded-2xl border-4 border-green-300 bg-gradient-to-br from-green-50 to-green-100">
+                  <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
                     <CardHeader>
                       <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                         <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-600" />
@@ -1404,7 +1404,7 @@ const ViewJob = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 sm:px-6">
-                      <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-100">
+                      <div className="bg-green-50 rounded-xl p-4 sm:p-6 border-2 border-green-200">
                         <div 
                           className="rich-content prose prose-gray prose-sm sm:prose max-w-none text-gray-700 leading-relaxed"
                           dangerouslySetInnerHTML={{ __html: job.requirements }}
@@ -1416,7 +1416,7 @@ const ViewJob = () => {
 
                 {/* Benefícios */}
                 {job.benefits && (
-                  <Card className="shadow-lg rounded-2xl border-4 border-red-300 bg-gradient-to-br from-red-50 to-red-100">
+                  <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
                     <CardHeader>
                       <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                         <Heart className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-red-500" />
@@ -1424,7 +1424,7 @@ const ViewJob = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="px-4 sm:px-6">
-                      <div className="bg-red-50 rounded-xl p-4 sm:p-6 border border-red-100">
+                      <div className="bg-red-50 rounded-xl p-4 sm:p-6 border-2 border-red-200">
                         <div 
                           className="rich-content prose prose-gray prose-sm sm:prose max-w-none text-gray-700 leading-relaxed"
                           dangerouslySetInnerHTML={{ __html: job.benefits }}
@@ -1608,7 +1608,7 @@ const ViewJob = () => {
                 )}
 
                 {/* Informações da empresa */}
-                <Card className="shadow-lg rounded-2xl border-4 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100">
+                <Card className="shadow-lg rounded-2xl border-2 border-gray-200 bg-white">
                   <CardHeader className="pb-3 sm:pb-6">
                     <CardTitle className="flex items-center text-gray-900 text-base sm:text-lg">
                       {(() => { const shape = (typeof window !== 'undefined' && job?.company_id) ? (localStorage.getItem('company_avatar_shape_'+job.company_id) || 'square') : 'square'; return (
@@ -1627,7 +1627,7 @@ const ViewJob = () => {
                     {job.is_community ? (
                       <>
                         {/* Comunidade: mostrar apenas nome e formas de contato */}
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-blue-100">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 sm:p-4 border-2 border-blue-200">
                           <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">{job.company_name}</h4>
                         </div>
                         {Array.isArray(job.community_contact_methods) && job.community_contact_methods.length>0 && (
