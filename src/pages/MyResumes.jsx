@@ -103,6 +103,10 @@ const MyResumes = () => {
   const reloadResumeScore = async (resumeId) => {
     try {
       setReloadingScore(resumeId);
+      
+      // Disparar evento de início de requisição de IA
+      window.dispatchEvent(new Event('ai-request-start'));
+      
       const response = await resumesAPI.analyze(resumeId);
       console.log('✅ Score recarregado:', response);
       
@@ -124,6 +128,9 @@ const MyResumes = () => {
       });
     } finally {
       setReloadingScore(null);
+      
+      // Disparar evento de fim de requisição de IA
+      window.dispatchEvent(new Event('ai-request-end'));
     }
   };
 

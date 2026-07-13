@@ -85,10 +85,14 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
     try {
       setLoading(true);
       setError(null);
+      
+      // Disparar evento de início de requisição de IA
+      window.dispatchEvent(new Event('ai-request-start'));
 
       const token = localStorage.getItem('curriculoja_token');
       if (!token) {
         setLoading(false);
+        window.dispatchEvent(new Event('ai-request-end'));
         return;
       }
 
@@ -117,6 +121,8 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
       // Para erros transitórios: simplesmente não exibe o card (setMatch permanece null)
     } finally {
       setLoading(false);
+      // Disparar evento de fim de requisição de IA
+      window.dispatchEvent(new Event('ai-request-end'));
     }
   };
 

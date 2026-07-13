@@ -712,10 +712,18 @@ router.get('/', [
     let queryParams = [];
     let paramCount = 0;
 
-    // Filtro de busca por título ou empresa
+    // Filtro de busca ampliado: título, empresa, descrição, requisitos, benefícios e área
     if (search) {
       paramCount++;
-      whereConditions.push(`(j.title ILIKE $${paramCount} OR u.company_name ILIKE $${paramCount})`);
+      whereConditions.push(`(
+        j.title ILIKE $${paramCount} OR 
+        u.company_name ILIKE $${paramCount} OR
+        j.description ILIKE $${paramCount} OR
+        j.requirements ILIKE $${paramCount} OR
+        j.benefits ILIKE $${paramCount} OR
+        j.area ILIKE $${paramCount} OR
+        j.subarea ILIKE $${paramCount}
+      )`);
       queryParams.push(`%${search}%`);
     }
 

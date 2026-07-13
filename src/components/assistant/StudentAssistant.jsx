@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { messages as messagesAPI, interactions as interactionsAPI, applications as applicationsAPI, resumes as resumesAPI } from '@/lib/api';
-import { Bot, Bell, MessageSquare, CheckCircle2, X, ChevronDown, ChevronUp, Circle, Lightbulb, Upload, FileText, Star, Calendar, Clock } from 'lucide-react';
+import { Bot, Bell, MessageSquare, CheckCircle2, X, ChevronDown, ChevronUp, Circle, Lightbulb, Upload, FileText, Star, Calendar, Clock, Loader2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 // Pequeno assistente para alunos: avisa novas mensagens e respostas das empresas.
@@ -30,8 +30,23 @@ export default function StudentAssistant(){
   const [tourStep, setTourStep] = useState(0);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [guideLoaded, setGuideLoaded] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false); // Rastreia requisições de IA
 
   const total = useMemo(() => (counts.messages + counts.interactions + counts.decisions + counts.interviews), [counts]);
+
+  // Listener para rastrear requisições de IA
+  useEffect(() => {
+    const handleAiStart = () => setAiLoading(true);
+    const handleAiEnd = () => setAiLoading(false);
+    
+    window.addEventListener('ai-request-start', handleAiStart);
+    window.addEventListener('ai-request-end', handleAiEnd);
+    
+    return () => {
+      window.removeEventListener('ai-request-start', handleAiStart);
+      window.removeEventListener('ai-request-end', handleAiEnd);
+    };
+  }, []);
 
   const fetchData = useCallback(async () => {
     if (!user || user.type !== 'candidate') return;
@@ -382,7 +397,11 @@ export default function StudentAssistant(){
         onClick={()=> setOpen(o=>!o)}
         className="relative h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-300 hover:shadow-xl"
       >
-        <Bot className="w-6 h-6"/>
+        {aiLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin" />
+        ) : (
+          <Bot className="w-6 h-6"/>
+        )}
         {total > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] flex items-center justify-center border-2 border-white font-bold">
             {total > 9 ? '9+' : total}
