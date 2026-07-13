@@ -574,6 +574,7 @@ const CreateJob = () => {
                         <option value="pj">PJ</option>
                         <option value="estagio">Estágio</option>
                         <option value="temporario">Temporário</option>
+                        <option value="freelancer">Freelancer</option>
                       </Select>
                     </div>
                     <div className="space-y-1.5">

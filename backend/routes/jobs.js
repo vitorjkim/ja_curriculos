@@ -920,18 +920,11 @@ router.post('/', [
     }
 
     // ─────────────────────────────────────────────────────────
-    // BLOCO 3: Validações de Plano e Verificação
+    // BLOCO 3: Validações de Plano
     // ─────────────────────────────────────────────────────────
     
-    // Se empresa não verificada, salvar como rascunho
-    if (req.needsVerification) {
-      return res.status(403).json({
-        success: false,
-        error: 'Sua empresa está em análise. Vagas serão publicadas após aprovação.',
-        status: 'pending_verification',
-        action: 'contact_support',
-      });
-    }
+    // Removido bloqueio de verificação - empresas podem criar vagas mesmo sem verificação
+    // if (req.needsVerification) { ... }
 
     // Validar limite de vagas para plano free
     const jobLimitResult = await validateJobPostingLimit(req.user.id, req.user.type);
