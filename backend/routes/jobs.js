@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../config/database.js';
 import { authenticateToken, optionalAuth, requireCompany, requireAdmin } from '../middleware/auth.js';
 import { JOB_TAXONOMY, ALL_AREAS, isValidArea, isValidSubarea } from '../config/jobTaxonomy.js';
-import { checkSubscriptionPlan, validateCompanyVerification, validateJobPostingLimit } from '../middleware/checkSubscriptionPlan.js';
+import { checkSubscriptionPlan, validateCompanyVerification } from '../middleware/checkSubscriptionPlan.js';
 import { notifyNewJobAlert } from '../services/notificationService.js';
 import { calculateJobMatch, formatResumeForAnalysis } from '../services/aiService.js';
 
@@ -920,24 +920,11 @@ router.post('/', [
     }
 
     // ─────────────────────────────────────────────────────────
-    // BLOCO 3: Validações de Plano
+    // BLOCO 3: Sem limites de vagas - Sistema de planos removido
     // ─────────────────────────────────────────────────────────
     
-    // Removido bloqueio de verificação - empresas podem criar vagas mesmo sem verificação
-    // if (req.needsVerification) { ... }
-
-    // Validar limite de vagas para plano free
-    const jobLimitResult = await validateJobPostingLimit(req.user.id, req.user.type);
-    if (jobLimitResult !== true) {
-      return res.status(403).json({
-        success: false,
-        error: jobLimitResult.reason,
-        current: jobLimitResult.current,
-        limit: jobLimitResult.limit,
-        upgradePlan: jobLimitResult.upgradePlan,
-        upgradeUrl: '/pricing',
-      });
-    }
+    // Removido bloqueio de verificação - empresas podem criar vagas sem verificação
+    // Removido limite de vagas - empresas podem criar vagas ilimitadas
 
     const {
       title,
@@ -955,8 +942,6 @@ router.post('/', [
   area,
   subarea
     } = req.body;
-
-    // Limites de vagas implementados via plano (free: 2/mês, pro: ilimitado)
 
     const query = `
       INSERT INTO jobs (

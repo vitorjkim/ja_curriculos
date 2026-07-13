@@ -133,36 +133,7 @@ const CreateJob = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Verificar restrições do plano
-    if (user.subscriptionPlan === 'pro') {
-      try {
-        // Verificar quantas vagas ativas a empresa já tem no plano Pro
-        const activeJobsResponse = await jobsAPI.getCompanyJobs();
-        const activeJobs = activeJobsResponse.jobs || [];
-        
-        if (activeJobs.length >= 5) {
-          toast({
-            title: 'Limite do Plano Pro',
-            description: 'Você já atingiu o limite de 5 vagas ativas.',
-            variant: 'destructive'
-          });
-          return;
-        }
-      } catch (error) {
-        // Fallback para localStorage
-        const jobs = JSON.parse(localStorage.getItem('curriculoja_jobs') || '[]');
-        const companyJobs = jobs.filter(job => job.companyId === user.id);
-        
-        if (companyJobs.length >= 5) {
-          toast({
-            title: 'Limite do Plano Pro',
-            description: 'Você já atingiu o limite de 5 vagas ativas.',
-            variant: 'destructive'
-          });
-          return;
-        }
-      }
-    }
+    // Sistema de planos removido - sem limites de vagas
     
     setSubmitting(true);
 

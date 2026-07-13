@@ -41,7 +41,7 @@ const PLANS = {
     currency: 'BRL',
     description: 'Perfeito para começar',
     features: [
-      '2 vagas por mês',
+      'Vagas ilimitadas',
       'Perfil básico',
       'Sem acesso à IA',
       'Sem ranking de candidatos',

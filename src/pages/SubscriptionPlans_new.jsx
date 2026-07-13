@@ -39,7 +39,7 @@ const SubscriptionPlans = () => {
       description: 'Perfeito para empresas que estão começando',
       icon: Building2,
       features: [
-        'Publicação de até 2 vagas',
+        'Vagas ilimitadas',
         'Visualização de até 10 currículos por mês',
         'Suporte por email',
         'Painel básico de controle'

@@ -161,54 +161,12 @@ export const requirePremiumPlan = checkSubscriptionPlan('premium');
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * Valida limite de vagas por mês (2 para free, ilimitado para pro/premium)
+ * REMOVIDO: Sistema de limites de vagas por plano
+ * Empresas agora podem criar vagas ilimitadas
  */
 export async function validateJobPostingLimit(userId, userType) {
-  try {
-    // Apenas para empresas
-    if (userType !== 'company') return true;
-
-    const userResult = await pool.query(
-      'SELECT subscription_plan FROM users WHERE id = $1',
-      [userId]
-    );
-
-    if (userResult.rows.length === 0) return false;
-
-    const plan = userResult.rows[0].subscription_plan;
-
-    // Plano free tem limite de 2 vagas por mês
-    if (plan !== 'free') {
-      return true; // Pro e premium sem limite
-    }
-
-    // Contar vagas criadas neste mês
-    const jobsResult = await pool.query(
-      `SELECT COUNT(*) FROM jobs
-       WHERE company_id = $1
-       AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM NOW())
-       AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW())`,
-      [userId]
-    );
-
-    const jobsThisMonth = parseInt(jobsResult.rows[0].count, 10);
-    const limit = 2;
-
-    if (jobsThisMonth >= limit) {
-      return {
-        allowed: false,
-        reason: `Limite de ${limit} vagas por mês atingido`,
-        current: jobsThisMonth,
-        limit,
-        upgradePlan: 'pro',
-      };
-    }
-
-    return true;
-  } catch (error) {
-    console.error('❌ Error validating job posting limit:', error);
-    return true; // Fail open
-  }
+  // Sempre retorna true - sem limites
+  return true;
 }
 
 /**

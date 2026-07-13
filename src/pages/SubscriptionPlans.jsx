@@ -39,7 +39,7 @@ const SubscriptionPlans = () => {
       description: 'Para começar a divulgar suas primeiras vagas',
       icon: Building2,
       features: [
-        'Até 2 vagas ativas por mês',
+        'Vagas ilimitadas',
         'Até 10 currículos recebidos/mês',
         'Painel básico',
         'Suporte por email'
