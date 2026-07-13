@@ -348,7 +348,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                     </h4>
                   </div>
 
-                  <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-3">
+                  <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-3">
                     <div className="flex flex-wrap gap-2">
                       {match.strengths.map((strength, i) => {
                         const isOpen = openGreen.has(i);
@@ -361,7 +361,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                             }`}
                           >
                             <div
-                              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border transition-colors ${
                                 isOpen
                                   ? 'bg-[#dcfce7] border-[#22c55e]'
                                   : 'bg-[#f0fdf4] border-[#bbf7d0] hover:bg-[#dcfce7]'
@@ -402,7 +402,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                     </h4>
                   </div>
 
-                  <div className="rounded-xl border border-[#fecaca] bg-[#fff5f5] p-3">
+                  <div className="rounded-2xl border border-[#fecaca] bg-[#fff5f5] p-3">
                     <div className="flex flex-wrap gap-2">
                       {match.gaps.map((gap, i) => {
                         const isOpen = openRed.has(i);
@@ -415,7 +415,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                             }`}
                           >
                             <div
-                              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border transition-colors ${
                                 isOpen
                                   ? 'bg-[#fee2e2] border-[#ef4444]'
                                   : 'bg-[#fff5f5] border-[#fecaca] hover:bg-[#fee2e2]'
@@ -448,11 +448,11 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
 
               {/* Sugestão da IA - Plano de Melhoria com Checklist */}
               <div>
-                <div className="rounded-xl border border-[#e0e7ff] bg-[#f5f7ff] overflow-hidden">
+                <div className="rounded-2xl border border-[#e0e7ff] bg-[#f5f7ff] overflow-hidden">
                   {/* Cabeçalho */}
                   <div className="bg-white border-b border-[#e0e7ff] px-4 py-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#f5f3ff] border border-[#ddd6fe] flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#f5f3ff] border border-[#ddd6fe] flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-[15px] h-[15px] text-[#7c3aed]" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -529,7 +529,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               href={item.course.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 mx-4 mb-3 px-3 py-2 rounded-lg border text-xs hover:opacity-80 transition-opacity"
+                              className="flex items-center gap-2 mx-4 mb-3 px-3 py-2 rounded-2xl border text-xs hover:opacity-80 transition-opacity"
                               style={{
                                 backgroundColor: item.colorLight,
                                 borderColor: item.colorLight,
