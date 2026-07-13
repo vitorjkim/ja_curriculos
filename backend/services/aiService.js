@@ -363,7 +363,7 @@ export async function calculateJobMatch(resumeText, jobDescription) {
     throw new Error('Descrição da vaga insuficiente para análise');
   }
 
-  const prompt = `Você é um especialista em recrutamento. Analise a compatibilidade entre o CURRÍCULO e a VAGA abaixo e responda APENAS com JSON válido, sem markdown.
+  const prompt = `Você é um orientador de carreira especializado em recrutamento. Analise a compatibilidade entre o CURRÍCULO e a VAGA abaixo.
 
 === CURRÍCULO ===
 ${resumeText}
@@ -371,19 +371,24 @@ ${resumeText}
 === VAGA ===
 ${jobDescription}
 
-Retorne SOMENTE este JSON (sem texto antes ou depois):
+Retorne SOMENTE JSON válido (sem markdown, sem texto antes/depois):
 {
-  "matchScore": <número 0-100 representando % de compatibilidade>,
-  "jobDifficulty": <número 1-10 representando dificuldade da vaga>,
-  "candidateLevel": <número 1-10 representando nível do candidato>,
-  "reasons": [
-    "<ponto positivo ou neutro de compatibilidade>",
-    "<outro ponto>",
-    "<terceiro ponto>"
+  "matchScore": <número 0-100>,
+  "jobDifficulty": <número 1-10>,
+  "candidateLevel": <número 1-10>,
+  "strengths": [
+    {
+      "category": "<nome curto da competência>",
+      "explanation": "<explicação de por que isso aumentou a compatibilidade>"
+    }
   ],
-  "gapAnalysis": [
-    "<o que falta para atingir 100% de match>",
-    "<segunda lacuna se existir>"
+  "opportunities": [
+    {
+      "skill": "<nome da habilidade>",
+      "impact": <número inteiro representando % de impacto estimado (ex: 18, 12, 8)>,
+      "priority": "<Alta|Média|Baixa>",
+      "reason": "<explicação de POR QUE essa habilidade é importante para ESTA vaga e qual o impacto dela>"
+    }
   ]
 }
 
@@ -416,7 +421,24 @@ IMPORTANTE: Seja consistente. Se o currículo não mudou, o candidateLevel deve 
   * Se candidateLevel >= jobDifficulty: senioridade 100%
   * Se candidateLevel = jobDifficulty - 1: senioridade 80%
   * Se candidateLevel = jobDifficulty - 2: senioridade 60%
-  * Se candidateLevel < jobDifficulty - 2: senioridade 30%`;
+  * Se candidateLevel < jobDifficulty - 2: senioridade 30%
+
+**strengths** (máximo 5 itens):
+Liste competências/experiências que o candidato TEM e que são relevantes para a vaga.
+- "category": nome curto (ex: "React", "Senioridade", "Formação")
+- "explanation": explique brevemente por que isso foi positivo
+
+**opportunities** (máximo 5 itens, ORDENADOS POR IMPACTO DECRESCENTE):
+Liste APENAS melhorias que REALMENTE aumentariam as chances nesta vaga.
+NÃO liste itens de baixo impacto (< 5%) só para preencher.
+PRIORIZE sempre pelo impacto estimado.
+
+- "skill": nome da habilidade (ex: "Inglês intermediário", "UX/UI Design", "TypeScript")
+- "impact": percentual REALISTA de quanto essa skill aumentaria o matchScore (seja criterioso)
+- "priority": "Alta" se impact >= 15%, "Média" se 8-14%, "Baixa" se < 8%
+- "reason": explique POR QUE essa habilidade é importante especificamente para ESTA vaga e seu impacto
+
+REGRA CRÍTICA: Não invente oportunidades genéricas. Recomende apenas o que realmente faz diferença para ESTA vaga específica.`;
 
 
   // Tenta OpenAI primeiro
@@ -521,8 +543,11 @@ async function tryGeminiMatch(prompt) {
     result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
     result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
     result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
-    result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
-    result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+    result.strengths = Array.isArray(result.strengths) ? result.strengths.slice(0, 5) : [];
+    result.opportunities = Array.isArray(result.opportunities) ? result.opportunities.slice(0, 5) : [];
+    
+    // Ordena opportunities por impacto decrescente
+    result.opportunities.sort((a, b) => (b.impact || 0) - (a.impact || 0));
 
     console.log(`✅ Job Match Score (Gemini): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
     return result;
@@ -582,8 +607,11 @@ async function tryOpenAIMatch(prompt) {
       result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
       result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
       result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
-      result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
-      result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+      result.strengths = Array.isArray(result.strengths) ? result.strengths.slice(0, 5) : [];
+      result.opportunities = Array.isArray(result.opportunities) ? result.opportunities.slice(0, 5) : [];
+      
+      // Ordena opportunities por impacto decrescente
+      result.opportunities.sort((a, b) => (b.impact || 0) - (a.impact || 0));
 
       console.log(`✅ Job Match Score (OpenAI): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
       return result;
