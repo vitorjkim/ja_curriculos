@@ -192,8 +192,9 @@ async function tryOpenAIAnalyze(prompt) {
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    temperature: 0.7,
+    temperature: 0.1,
     max_tokens: 2048,
+    seed: 12345,
     response_format: { type: 'json_object' },
     messages: [{ role: 'user', content: prompt }],
   });
@@ -229,7 +230,7 @@ async function tryGeminiAnalyze(prompt) {
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 20000 },
+    generationConfig: { temperature: 0.1, maxOutputTokens: 20000 },
   };
 
   const response = await fetch(url, {
@@ -284,18 +285,40 @@ IMPORTANTE: Você DEVE responder APENAS com um JSON válido, seguindo exatamente
 
 ${JSON.stringify(RESUME_ANALYSIS_SCHEMA, null, 2)}
 
-Análise que você deve fazer:
-1. Score geral (0-100): Qualidade total do currículo.
-2. completude (0-100): O currículo tem todas as seções essenciais (contato, experiência, educação, habilidades)?
-3. qualidade (0-100): O texto é claro, conciso e sem erros de português? A formatação é profissional?
-4. relevancia (0-100): As informações são relevantes para uma vaga de tecnologia/mercado atual? Contém palavras-chave de mercado?
-5. impacto (0-100): O candidato demonstra resultados e conquistas com números ou exemplos concretos?
-6. geral (0-100): Uma avaliação holística da força do currículo.
+CRITÉRIOS OBJETIVOS E CONSISTENTES:
+
+**completude** (0-100): Baseado em seções presentes
+- Contato completo (nome, email, telefone) = 20 pontos
+- Pelo menos 1 experiência profissional = 25 pontos
+- Pelo menos 1 formação/educação = 25 pontos
+- Pelo menos 3 habilidades/skills = 15 pontos
+- Bio/resumo profissional presente = 15 pontos
+
+**qualidade** (0-100): Clareza da escrita
+- Sem erros de português graves = 40 pontos
+- Descrições claras e objetivas = 30 pontos
+- Formatação consistente = 30 pontos
+
+**relevancia** (0-100): Alinhamento com mercado
+- Palavras-chave de mercado presentes = 40 pontos
+- Tecnologias/ferramentas atuais = 30 pontos
+- Áreas de atuação definidas = 30 pontos
+
+**impacto** (0-100): Demonstração de resultados
+- Usa números/métricas em experiências = 40 pontos
+- Descreve resultados concretos = 35 pontos
+- Mostra evolução/conquistas = 25 pontos
+
+**geral** (0-100): Média ponderada de todos os critérios acima
+
+**score** (0-100): DEVE SER a média aritmética simples de (completude + qualidade + relevancia + impacto + geral) / 5
 
 Para sugestões:
-- CRITICAL: Erros graves ou seções faltando que prejudicam muito a avaliação.
-- IMPORTANT: Melhorias de alto impacto que podem aumentar significativamente a chance do candidato.
-- RECOMMENDED: Ajustes finos e dicas de boas práticas.
+- CRITICAL: Erros graves ou seções faltando (completude < 40)
+- IMPORTANT: Melhorias de alto impacto (scores entre 40-70)
+- RECOMMENDED: Ajustes finos (scores > 70)
+
+REGRA IMPORTANTE: Seja consistente. Se analisar o mesmo currículo novamente, DEVE retornar exatamente os mesmos scores.
 
 Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
 
@@ -351,8 +374,8 @@ ${jobDescription}
 Retorne SOMENTE este JSON (sem texto antes ou depois):
 {
   "matchScore": <número 0-100 representando % de compatibilidade>,
-  "jobDifficulty": <número 1-10 representando dificuldade da vaga: 1=estágio básico, 5=pleno, 10=especialista sênior>,
-  "candidateLevel": <número 1-10 representando nível do candidato pelo currículo>,
+  "jobDifficulty": <número 1-10 representando dificuldade da vaga>,
+  "candidateLevel": <número 1-10 representando nível do candidato>,
   "reasons": [
     "<ponto positivo ou neutro de compatibilidade>",
     "<outro ponto>",
@@ -364,10 +387,37 @@ Retorne SOMENTE este JSON (sem texto antes ou depois):
   ]
 }
 
-Cálculo do matchScore:
-- 60% do peso: compatibilidade de skills/habilidades exigidas vs. presentes no currículo
-- 40% do peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
-- Se jobDifficulty <= candidateLevel, sineridade = 100%. Se jobDifficulty = candidateLevel+2, sineridade = 60%. Se jobDifficulty > candidateLevel+3, sineridade = 20%.`;
+CRITÉRIOS RIGOROSOS E OBJETIVOS:
+
+**jobDifficulty** (nível da vaga - baseado apenas nos requisitos da vaga):
+- 1-2: Estágio/Trainee - sem experiência exigida, apenas formação básica
+- 3-4: Júnior - 0-2 anos de experiência
+- 5-6: Pleno - 2-5 anos de experiência + responsabilidades médias
+- 7-8: Sênior - 5+ anos + liderança técnica
+- 9-10: Especialista/Lead - 8+ anos + decisões estratégicas
+
+**candidateLevel** (nível do candidato - baseado apenas no currículo):
+REGRA: Conte ANOS TOTAIS de experiência profissional documentada no currículo.
+- 0 anos = nível 1
+- 0-1 ano = nível 2
+- 1-2 anos = nível 3
+- 2-3 anos = nível 4
+- 3-5 anos = nível 5
+- 5-7 anos = nível 6
+- 7-10 anos = nível 7
+- 10-15 anos = nível 8
+- 15+ anos = nível 9-10
+
+IMPORTANTE: Seja consistente. Se o currículo não mudou, o candidateLevel deve ser EXATAMENTE o mesmo sempre.
+
+**matchScore** (compatibilidade 0-100):
+- 60% peso: skills mencionadas na vaga que aparecem no currículo
+- 40% peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
+  * Se candidateLevel >= jobDifficulty: senioridade 100%
+  * Se candidateLevel = jobDifficulty - 1: senioridade 80%
+  * Se candidateLevel = jobDifficulty - 2: senioridade 60%
+  * Se candidateLevel < jobDifficulty - 2: senioridade 30%`;
+
 
   // Tenta OpenAI primeiro
   let openaiError = null;
@@ -415,7 +465,7 @@ async function tryGeminiMatch(prompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0.0, maxOutputTokens: 8192 },
       }),
     });
 
@@ -500,7 +550,8 @@ async function tryOpenAIMatch(prompt) {
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.4,
+        temperature: 0.0,
+        seed: 67890,
         max_tokens: 2048,
       });
 
