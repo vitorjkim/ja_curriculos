@@ -81,7 +81,6 @@ import SchoolPostView from '@/pages/SchoolPostView';
 import CandidatePostView from '@/pages/CandidatePostView';
 import CompanyPostView from '@/pages/CompanyPostView';
 import StudentAssistant from '@/components/assistant/StudentAssistant';
-import TesteCompatibilidade from '@/pages/TesteCompatibilidade';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -194,7 +193,6 @@ function App() {
             <Route path="/company-interviews" element={<CompanyInterviews />} />
             <Route path="/company-interviews/:jobId" element={<CompanyJobPipeline />} />
             <Route path="/company-approved" element={<CompanyApprovedByJob />} />
-            <Route path="/teste-compatibilidade" element={<TesteCompatibilidade />} />
           </Routes>
             </div>
           
