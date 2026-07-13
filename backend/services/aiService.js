@@ -376,16 +376,26 @@ Retorne SOMENTE este JSON (sem texto antes ou depois):
   "matchScore": <número 0-100 representando % de compatibilidade>,
   "jobDifficulty": <número 1-10 representando dificuldade da vaga>,
   "candidateLevel": <número 1-10 representando nível do candidato>,
-  "reasons": [
-    "<ponto positivo ou neutro de compatibilidade>",
-    "<outro ponto>",
-    "<terceiro ponto>"
+  "strengths": [
+    { "keyword": "<palavra-chave curta, 1-3 palavras, ex: 'Tecnologia Frontend'>", "text": "<explicação completa e específica do porquê esse ponto aproxima o candidato da vaga>" }
   ],
-  "gapAnalysis": [
-    "<o que falta para atingir 100% de match>",
-    "<segunda lacuna se existir>"
+  "gaps": [
+    { "keyword": "<palavra-chave curta, 1-3 palavras, ex: 'Idioma'>", "text": "<explicação completa e específica do que falta e por quê é um gap real>" }
   ]
 }
+
+REGRAS PARA "strengths" (pontos que aproximam o candidato da vaga):
+- A "keyword" é APENAS um rótulo curto (ex: "Senioridade", "Tecnologia Frontend"). NUNCA repita a keyword dentro do "text".
+- O "text" deve ser uma frase completa, específica e informativa, nunca uma repetição da keyword. Ex: keyword "Senioridade" + text "É júnior (nível 3) enquanto a vaga pede pleno (nível 5) — 2 degraus de diferença, distância moderada."
+- A quantidade de itens deve refletir a realidade: se o candidato tem poucos ou nenhum ponto de aproximação real com a vaga (ex: matchScore muito baixo, próximo de 0), retorne um array VAZIO ou com só 1 item. NÃO force 3 itens quando não existem pontos positivos genuínos.
+- Se o matchScore for alto (acima de 70), pode haver 3 a 5 pontos fortes.
+- NUNCA invente pontos positivos genéricos ou vagos só para preencher a lista.
+
+REGRAS PARA "gaps" (incompatibilidades reais, não "coisas que podem melhorar"):
+- A "keyword" é um rótulo curto do gap (ex: "Idioma", "Localização", "Design UX/UI"). NUNCA repita a keyword dentro do "text".
+- O "text" deve explicar concretamente a incompatibilidade, com contexto da vaga e do candidato. Ex: keyword "Idioma" + text "A vaga exige inglês intermediário, mas o currículo indica apenas francês — idioma incompatível com o requisito."
+- Liste TODOS os gaps reais e relevantes encontrados — não se limite a um número fixo. Pode ser 1, pode ser 5, depende da vaga e do currículo.
+- Se não houver gaps reais (candidato perfeitamente compatível), retorne array vazio.
 
 CRITÉRIOS RIGOROSOS E OBJETIVOS:
 
@@ -521,13 +531,34 @@ async function tryGeminiMatch(prompt) {
     result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
     result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
     result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
-    result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
-    result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+    result.strengths = normalizeKeywordList(result.strengths);
+    result.gaps = normalizeKeywordList(result.gaps);
+    // Compatibilidade retroativa com formato antigo (reasons/gapAnalysis como strings)
+    result.reasons = result.strengths.map(s => s.text);
+    result.gapAnalysis = result.gaps.map(g => g.text);
 
     console.log(`✅ Job Match Score (Gemini): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
     return result;
   }
   throw lastError || new Error('Gemini: Falha após 3 tentativas');
+}
+
+/**
+ * Normaliza lista de pontos (strengths/gaps) garantindo formato { keyword, text }
+ */
+function normalizeKeywordList(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter(item => item && (typeof item === 'object' ? item.text : typeof item === 'string'))
+    .map(item => {
+      if (typeof item === 'string') {
+        // Formato antigo (string simples) - usa como texto e keyword genérica
+        return { keyword: item.split(' ').slice(0, 3).join(' '), text: item };
+      }
+      return { keyword: String(item.keyword || '').trim(), text: String(item.text || '').trim() };
+    })
+    .filter(item => item.text.length > 0)
+    .slice(0, 8);
 }
 
 /**
@@ -548,7 +579,7 @@ async function tryOpenAIMatch(prompt) {
 
     try {
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.0,
         seed: 67890,
@@ -582,8 +613,11 @@ async function tryOpenAIMatch(prompt) {
       result.matchScore = Math.min(100, Math.max(0, Math.round(result.matchScore || 0)));
       result.jobDifficulty = Math.min(10, Math.max(1, Math.round(result.jobDifficulty || 5)));
       result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
-      result.reasons = Array.isArray(result.reasons) ? result.reasons.slice(0, 5) : [];
-      result.gapAnalysis = Array.isArray(result.gapAnalysis) ? result.gapAnalysis.slice(0, 5) : [];
+      result.strengths = normalizeKeywordList(result.strengths);
+      result.gaps = normalizeKeywordList(result.gaps);
+      // Compatibilidade retroativa com formato antigo (reasons/gapAnalysis como strings)
+      result.reasons = result.strengths.map(s => s.text);
+      result.gapAnalysis = result.gaps.map(g => g.text);
 
       console.log(`✅ Job Match Score (OpenAI): ${result.matchScore}% (vaga dif=${result.jobDifficulty} candidato=${result.candidateLevel})`);
       return result;

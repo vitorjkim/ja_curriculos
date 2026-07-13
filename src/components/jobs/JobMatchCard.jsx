@@ -75,14 +75,16 @@ const IMPROVEMENT_ITEMS = [
   }
 ];
 
+const CACHE_VERSION = 'v2'; // bump ao mudar formato do payload de match
+
 const getCachedMatch = (jobId, resumeId, resumeScore) => {
   try {
-    const raw = localStorage.getItem(`jobmatch_${jobId}_${resumeId}`);
+    const raw = localStorage.getItem(`jobmatch_${CACHE_VERSION}_${jobId}_${resumeId}`);
     if (!raw) return null;
     const { data, timestamp, scoreUsed } = JSON.parse(raw);
     // Valida TTL
     if (Date.now() - timestamp > CACHE_TTL) { 
-      localStorage.removeItem(`jobmatch_${jobId}_${resumeId}`); 
+      localStorage.removeItem(`jobmatch_${CACHE_VERSION}_${jobId}_${resumeId}`); 
       return null; 
     }
     // Só usa cache se o currículo não melhorou
@@ -94,7 +96,7 @@ const getCachedMatch = (jobId, resumeId, resumeScore) => {
 const setCachedMatch = (jobId, resumeId, resumeScore, data) => {
   try { 
     localStorage.setItem(
-      `jobmatch_${jobId}_${resumeId}`, 
+      `jobmatch_${CACHE_VERSION}_${jobId}_${resumeId}`, 
       JSON.stringify({ data, timestamp: Date.now(), scoreUsed: resumeScore })
     ); 
   } catch {}
@@ -336,19 +338,19 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                 </div>
               </div>
 
-              {/* Razões - Badges Colapsáveis Verdes */}
-              {match.reasons && match.reasons.length > 0 && (
+              {/* Pontos Fortes - Badges Colapsáveis Verdes */}
+              {match.strengths && match.strengths.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-3">
                     <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
                     <h4 className="font-extrabold text-sm text-[#166534]">
-                      Por que esse score?
+                      Pontos que te aproximam da vaga
                     </h4>
                   </div>
 
                   <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-3">
                     <div className="flex flex-wrap gap-2">
-                      {match.reasons.map((reason, i) => {
+                      {match.strengths.map((strength, i) => {
                         const isOpen = openGreen.has(i);
                         return (
                           <button
@@ -368,7 +370,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-3 h-3 text-[#166534] flex-shrink-0" />
                                 <span className="text-xs font-medium text-[#166534]">
-                                  {reason.split('.')[0]}
+                                  {strength.keyword}
                                 </span>
                               </div>
                               <ChevronUp
@@ -379,7 +381,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                             </div>
                             {isOpen && (
                               <p className="text-xs text-[#166534] mt-2 px-1 text-left leading-relaxed">
-                                {reason}
+                                {strength.text}
                               </p>
                             )}
                           </button>
@@ -391,7 +393,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
               )}
 
               {/* Gap Analysis - Badges Colapsáveis Vermelhos */}
-              {match.gapAnalysis && match.gapAnalysis.length > 0 && (
+              {match.gaps && match.gaps.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-3">
                     <Zap className="w-4 h-4 text-[#ef4444]" />
@@ -402,7 +404,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
 
                   <div className="rounded-xl border border-[#fecaca] bg-[#fff5f5] p-3">
                     <div className="flex flex-wrap gap-2">
-                      {match.gapAnalysis.map((gap, i) => {
+                      {match.gaps.map((gap, i) => {
                         const isOpen = openRed.has(i);
                         return (
                           <button
@@ -422,7 +424,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               <div className="flex items-center gap-2">
                                 <Zap className="w-[11px] h-[11px] text-[#991b1b] flex-shrink-0" />
                                 <span className="text-xs font-medium text-[#991b1b]">
-                                  {gap.split('.')[0]}
+                                  {gap.keyword}
                                 </span>
                               </div>
                               <ChevronUp
@@ -433,7 +435,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                             </div>
                             {isOpen && (
                               <p className="text-xs text-[#991b1b] mt-2 px-1 text-left leading-relaxed">
-                                {gap}
+                                {gap.text}
                               </p>
                             )}
                           </button>
