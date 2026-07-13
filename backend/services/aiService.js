@@ -151,28 +151,134 @@ export function formatResumeForAnalysis(resume) {
 }
 
 /**
- * Analisa um currículo usando Google Gemini
+ * Extrai e faz parse de um JSON de uma resposta de IA (remove markdown, etc.)
+ */
+function parseAIJsonContent(content) {
+  let cleanContent = content
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+
+  if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
+    try {
+      const unwrapped = JSON.parse(cleanContent);
+      if (typeof unwrapped === 'string') cleanContent = unwrapped.trim();
+    } catch (e) {
+      // mantém o texto original
+    }
+  }
+
+  try {
+    return JSON.parse(cleanContent);
+  } catch (parseError) {
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw parseError;
+  }
+}
+
+/**
+ * Tenta analisar o currículo usando OpenAI (GPT-4o-mini)
+ */
+async function tryOpenAIAnalyze(prompt) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    temperature: 0.7,
+    max_tokens: 2048,
+    response_format: { type: 'json_object' },
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  const content = response.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Resposta vazia do OpenAI');
+
+  console.log(`📊 Tamanho da resposta OpenAI: ${content.length} caracteres`);
+  const analysis = parseAIJsonContent(content);
+
+  if (
+    analysis.score === undefined ||
+    typeof analysis.score !== 'number' ||
+    analysis.score < 0 ||
+    analysis.score > 100
+  ) {
+    console.warn('⚠️ Score inválido retornado pela IA, ajustando...');
+    analysis.score = Math.min(100, Math.max(0, parseInt(analysis.score) || 50));
+  }
+
+  console.log(`✅ Análise concluída com OpenAI: Score ${analysis.score}/100`);
+  return analysis;
+}
+
+/**
+ * Tenta analisar o currículo usando Google Gemini (fallback)
+ */
+async function tryGeminiAnalyze(prompt) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY não configurada');
+  }
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 20000 },
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini REST API error ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!content) throw new Error('Resposta vazia do Gemini');
+
+  console.log(`📊 Tamanho da resposta Gemini: ${content.length} caracteres`);
+  const analysis = parseAIJsonContent(content);
+
+  if (
+    analysis.score === undefined ||
+    typeof analysis.score !== 'number' ||
+    analysis.score < 0 ||
+    analysis.score > 100
+  ) {
+    console.warn('⚠️ Score inválido retornado pela IA, ajustando...');
+    analysis.score = Math.min(100, Math.max(0, parseInt(analysis.score) || 50));
+  }
+
+  console.log(`✅ Análise concluída com Gemini: Score ${analysis.score}/100`);
+  return analysis;
+}
+
+/**
+ * Analisa um currículo usando IA (OpenAI GPT-4o-mini como principal, Gemini como fallback)
  * @param {Object} resume - Objeto do currículo
  * @returns {Promise<Object>} - Análise estruturada em JSON
  * @throws {Error} - Se houver erro na API ou validação
  */
 export async function analyzeResume(resume) {
-  try {
-    // Validar que temos API key do Gemini
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY não configurada');
-    }
+  // Formatar currículo para análise
+  const resumeText = formatResumeForAnalysis(resume);
 
-    // Formatar currículo para análise
-    const resumeText = formatResumeForAnalysis(resume);
+  if (!resumeText || resumeText.trim().length < 50) {
+    throw new Error('Currículo insuficiente para análise (mínimo 50 caracteres)');
+  }
 
-    if (!resumeText || resumeText.trim().length < 50) {
-      throw new Error('Currículo insuficiente para análise (mínimo 50 caracteres)');
-    }
-
-    console.log(`🤖 Analisando currículo ID: ${resume.id} com Google Gemini (REST)...`);
-
-    const prompt = `Você é um especialista em recrutamento e currículos. Sua tarefa é analisar o currículo em português a seguir e fornecer uma análise estruturada em JSON.
+  const prompt = `Você é um especialista em recrutamento e currículos. Sua tarefa é analisar o currículo em português a seguir e fornecer uma análise estruturada em JSON.
 
 IMPORTANTE: Você DEVE responder APENAS com um JSON válido, seguindo exatamente este esquema:
 
@@ -193,101 +299,25 @@ Para sugestões:
 
 Analise este currículo e retorne apenas o JSON:\n\n${resumeText}`;
 
-const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY;
-    const body = {
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 20000,
-      },
-    };
+  console.log(`🤖 Analisando currículo ID: ${resume.id} com OpenAI (GPT-4o-mini)...`);
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+  try {
+    return await tryOpenAIAnalyze(prompt);
+  } catch (openaiError) {
+    const isQuotaError = openaiError.message.includes('429') || openaiError.message.includes('quota') || openaiError.message.includes('RESOURCE_EXHAUSTED');
+    console.warn(`⚠️ OpenAI falhou${isQuotaError ? ' (quota)' : ''}: ${openaiError.message.substring(0, 150)}`);
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini REST API error ${response.status}: ${errText}`);
-    }
-
-    const data = await response.json();
-    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!content) {
-      throw new Error('Resposta vazia do Gemini');
-    }
-
-    // Log tamanho para debug
-    console.log(`📊 Tamanho da resposta Gemini: ${content.length} caracteres`);
-
-    // Limpeza agressiva de markdown e caracteres problemáticos
-    let cleanContent = content
-      .replace(/^```(?:json)?\s*/i, '')      // Remove bloco de código markdown
-      .replace(/\s*```$/i, '')                // Remove fechamento markdown
-      .trim();
-    
-    // Se está envolvido em "json...", extrai o conteúdo
-    if (cleanContent.startsWith('"') && cleanContent.endsWith('"')) {
+    if (process.env.GEMINI_API_KEY) {
+      console.log('🔄 Tentando fallback com Gemini...');
       try {
-        cleanContent = JSON.parse(cleanContent);
-        if (typeof cleanContent === 'string') {
-          cleanContent = cleanContent.trim();
-        }
-      } catch (e) {
-        // Se falhar, continua com o texto original
-      }
-    }
-    
-    // Mais um log de debug
-    console.log(`📊 Tamanho após limpeza: ${cleanContent.length} caracteres`);
-    console.log(`📊 Primeiros 200 chars: ${cleanContent.substring(0, 200)}`);
-
-    let analysis;
-    try {
-      analysis = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error(`❌ Erro ao parsear JSON na posição: ${parseError.message}`);
-      console.error(`❌ Primeiros 300 chars: ${cleanContent.substring(0, 300)}`);
-      console.error(`❌ Últimos 300 chars: ${cleanContent.substring(Math.max(0, cleanContent.length - 300))}`);
-      
-      // Tenta extrair JSON entre chaves se parser falhar
-      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          console.log('🔄 Tentando extrair JSON entre chaves...');
-          analysis = JSON.parse(jsonMatch[0]);
-          console.log('✅ Extração bem-sucedida!');
-        } catch (e2) {
-          throw parseError;
-        }
-      } else {
-        throw parseError;
+        return await tryGeminiAnalyze(prompt);
+      } catch (geminiError) {
+        console.error('❌ Gemini também falhou:', geminiError.message.substring(0, 150));
+        throw new Error(`Ambas as APIs falharam. OpenAI: ${openaiError.message.substring(0, 80)}. Gemini: ${geminiError.message.substring(0, 80)}`);
       }
     }
 
-    // Validar scores
-    if (
-      analysis.score === undefined ||
-      typeof analysis.score !== 'number' ||
-      analysis.score < 0 ||
-      analysis.score > 100
-    ) {
-      console.warn('⚠️ Score inválido retornado pela IA, ajustando...');
-      analysis.score = Math.min(100, Math.max(0, parseInt(analysis.score) || 50));
-    }
-
-    console.log(`✅ Análise concluída com Gemini: Score ${analysis.score}/100`);
-    return analysis;
-  } catch (error) {
-    console.error('❌ Erro na análise de currículo com Gemini:', error);
-    throw new Error(`Erro na API do Gemini: ${error.message}`);
+    throw new Error(`Erro na API do OpenAI: ${openaiError.message}`);
   }
 }
 
@@ -298,8 +328,8 @@ const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-
  * @returns {Promise<Object>} - { matchScore, jobDifficulty, candidateLevel, reasons, gapAnalysis }
  */
 export async function calculateJobMatch(resumeText, jobDescription) {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY não configurada');
+  if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
+    throw new Error('Nenhuma API de IA configurada (OPENAI_API_KEY ou GEMINI_API_KEY)');
   }
 
   if (!resumeText || resumeText.trim().length < 20) {
@@ -339,29 +369,29 @@ Cálculo do matchScore:
 - 40% do peso: compatibilidade de senioridade (jobDifficulty vs candidateLevel)
 - Se jobDifficulty <= candidateLevel, sineridade = 100%. Se jobDifficulty = candidateLevel+2, sineridade = 60%. Se jobDifficulty > candidateLevel+3, sineridade = 20%.`;
 
-  // Tenta Gemini primeiro
-  let geminiError = null;
+  // Tenta OpenAI primeiro
+  let openaiError = null;
   try {
-    const result = await tryGeminiMatch(prompt);
+    const result = await tryOpenAIMatch(prompt);
     return result;
   } catch (error) {
-    const isQuotaError = error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED');
-    geminiError = error;
-    console.warn(`⚠️ Gemini falhou${isQuotaError ? ' (quota)' : ''}: ${error.message.substring(0, 100)}`);
-    
-    // Se for erro de quota, tenta OpenAI
-    if (isQuotaError && process.env.OPENAI_API_KEY) {
-      console.log('🔄 Tentando fallback com OpenAI...');
+    const isQuotaError = error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED');
+    openaiError = error;
+    console.warn(`⚠️ OpenAI falhou${isQuotaError ? ' (quota)' : ''}: ${error.message.substring(0, 100)}`);
+
+    // Se falhar, tenta Gemini como fallback (se configurado)
+    if (process.env.GEMINI_API_KEY) {
+      console.log('🔄 Tentando fallback com Gemini...');
       try {
-        const result = await tryOpenAIMatch(prompt);
-        console.log('✅ OpenAI funcionou como fallback');
+        const result = await tryGeminiMatch(prompt);
+        console.log('✅ Gemini funcionou como fallback');
         return result;
-      } catch (openaiError) {
-        console.error('❌ OpenAI também falhou:', openaiError.message.substring(0, 100));
-        throw new Error(`Ambas as APIs falharam. Gemini: ${geminiError.message.substring(0, 50)}. OpenAI: ${openaiError.message.substring(0, 50)}`);
+      } catch (geminiError) {
+        console.error('❌ Gemini também falhou:', geminiError.message.substring(0, 100));
+        throw new Error(`Ambas as APIs falharam. OpenAI: ${openaiError.message.substring(0, 50)}. Gemini: ${geminiError.message.substring(0, 50)}`);
       }
     }
-    throw geminiError;
+    throw openaiError;
   }
 }
 
