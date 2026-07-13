@@ -1,21 +1,10 @@
 /**
- * JobMatchCard - Design moderno inspirado em Notion/Linear/Stripe
- * Exibe compatibilidade com badges expansíveis e simulador de evolução
+ * JobMatchCard - Exibe o score de compatibilidade entre um currículo e uma vaga
+ * Mostra: matchScore (0-100%), dificuldade da vaga, nível do candidato, razões e lacunas
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronRight,
-  Sparkles,
-  AlertTriangle, 
-  CheckCircle2, 
-  RefreshCw, 
-  TrendingUp,
-  Target,
-  Lightbulb,
-  Check
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Zap, AlertTriangle, CheckCircle, RefreshCw, Target } from 'lucide-react';
 
 const getApiUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -27,9 +16,9 @@ const getApiUrl = () => {
 };
 
 const getScoreColor = (score) => {
-  if (score >= 75) return { text: 'text-emerald-600', bg: 'bg-emerald-500', ring: 'ring-emerald-500/20', light: 'bg-emerald-50', border: 'border-emerald-200' };
-  if (score >= 50) return { text: 'text-amber-600', bg: 'bg-amber-500', ring: 'ring-amber-500/20', light: 'bg-amber-50', border: 'border-amber-200' };
-  return { text: 'text-red-600', bg: 'bg-red-500', ring: 'ring-red-500/20', light: 'bg-red-50', border: 'border-red-200' };
+  if (score >= 75) return { text: 'text-emerald-600', bg: 'bg-emerald-500', border: 'border-emerald-200', light: 'bg-emerald-50' };
+  if (score >= 50) return { text: 'text-yellow-600', bg: 'bg-yellow-500', border: 'border-yellow-200', light: 'bg-yellow-50' };
+  return { text: 'text-red-600', bg: 'bg-red-500', border: 'border-red-200', light: 'bg-red-50' };
 };
 
 const getScoreLabel = (score) => {
@@ -41,30 +30,26 @@ const getScoreLabel = (score) => {
 };
 
 const getDifficultyLabel = (level) => {
-  if (level <= 2) return 'Estágio';
+  if (level <= 2) return 'Estágio / Aprendiz';
   if (level <= 4) return 'Júnior';
   if (level <= 6) return 'Pleno';
   if (level <= 8) return 'Sênior';
-  return 'Especialista';
+  return 'Especialista / Lead';
 };
 
-const getPriorityBadgeColor = (priority) => {
-  if (priority === 'Alta') return 'bg-rose-100 text-rose-700 border-rose-200';
-  if (priority === 'Média') return 'bg-amber-100 text-amber-700 border-amber-200';
-  return 'bg-slate-100 text-slate-600 border-slate-200';
-};
-
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas em ms
 
 const getCachedMatch = (jobId, resumeId, resumeScore) => {
   try {
     const raw = localStorage.getItem(`jobmatch_${jobId}_${resumeId}`);
     if (!raw) return null;
     const { data, timestamp, scoreUsed } = JSON.parse(raw);
+    // Valida TTL
     if (Date.now() - timestamp > CACHE_TTL) { 
       localStorage.removeItem(`jobmatch_${jobId}_${resumeId}`); 
       return null; 
     }
+    // Só usa cache se o currículo não melhorou
     if (resumeScore > (scoreUsed || 0)) return null;
     return data;
   } catch { return null; }
@@ -79,108 +64,11 @@ const setCachedMatch = (jobId, resumeId, resumeScore, data) => {
   } catch {}
 };
 
-// Badge expansível
-function ExpandableBadge({ icon: Icon, title, children, variant = 'default' }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const bgColors = {
-    default: 'bg-slate-50 hover:bg-slate-100 border-slate-200',
-    success: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200',
-    opportunity: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200'
-  };
-  
-  return (
-    <motion.div
-      layout
-      className={`border rounded-xl overflow-hidden transition-all ${bgColors[variant]}`}
-    >
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:cursor-pointer group"
-      >
-        <div className="flex items-center gap-2.5">
-          {Icon && <Icon className="w-4 h-4 text-slate-600 flex-shrink-0" />}
-          <span className="text-sm font-medium text-slate-900">{title}</span>
-        </div>
-        <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        </motion.div>
-      </button>
-      
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 pt-1">
-              <p className="text-sm text-slate-600 leading-relaxed">{children}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// Card de oportunidade com checkbox para simulação
-function OpportunityCard({ opportunity, isChecked, onToggle }) {
-  const priorityColor = getPriorityBadgeColor(opportunity.priority);
-  
-  return (
-    <motion.div
-      layout
-      className={`border rounded-xl p-4 transition-all ${
-        isChecked 
-          ? 'bg-indigo-50 border-indigo-200 shadow-sm' 
-          : 'bg-white border-slate-200 hover:border-slate-300'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <button
-          onClick={onToggle}
-          className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${
-            isChecked
-              ? 'bg-indigo-600 border-indigo-600'
-              : 'border-slate-300 hover:border-indigo-400'
-          }`}
-        >
-          {isChecked && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-        </button>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <h4 className="text-sm font-semibold text-slate-900">{opportunity.skill}</h4>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${priorityColor}`}>
-              {opportunity.priority}
-            </span>
-          </div>
-          
-          <p className="text-xs text-slate-600 mb-2 leading-relaxed">{opportunity.reason}</p>
-          
-          <div className="flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="text-xs font-bold text-emerald-600">+{opportunity.impact}%</span>
-            <span className="text-xs text-slate-500">de impacto estimado</span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
   const [match, setMatch] = useState(() => getCachedMatch(jobId, resumeId, resumeScore));
-  const [loading, setLoading] = useState(!match);
+  const [loading, setLoading] = useState(!match); // Só carrega se não tiver cache
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  const [checkedOpportunities, setCheckedOpportunities] = useState(new Set());
 
   useEffect(() => {
     const cached = getCachedMatch(jobId, resumeId, resumeScore);
@@ -198,6 +86,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
       setLoading(true);
       setError(null);
       
+      // Disparar evento de início de requisição de IA
       window.dispatchEvent(new Event('ai-request-start'));
 
       const token = localStorage.getItem('curriculoja_token');
@@ -226,186 +115,101 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
       setCachedMatch(jobId, resumeId, resumeScore, data);
       setMatch(data);
     } catch (err) {
+      // Erros transitórios (503/sobrecarga) não devem mostrar mensagem de erro ao usuário
       const isTransient = err.message?.includes('503') || err.message?.includes('sobrecarga') || err.message?.includes('high demand') || err.message?.includes('UNAVAILABLE');
       if (!isTransient) setError(err.message);
+      // Para erros transitórios: simplesmente não exibe o card (setMatch permanece null)
     } finally {
       setLoading(false);
+      // Disparar evento de fim de requisição de IA
       window.dispatchEvent(new Event('ai-request-end'));
     }
   };
 
-  // Calcula score simulado baseado nas oportunidades marcadas
-  const simulatedScore = useMemo(() => {
-    if (!match?.opportunities) return match?.matchScore || 0;
-    
-    const baseScore = match.matchScore || 0;
-    let bonusScore = 0;
-    
-    checkedOpportunities.forEach(index => {
-      const opp = match.opportunities[index];
-      if (opp) bonusScore += opp.impact || 0;
-    });
-    
-    return Math.min(100, baseScore + bonusScore);
-  }, [match, checkedOpportunities]);
-
-  const toggleOpportunity = (index) => {
-    setCheckedOpportunities(prev => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
-
-  // Loading state
+  // Enquanto carrega
   if (loading) {
     return (
-      <div className="w-full bg-white rounded-2xl border border-slate-200 p-6 flex items-center gap-4 shadow-sm">
-        <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-          <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
+      <div className="w-full bg-white rounded-2xl border-2 border-indigo-100 p-4 flex items-center gap-3 shadow-sm">
+        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+          <RefreshCw className="w-5 h-5 text-indigo-500 animate-spin" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-900">Analisando compatibilidade...</p>
-          <p className="text-xs text-slate-500 mt-0.5">Nossa IA está avaliando seu perfil</p>
+          <p className="text-sm font-semibold text-gray-700">Calculando compatibilidade com a vaga...</p>
+          <p className="text-xs text-gray-400">Análise de IA em andamento</p>
         </div>
       </div>
     );
   }
 
-  // Error state
+  // Erro
   if (error) {
     return (
-      <div className="w-full bg-red-50 rounded-2xl border border-red-200 p-6 flex items-center gap-4">
-        <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0" />
+      <div className="w-full bg-red-50 rounded-2xl border border-red-200 p-4 flex items-center gap-3">
+        <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-red-900">{error}</p>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
-        <button 
-          onClick={fetchMatch} 
-          className="text-sm text-red-700 hover:text-red-900 font-medium underline"
-        >
-          Tentar novamente
-        </button>
+        <button onClick={fetchMatch} className="text-xs text-red-600 underline">Tentar novamente</button>
       </div>
     );
   }
 
+  // Sem dados
   if (!match) return null;
 
-  const currentScore = checkedOpportunities.size > 0 ? simulatedScore : match.matchScore;
-  const colors = getScoreColor(currentScore);
-  const scoreLabel = getScoreLabel(currentScore);
+  const colors = getScoreColor(match.matchScore);
+  const scoreLabel = getScoreLabel(match.matchScore);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+      className="w-full bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden"
     >
-      {/* Header - sempre visível */}
+      {/* Header clicável */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-6 py-5 flex items-center gap-5 hover:bg-slate-50/50 transition-colors text-left"
+        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left outline-none focus:outline-none"
       >
-        {/* Donut chart grande e chamativo */}
-        <div className="relative w-20 h-20 flex-shrink-0">
-          <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 120 120">
-            {/* Background circle */}
-            <circle 
-              cx="60" 
-              cy="60" 
-              r="52" 
-              fill="none" 
-              stroke="#f1f5f9" 
-              strokeWidth="16" 
-            />
-            {/* Progress circle */}
-            <motion.circle
-              cx="60" 
-              cy="60" 
-              r="52"
+        {/* Score circular compacto */}
+        <div className="relative w-14 h-14 flex-shrink-0">
+          <svg className="w-14 h-14 transform -rotate-90" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+            <circle
+              cx="60" cy="60" r="50"
               fill="none"
-              stroke={currentScore >= 75 ? '#10b981' : currentScore >= 50 ? '#f59e0b' : '#ef4444'}
-              strokeWidth="16"
-              strokeDasharray={`${(currentScore / 100) * 326.73} 326.73`}
+              stroke={match.matchScore >= 75 ? '#10b981' : match.matchScore >= 50 ? '#eab308' : '#ef4444'}
+              strokeWidth="12"
+              strokeDasharray={`${(match.matchScore / 100) * 314} 314`}
               strokeLinecap="round"
-              initial={{ strokeDasharray: `${(match.matchScore / 100) * 326.73} 326.73` }}
-              animate={{ strokeDasharray: `${(currentScore / 100) * 326.73} 326.73` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="transition-all duration-1000"
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <motion.span 
-              className={`text-2xl font-black ${colors.text}`}
-              key={currentScore}
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-            >
-              {currentScore}%
-            </motion.span>
+            <span className={`text-sm font-black ${colors.text}`}>{match.matchScore}%</span>
           </div>
         </div>
 
-        {/* Info */}
+        {/* Texto */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Target className="w-4 h-4 text-indigo-600" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Compatibilidade com a Vaga
+          <div className="flex items-center gap-2 mb-0.5">
+            <Target className="w-4 h-4 text-indigo-500" />
+            <span className="text-sm font-bold text-gray-900">Compatibilidade com a Vaga</span>
+          </div>
+          <p className={`text-xs font-semibold ${colors.text}`}>{scoreLabel}</p>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="text-xs text-gray-500">
+              Vaga: <span className="font-semibold text-gray-700">{getDifficultyLabel(match.jobDifficulty)}</span>
+            </span>
+            <span className="text-gray-300">|</span>
+            <span className="text-xs text-gray-500">
+              Seu nível: <span className="font-semibold text-gray-700">{getDifficultyLabel(match.candidateLevel)}</span>
             </span>
           </div>
-          <h3 className={`text-lg font-bold ${colors.text} mb-1`}>{scoreLabel}</h3>
-          <div className="flex items-center gap-4 text-xs text-slate-600">
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500">Vaga:</span>
-              <span className="font-semibold text-slate-900">{getDifficultyLabel(match.jobDifficulty)}</span>
-              <span className="text-slate-400">({match.jobDifficulty}/10)</span>
-            </div>
-            <span className="text-slate-300">•</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500">Seu nível:</span>
-              <span className="font-semibold text-slate-900">{getDifficultyLabel(match.candidateLevel)}</span>
-              <span className="text-slate-400">({match.candidateLevel}/10)</span>
-            </div>
-          </div>
-          
-          {checkedOpportunities.size > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-2 flex items-center gap-1.5 text-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="text-indigo-700 font-medium">
-                Simulando {checkedOpportunities.size} {checkedOpportunities.size === 1 ? 'melhoria' : 'melhorias'}
-              </span>
-              <span className="text-slate-500">→</span>
-              <span className="text-emerald-700 font-bold">+{simulatedScore - match.matchScore}%</span>
-            </motion.div>
-          )}
         </div>
 
-        <ChevronDown 
-          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-        />
+        {expanded ? <ChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />}
       </button>
-
-      {/* Barra de progresso fina (sempre visível) */}
-      <div className="px-6 pb-5">
-        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-          <motion.div
-            className={`h-2 ${colors.bg} rounded-full`}
-            initial={{ width: `${match.matchScore}%` }}
-            animate={{ width: `${currentScore}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-          />
-        </div>
-      </div>
 
       {/* Conteúdo expandido */}
       <AnimatePresence>
@@ -414,94 +218,75 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden border-t border-slate-100"
+            className="overflow-hidden border-t border-gray-100"
           >
-            <div className="px-6 py-8 space-y-8">
-              
-              {/* Pontos Fortes */}
-              {match.strengths && match.strengths.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                      Por que você recebeu essa nota
-                    </h4>
-                  </div>
-                  <div className="grid gap-2.5">
-                    {match.strengths.map((strength, i) => (
-                      <ExpandableBadge
-                        key={i}
-                        icon={CheckCircle2}
-                        title={strength.category}
-                        variant="success"
-                      >
-                        {strength.explanation}
-                      </ExpandableBadge>
+            <div className="px-5 py-4 space-y-4">
+              {/* Barra de progresso grande */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-xs text-gray-500 font-medium">Match Score</span>
+                  <span className={`text-sm font-black ${colors.text}`}>{match.matchScore}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${match.matchScore}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className={`h-3 rounded-full ${colors.bg}`}
+                  />
+                </div>
+              </div>
+
+              {/* Dificuldade vs Nível */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Nível da Vaga</p>
+                  <p className="text-xl font-black text-gray-800">{match.jobDifficulty}<span className="text-sm font-normal text-gray-400">/10</span></p>
+                  <p className="text-xs text-gray-600 mt-0.5">{getDifficultyLabel(match.jobDifficulty)}</p>
+                </div>
+                <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-200 text-center">
+                  <p className="text-xs text-indigo-600 mb-1">Seu Nível</p>
+                  <p className="text-xl font-black text-indigo-700">{match.candidateLevel}<span className="text-sm font-normal text-indigo-400">/10</span></p>
+                  <p className="text-xs text-indigo-600 mt-0.5">{getDifficultyLabel(match.candidateLevel)}</p>
+                </div>
+              </div>
+
+              {/* Razões */}
+              {match.reasons && match.reasons.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">Por que esse score?</p>
+                  <ul className="space-y-1.5">
+                    {match.reasons.map((reason, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-gray-700">
+                        <CheckCircle className="w-3.5 h-3.5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                        <span>{reason}</span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               )}
 
-              {/* Oportunidades de melhoria */}
-              {match.opportunities && match.opportunities.length > 0 && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Lightbulb className="w-5 h-5 text-indigo-600" />
-                      <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                        Como aumentar suas chances
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-4">
-                      Marque as melhorias que você conquistar e veja seu score crescer em tempo real
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {match.opportunities.map((opportunity, i) => (
-                      <OpportunityCard
-                        key={i}
-                        opportunity={opportunity}
-                        isChecked={checkedOpportunities.has(i)}
-                        onToggle={() => toggleOpportunity(i)}
-                      />
+              {/* Gap Analysis */}
+              {match.gapAnalysis && match.gapAnalysis.length > 0 && (
+                <div className="bg-amber-50 rounded-xl p-3 border border-amber-200">
+                  <p className="text-xs font-semibold text-amber-700 mb-2">O que falta para 100%?</p>
+                  <ul className="space-y-1.5">
+                    {match.gapAnalysis.map((gap, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-amber-800">
+                        <Zap className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                        <span>{gap}</span>
+                      </li>
                     ))}
-                  </div>
-
-                  {checkedOpportunities.size > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200"
-                    >
-                      <div className="flex items-start gap-3">
-                        <Sparkles className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h5 className="text-sm font-bold text-indigo-900 mb-1">
-                            Simulação de evolução
-                          </h5>
-                          <p className="text-xs text-indigo-700 leading-relaxed">
-                            Se você desenvolver {checkedOpportunities.size === 1 ? 'esta competência' : 'estas competências'}, 
-                            sua compatibilidade estimada pode chegar a <span className="font-bold">{simulatedScore}%</span>.
-                            Esta é uma simulação para orientar seu desenvolvimento profissional.
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
+                  </ul>
                 </div>
               )}
 
-              {/* Botão recalcular */}
+              {/* Recalcular */}
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fetchMatch();
-                }}
-                className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1.5 transition-colors group"
+                onClick={fetchMatch}
+                className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
               >
-                <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Recalcular compatibilidade
               </button>
             </div>
