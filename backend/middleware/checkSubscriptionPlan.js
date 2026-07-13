@@ -248,6 +248,13 @@ export async function validateCompanyVerification(req, res, next) {
       return next(); // Não é empresa, pula validação
     }
 
+    // Garantir que a coluna is_verified existe (idempotente)
+    try {
+      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE`);
+    } catch (err) {
+      console.warn('⚠️ Não foi possível criar coluna is_verified (pode já existir):', err.message);
+    }
+
     const userResult = await pool.query(
       'SELECT is_verified FROM users WHERE id = $1',
       [userId]
