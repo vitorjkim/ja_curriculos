@@ -576,50 +576,7 @@ const Dashboard = () => {
       </Helmet>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-gray-900 mb-1 tracking-tight leading-tight">
-                Olá, <span className="text-blue-600">{user?.name || 'Usuário'}</span>!
-              </h1>
-              <p className="text-[15px] text-gray-600 leading-relaxed">
-                Acompanhe suas atividades e acesse suas ferramentas
-              </p>
-            </div>
-            
-            {/* Indicador de dados reais vs exemplo */}
-            <div className="hidden md:flex items-center gap-3">
-              {usingRealData ? (
-                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-semibold border border-green-200 shadow-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  Dados reais
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  Dados de exemplo
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Stats Cards - Modern Design */}
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+            {/* Quick Actions removed as requested */}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               {[
