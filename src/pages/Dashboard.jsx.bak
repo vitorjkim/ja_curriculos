@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-
-const Dashboard = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Helmet>
-        <title>Dashboard - CurriculoJá</title>
-      </Helmet>
-      <h1 className="text-3xl font-bold mb-4">Seu primeiro emprego começa aqui</h1>
-      <p className="mb-4">Crie currículos profissionais, encontre vagas exclusivas da sua escola e acompanhe todo o processo seletivo em tempo real.</p>
-      <p className="mb-2 text-red-600">Vagas da Sua Escola — removido</p>
-    </div>
-  );
-};
-
-export default Dashboard;
+import { 
+  Home, 
+  FileText, 
+  Search, 
+  MessageSquare, 
+  Briefcase, 
+  User, 
+  TrendingUp, 
+  Calendar,
+  Target,
+  Award,
+  Eye,
+  Edit,
+  Plus,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  MapPin,
+  Building,
+  Heart,
+  ThumbsUp
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Combobox } from '@/components/ui/combobox';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { resumesAPI, applications as applicationsAPI, jobsAPI } from '@/lib/api';
+import { listSavedJobs, removeJob as removeSavedJob } from '@/lib/savedJobs';
+import CandidateInterviewsSection from '@/components/candidate/CandidateInterviewsSection';
+import { loadAlerts, addAlert, removeAlert, toggleAlert, isJobMatch, migrateLocalAlerts } from '@/lib/jobAlerts';
 
 const Dashboard = () => {
   console.log('🔥 DASHBOARD: Componente iniciando...');
