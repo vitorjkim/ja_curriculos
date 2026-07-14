@@ -386,10 +386,7 @@ const Home = () => {
                       <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-emerald-400 flex-shrink-0" />
                       <span className="text-sm md:text-base">Currículo Guiado</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-emerald-400 flex-shrink-0" />
-                      <span className="text-sm md:text-base">Vagas da Sua Escola</span>
-                    </div>
+                    {/* Vagas da Sua Escola removido por solicitação */}
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-emerald-400 flex-shrink-0" />
                       <span className="text-sm md:text-base">Chat com Empresas</span>
@@ -808,7 +805,7 @@ const Home = () => {
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 group-hover:text-white mb-2 transition-colors duration-300">Encontre Vagas</h3>
                         <div className="space-y-1 mb-4">
-                          <p className="text-gray-600 group-hover:text-blue-100 text-sm transition-colors duration-300">• Vagas da sua escola</p>
+                          {/* Vagas da sua escola (removido) */}
                           <p className="text-gray-600 group-hover:text-blue-100 text-sm transition-colors duration-300">• Empresas parceiras</p>
                           <p className="text-gray-600 group-hover:text-blue-100 text-sm transition-colors duration-300">• Filtros por área</p>
                           <p className="text-gray-600 group-hover:text-blue-100 text-sm transition-colors duration-300">• Match automático</p>
