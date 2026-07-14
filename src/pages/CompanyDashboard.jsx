@@ -357,7 +357,38 @@ const CompanyDashboard = () => {
               </motion.div>
             </div>
 
-            {/* Quick Actions removed */}
+            {/* Quick Actions */}
+              <Card className="h-full rounded-[24px] border-2 border-slate-200 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:col-span-full">
+              <CardHeader className="border-b border-slate-100 pb-4">
+                <CardTitle className="text-base font-semibold text-slate-900">Ações Rápidas</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Link to="/create-job" className="block">
+                    <Button className="w-full rounded-2xl border-2 border-[#2563eb] bg-[#2563eb] py-4 text-sm font-medium text-white shadow-[0_18px_40px_rgba(37,99,235,0.35)] transition-all hover:-translate-y-[1px] hover:bg-[#1d4ed8] hover:border-[#1d4ed8] hover:shadow-[0_22px_55px_rgba(37,99,235,0.45)]">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Nova Vaga
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/my-jobs" className="block">
+                    <Button className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 py-4 text-sm font-medium text-slate-900 shadow-sm transition-all hover:-translate-y-[1px] hover:border-slate-300 hover:bg-white">
+                      <Briefcase className="w-4 h-4 mr-2" />
+                      Gerenciar Vagas
+                    </Button>
+                  </Link>
+
+                  {isAgency && (
+                    <Link to="/agency-portal" className="block md:col-span-2">
+                      <Button className="w-full rounded-2xl border-2 border-orange-400 bg-gradient-to-r from-orange-500 to-amber-500 py-4 text-sm font-medium text-white shadow-[0_18px_40px_rgba(249,115,22,0.3)] transition-all hover:-translate-y-[1px] hover:from-orange-600 hover:to-amber-600 hover:shadow-[0_22px_55px_rgba(249,115,22,0.4)]">
+                        <Building2 className="w-4 h-4 mr-2" />
+                        Portal da Agência
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+              </Card>
 
             {/* Parcerias com Escolas */}
             <Card className="mb-8 mt-8 rounded-[24px] border-2 border-emerald-100 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">

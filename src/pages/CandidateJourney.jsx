@@ -693,7 +693,56 @@ const CandidateJourney = () => {
                 )}
               </motion.div>
 
-              {/* Quick Actions removed as requested */}
+              {/* Card Ações Rápidas */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5"
+              >
+                <h3 className="font-bold text-gray-900 mb-4">Ações Rápidas</h3>
+                
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => navigate('/jobs')}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-blue-500 flex items-center justify-center">
+                      <Search className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Buscar Vagas</p>
+                      <p className="text-xs text-gray-500">Encontre oportunidades</p>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => navigate('/create-resume')}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Criar Currículo</p>
+                      <p className="text-xs text-gray-500">Monte seu currículo</p>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    onClick={() => navigate('/profile')}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-violet-50 hover:bg-violet-100 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-violet-500 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Meu Perfil</p>
+                      <p className="text-xs text-gray-500">Gerencie suas informações</p>
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
             </div>
           </div>
         </div>

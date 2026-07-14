@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-
-const Dashboard = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Helmet>
-        <title>Dashboard - CurriculoJá</title>
-      </Helmet>
-      <h1 className="text-3xl font-bold mb-4">Seu primeiro emprego começa aqui</h1>
-      <p className="mb-4">Crie currículos profissionais, encontre vagas exclusivas da sua escola e acompanhe todo o processo seletivo em tempo real.</p>
-      <p className="mb-2 text-red-600">Vagas da Sua Escola — removido</p>
-    </div>
-  );
-};
-
-export default Dashboard;
+import { 
+  Home, 
+  FileText, 
+  Search, 
+  MessageSquare, 
+  Briefcase, 
+  User, 
+  TrendingUp, 
+  Calendar,
+  Target,
+  Award,
+  Eye,
+  Edit,
+  Plus,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  MapPin,
+  Building,
+  Heart,
+  ThumbsUp
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Combobox } from '@/components/ui/combobox';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { resumesAPI, applications as applicationsAPI, jobsAPI } from '@/lib/api';
+import { listSavedJobs, removeJob as removeSavedJob } from '@/lib/savedJobs';
+import CandidateInterviewsSection from '@/components/candidate/CandidateInterviewsSection';
+import { loadAlerts, addAlert, removeAlert, toggleAlert, isJobMatch, migrateLocalAlerts } from '@/lib/jobAlerts';
 
 const Dashboard = () => {
   console.log('🔥 DASHBOARD: Componente iniciando...');
@@ -554,7 +576,50 @@ const Dashboard = () => {
       </Helmet>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            {/* Quick Actions removed as requested */}
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-[1.85rem] md:text-[2.25rem] font-bold text-gray-900 mb-1 tracking-tight leading-tight">
+                Olá, <span className="text-blue-600">{user?.name || 'Usuário'}</span>!
+              </h1>
+              <p className="text-[15px] text-gray-600 leading-relaxed">
+                Acompanhe suas atividades e acesse suas ferramentas
+              </p>
+            </div>
+            
+            {/* Indicador de dados reais vs exemplo */}
+            <div className="hidden md:flex items-center gap-3">
+              {usingRealData ? (
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-semibold border border-green-200 shadow-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Dados reais
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-700 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Dados de exemplo
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Stats Cards - Modern Design */}
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               {[
@@ -584,7 +649,51 @@ const Dashboard = () => {
               })}
             </motion.div>
 
-            {/* Quick Actions removed as requested */}
+            {/* Quick Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <h2 className="text-xl font-bold text-gray-900 mb-5" data-tour="qa.section">Ações <span className="text-blue-600">Rápidas:</span></h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {quickActions.map((action, index) => (
+                  <Card 
+                    key={action.title}
+                    className={`hover:shadow-lg transition-all duration-300 rounded-[24px] border-2 border-gray-200 shadow-md group overflow-hidden cursor-pointer bg-white ${
+                      action.title === 'Buscar Vagas' ? 'hover:border-blue-400' :
+                      action.title === 'Criar Currículo' ? 'hover:border-green-400' :
+                      action.title === 'Meu Perfil' ? 'hover:border-yellow-400' : 'hover:border-purple-400'
+                    }`}
+                  >
+                    <CardContent className="p-6">
+                        <Link to={action.path} className="block" data-tour={
+                          action.title === 'Criar Currículo' ? 'qa.createResume' :
+                          action.title === 'Meu Perfil' ? 'qa.profile' : undefined
+                        }>
+                        <div className="text-center">
+                          <div className={`inline-flex w-14 h-14 rounded-xl items-center justify-center mb-4 shadow-md border-2 border-white group-hover:scale-110 transition-transform duration-300 bg-gradient-to-br ${action.bgColor}`}>
+                            <action.icon className={`w-7 h-7 stroke-[2] ${
+                              action.title === 'Buscar Vagas' ? 'text-blue-600' :
+                              action.title === 'Criar Currículo' ? 'text-green-600' :
+                              action.title === 'Meu Perfil' ? 'text-yellow-600' : 'text-purple-600'
+                            }`} />
+                          </div>
+                          <h3 className={`text-base font-bold mb-1 transition-colors text-gray-900 ${
+                            action.title === 'Buscar Vagas' ? 'group-hover:text-blue-600' :
+                            action.title === 'Criar Currículo' ? 'group-hover:text-green-600' :
+                            action.title === 'Meu Perfil' ? 'group-hover:text-yellow-600' : 'group-hover:text-purple-600'
+                          }`}>
+                            {action.title}
+                          </h3>
+                          <p className="text-sm text-gray-600">{action.description}</p>
+                        </div>
+                        </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </motion.div>
 
             {/* Dialog: Seu Progresso (abre ao clicar em Meu Perfil) */}
             {user?.type === 'candidate' && (
