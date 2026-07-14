@@ -109,9 +109,9 @@ const ViewJob = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   // Match com IA - para verificar gaps (ex: localização)
-  const [matchGaps, setMatchGaps] = useState([]);
   const [showLocationWarning, setShowLocationWarning] = useState(false);
   const [pendingResumeId, setPendingResumeId] = useState(null);
+  const [cityMismatchInfo, setCityMismatchInfo] = useState(null); // { candidateCity, jobCity }
   // Logo da empresa (quando disponível)
   const [companyImage, setCompanyImage] = useState(null);
   // Candidaturas da vaga (para empresa/escola)
@@ -455,42 +455,52 @@ const ViewJob = () => {
     });
   };
 
-  // Verificar e buscar dados de match para checar gaps de localização
-  const checkLocationGapBeforeApply = async (resumeId) => {
-    try {
-      const apiUrl = getAPIBaseURL();
-      const response = await fetch(`${apiUrl}/jobs/match`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: id, resumeId: resumeId }),
-      });
+  // Normaliza string de cidade para comparação (remove acentos, sufixos de estado, espaços)
+  const normalizeCityStr = (str = '') => (str || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[-–,/|].*/, '')
+    .trim();
 
-      if (!response.ok) {
-        return null; // Se falhar, continua mesmo assim
-      }
+  // Busca a cidade do candidato a partir do currículo selecionado (ou do primeiro disponível)
+  const getResumeCity = (resumeId) => {
+    const resume = (userResumes || []).find(r => r.id === resumeId);
+    if (!resume) return '';
+    const info = typeof resume.personal_info === 'string'
+      ? JSON.parse(resume.personal_info || '{}')
+      : (resume.personal_info || {});
+    return info.city || info.location || '';
+  };
 
-      const match = await response.json();
-      const gaps = match.gaps || [];
-      
-      // Verificar se há gap de Localização
-      const hasLocationGap = gaps.some(gap => 
-        gap.keyword && gap.keyword.toLowerCase().includes('localização')
-      );
+  // Verifica se há incompatibilidade de cidade (apenas para vagas presenciais/híbridas)
+  const checkCityMismatch = (resumeId) => {
+    if (!job) return null;
+    // Vagas remotas não precisam de aviso de localização
+    if (job.work_type === 'remoto') return null;
+    // Só faz sentido avisar para presencial ou híbrido
+    if (job.work_type !== 'presencial' && job.work_type !== 'hibrido') return null;
 
-      return hasLocationGap ? { hasGap: true, gaps } : { hasGap: false, gaps };
-    } catch (error) {
-      console.error('Erro ao verificar gaps:', error);
-      return null;
+    const candidateCity = normalizeCityStr(getResumeCity(resumeId));
+    const jobCity = normalizeCityStr(job.location || '');
+
+    if (!candidateCity || !jobCity) return null; // não há dados suficientes para comparar
+
+    if (candidateCity !== jobCity) {
+      return { mismatch: true, candidateCity: getResumeCity(resumeId), jobCity: job.location };
     }
+
+    return { mismatch: false };
   };
 
   // Submeter a candidatura após confirmar aviso de localização (se houver)
   const submitApplicationWithCheck = async (resumeId) => {
-    // Verificar se há gap de localização
-    const gapCheck = await checkLocationGapBeforeApply(resumeId);
-    
-    if (gapCheck && gapCheck.hasGap) {
-      setMatchGaps(gapCheck.gaps);
+    // Verificar se há incompatibilidade de cidade
+    const cityCheck = checkCityMismatch(resumeId);
+
+    if (cityCheck && cityCheck.mismatch) {
+      setCityMismatchInfo({ candidateCity: cityCheck.candidateCity, jobCity: cityCheck.jobCity });
       setPendingResumeId(resumeId);
       setShowLocationWarning(true);
       return false; // não continua, mostra warning
@@ -523,6 +533,7 @@ const ViewJob = () => {
       setShowResumeModal(false);
       setShowLocationWarning(false);
       setPendingResumeId(null);
+      setCityMismatchInfo(null);
     } catch (error) {
       console.error('Erro ao candidatar:', error);
       toast({
@@ -2184,9 +2195,9 @@ const ViewJob = () => {
                   <AlertTriangle className="w-6 h-6 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Atenção: Problema com Localização</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Vaga em outra cidade</h3>
                   <p className="text-sm text-gray-700 mt-1">
-                    A localização pode ser um impedimento para essa vaga. Tem certeza que deseja continuar com a candidatura?
+                    Esta vaga é {job?.work_type === 'hibrido' ? 'híbrida' : 'presencial'} em <strong>{cityMismatchInfo?.jobCity}</strong>, mas seu currículo indica que você está em <strong>{cityMismatchInfo?.candidateCity}</strong>. Tem certeza que deseja continuar com a candidatura?
                   </p>
                 </div>
               </div>
@@ -2194,7 +2205,7 @@ const ViewJob = () => {
             
             <div className="px-6 py-6 space-y-3 bg-white">
               <p className="text-sm text-gray-600">
-                Se você atender os outros requisitos, você pode tentar mesmo assim. Mas converse com o recrutador sobre a questão da localização.
+                Se você puder se mudar ou se deslocar até o local de trabalho, pode se candidatar mesmo assim. Mas considere conversar com o recrutador sobre essa questão.
               </p>
             </div>
 
@@ -2203,6 +2214,7 @@ const ViewJob = () => {
                 onClick={() => {
                   setShowLocationWarning(false);
                   setPendingResumeId(null);
+                  setCityMismatchInfo(null);
                 }}
                 className="flex-1 px-4 py-2.5 text-gray-700 font-semibold text-sm rounded-xl border-2 border-gray-200 hover:bg-gray-100 transition-colors"
               >
