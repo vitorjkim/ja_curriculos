@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Zap, AlertTriangle, CheckCircle, RefreshCw, Target, Award, CheckCircle2, Sparkles, ExternalLink, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle, RefreshCw, Target, Award, CheckCircle2, Sparkles, ExternalLink, Check } from 'lucide-react';
 
 const getApiUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -297,7 +297,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                   <p className="text-xs text-gray-600 mt-0.5">{getDifficultyLabel(match.jobDifficulty)}</p>
                 </div>
                 <div className="bg-indigo-50 rounded-2xl p-3 border border-indigo-200 text-center">
-                  <p className="text-xs text-indigo-600 mb-1">Seu Nível</p>
+                  <p className="text-xs text-indigo-600 mb-1">Seu Nível para essa vaga</p>
                   <p className="text-xl font-black text-indigo-700">{match.candidateLevel}<span className="text-sm font-normal text-indigo-400">/10</span></p>
                   <p className="text-xs text-indigo-600 mt-0.5">{getDifficultyLabel(match.candidateLevel)}</p>
                 </div>
@@ -361,7 +361,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
               {match.gaps && match.gaps.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-3">
-                    <Zap className="w-4 h-4 text-[#ef4444]" />
+                    <AlertTriangle className="w-4 h-4 text-[#ef4444]" />
                     <h4 className="font-extrabold text-sm text-[#991b1b]">
                       O que falta para 100%?
                     </h4>
@@ -387,7 +387,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <Zap className="w-[11px] h-[11px] text-[#991b1b] flex-shrink-0" />
+                                <AlertTriangle className="w-[11px] h-[11px] text-[#991b1b] flex-shrink-0" />
                                 <span className="text-xs font-medium text-[#991b1b]">
                                   {gap.keyword}
                                 </span>
