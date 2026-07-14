@@ -2002,7 +2002,7 @@ router.post('/match', authenticateToken, async (req, res) => {
     // 1) Verifica cache em memória (rápido)
     const cacheKey = `${jobId}:${resumeId}`;
     const cached = jobMatchCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < JOB_MATCH_CACHE_TTL && Array.isArray(cached.data?.strengths)) {
+    if (cached && (Date.now() - cached.timestamp) < JOB_MATCH_CACHE_TTL && Array.isArray(cached.data?.strengths) && Array.isArray(cached.data?.improvementSuggestions)) {
       console.log(`✅ Job Match servido do cache memória: ${cacheKey}`);
       return res.json({ success: true, jobId, resumeId, fromCache: true, ...cached.data });
     }
@@ -2015,7 +2015,7 @@ router.post('/match', authenticateToken, async (req, res) => {
            AND created_at > NOW() - INTERVAL '${DB_MATCH_CACHE_TTL_DAYS} days'`,
         [jobId, resumeId]
       );
-      if (dbCached.rows.length > 0 && Array.isArray(dbCached.rows[0].result?.strengths)) {
+      if (dbCached.rows.length > 0 && Array.isArray(dbCached.rows[0].result?.strengths) && Array.isArray(dbCached.rows[0].result?.improvementSuggestions)) {
         const dbResult = dbCached.rows[0].result;
         // Atualiza cache em memória também
         jobMatchCache.set(cacheKey, { timestamp: Date.now(), data: dbResult });

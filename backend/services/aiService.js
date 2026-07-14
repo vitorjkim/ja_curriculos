@@ -14,6 +14,55 @@ import OpenAI from 'openai';
 let openai;
 
 /**
+ * Catálogo de cursos curados por categoria (evita que a IA "invente" URLs de cursos).
+ * A IA apenas escolhe a categoria mais adequada para cada sugestão de melhoria.
+ */
+const COURSE_CATALOG = {
+  language: {
+    name: 'Inglês para Negócios — Coursera',
+    url: 'https://www.coursera.org/learn/business-english',
+    color: '#2563eb',
+    colorLight: '#dbeafe'
+  },
+  design: {
+    name: 'UX/UI Design Completo — Udemy',
+    url: 'https://www.udemy.com/course/ux-ui-design/',
+    color: '#d97706',
+    colorLight: '#fed7aa'
+  },
+  office: {
+    name: 'Microsoft Office do Zero — Alura',
+    url: 'https://www.alura.com.br/curso-online-office',
+    color: '#6b7a90',
+    colorLight: '#e2e8f0'
+  },
+  technical: {
+    name: 'Programação e Lógica — Alura',
+    url: 'https://www.alura.com.br/cursos-online-programacao',
+    color: '#7c3aed',
+    colorLight: '#ede9fe'
+  },
+  certification: {
+    name: 'Certificações Profissionais — Coursera',
+    url: 'https://www.coursera.org/certificates',
+    color: '#059669',
+    colorLight: '#d1fae5'
+  },
+  'soft-skill': {
+    name: 'Comunicação e Soft Skills — Alura',
+    url: 'https://www.alura.com.br/cursos-online-comportamental',
+    color: '#db2777',
+    colorLight: '#fce7f3'
+  },
+  other: {
+    name: 'Cursos Recomendados — Alura',
+    url: 'https://www.alura.com.br/',
+    color: '#4f46e5',
+    colorLight: '#e0e7ff'
+  }
+};
+
+/**
  * Esquema JSON esperado da análise de currículo
  * Define a estrutura que a IA deve retornar
  */
@@ -381,8 +430,18 @@ Retorne SOMENTE este JSON (sem texto antes ou depois):
   ],
   "gaps": [
     { "keyword": "<palavra-chave curta, 1-3 palavras, ex: 'Idioma'>", "text": "<explicação completa e específica do que falta e por quê é um gap real>" }
+  ],
+  "improvementSuggestions": [
+    { "label": "<nome curto e específico da habilidade/curso que o candidato deveria desenvolver, ex: 'Inglês intermediário', ex: 'Figma e prototipação'>", "gain": <número 1-25 estimando quanto pontos percentuais o score subiria se o candidato adquirisse essa habilidade>, "category": "<uma destas categorias exatas: language, design, office, technical, certification, soft-skill, other>" }
   ]
 }
+
+REGRAS PARA "improvementSuggestions" (plano de ação para o candidato melhorar seu match com ESSA vaga específica):
+- Baseie-se DIRETAMENTE nos "gaps" reais identificados. Cada sugestão deve resolver um gap concreto encontrado na análise.
+- NÃO retorne uma quantidade fixa. Se houver apenas 1 gap relevante, retorne 1 sugestão. Se houver 5, pode retornar até 5. Se o candidato já é compatível (matchScore alto, sem gaps relevantes), retorne array VAZIO.
+- Cada "label" deve ser específico e acionável (ex: "Inglês intermediário", "Excel avançado", "Liderança de equipe"), nunca genérico como "Melhorar currículo".
+- O "gain" deve ser proporcional à importância do gap: gaps críticos (impedem a vaga) ganham mais pontos (15-25), gaps menores (nice-to-have) ganham menos (1-10). A soma de todos os gains não deve ultrapassar (100 - matchScore).
+- Escolha a "category" mais adequada dentre as opções fixas listadas. Use "other" apenas se nenhuma categoria específica se aplicar.
 
 REGRAS PARA "strengths" (pontos que aproximam o candidato da vaga):
 - A "keyword" é APENAS um rótulo curto (ex: "Senioridade", "Tecnologia Frontend"). NUNCA repita a keyword dentro do "text".
@@ -533,6 +592,7 @@ async function tryGeminiMatch(prompt) {
     result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
     result.strengths = normalizeKeywordList(result.strengths);
     result.gaps = normalizeKeywordList(result.gaps);
+    result.improvementSuggestions = normalizeImprovementSuggestions(result.improvementSuggestions);
     // Compatibilidade retroativa com formato antigo (reasons/gapAnalysis como strings)
     result.reasons = result.strengths.map(s => s.text);
     result.gapAnalysis = result.gaps.map(g => g.text);
@@ -558,6 +618,32 @@ function normalizeKeywordList(list) {
       return { keyword: String(item.keyword || '').trim(), text: String(item.text || '').trim() };
     })
     .filter(item => item.text.length > 0)
+    .slice(0, 8);
+}
+
+/**
+ * Normaliza a lista de sugestões de melhoria, mapeando a categoria escolhida pela IA
+ * para um curso curado (evita URLs inventadas pela IA)
+ */
+function normalizeImprovementSuggestions(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter(item => item && typeof item === 'object' && item.label)
+    .map((item, idx) => {
+      const category = COURSE_CATALOG[item.category] ? item.category : 'other';
+      const course = COURSE_CATALOG[category];
+      const gain = Math.min(30, Math.max(1, Math.round(Number(item.gain) || 5)));
+      return {
+        id: idx + 1,
+        label: String(item.label).trim(),
+        gain,
+        category,
+        color: course.color,
+        colorLight: course.colorLight,
+        course: { name: course.name, url: course.url }
+      };
+    })
+    .filter(item => item.label.length > 0)
     .slice(0, 8);
 }
 
@@ -615,6 +701,7 @@ async function tryOpenAIMatch(prompt) {
       result.candidateLevel = Math.min(10, Math.max(1, Math.round(result.candidateLevel || 5)));
       result.strengths = normalizeKeywordList(result.strengths);
       result.gaps = normalizeKeywordList(result.gaps);
+      result.improvementSuggestions = normalizeImprovementSuggestions(result.improvementSuggestions);
       // Compatibilidade retroativa com formato antigo (reasons/gapAnalysis como strings)
       result.reasons = result.strengths.map(s => s.text);
       result.gapAnalysis = result.gaps.map(g => g.text);

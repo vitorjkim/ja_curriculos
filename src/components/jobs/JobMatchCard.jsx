@@ -39,43 +39,7 @@ const getDifficultyLabel = (level) => {
 
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas em ms
 
-const IMPROVEMENT_ITEMS = [
-  {
-    id: 1,
-    label: 'Inglês intermediário',
-    gain: 18,
-    color: '#2563eb',
-    colorLight: '#dbeafe',
-    course: {
-      name: 'Inglês para Negócios — Coursera',
-      url: 'https://www.coursera.org/learn/business-english'
-    }
-  },
-  {
-    id: 2,
-    label: 'UX/UI Design',
-    gain: 12,
-    color: '#d97706',
-    colorLight: '#fed7aa',
-    course: {
-      name: 'UX/UI Design Completo — Udemy',
-      url: 'https://www.udemy.com/course/ux-ui-design/'
-    }
-  },
-  {
-    id: 3,
-    label: 'Pacote Office',
-    gain: 3,
-    color: '#6b7a90',
-    colorLight: '#e2e8f0',
-    course: {
-      name: 'Microsoft Office do Zero — Alura',
-      url: 'https://www.alura.com.br/curso-online-office'
-    }
-  }
-];
-
-const CACHE_VERSION = 'v2'; // bump ao mudar formato do payload de match
+const CACHE_VERSION = 'v3'; // bump ao mudar formato do payload de match
 
 const getCachedMatch = (jobId, resumeId, resumeScore) => {
   try {
@@ -114,8 +78,9 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
   // Calcula o score atual baseado no match original + itens marcados
   const currentScore = useMemo(() => {
     if (!match) return 0;
+    const suggestions = Array.isArray(match.improvementSuggestions) ? match.improvementSuggestions : [];
     const gainedPoints = Array.from(checkedItems).reduce((sum, itemId) => {
-      const item = IMPROVEMENT_ITEMS.find(i => i.id === itemId);
+      const item = suggestions.find(i => i.id === itemId);
       return sum + (item?.gain || 0);
     }, 0);
     return Math.min(match.matchScore + gainedPoints, 100);
@@ -447,6 +412,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
               )}
 
               {/* Sugestão da IA - Plano de Melhoria com Checklist */}
+              {Array.isArray(match.improvementSuggestions) && match.improvementSuggestions.length > 0 && (
               <div>
                 <div className="rounded-2xl border border-[#e0e7ff] bg-[#f5f7ff] overflow-hidden">
                   {/* Cabeçalho */}
@@ -473,7 +439,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
 
                   {/* Lista de itens */}
                   <div className="divide-y divide-[#e0e7ff]">
-                    {IMPROVEMENT_ITEMS.map(item => {
+                    {match.improvementSuggestions.map(item => {
                       const isChecked = checkedItems.has(item.id);
                       return (
                         <div key={item.id}>
@@ -556,6 +522,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Recalcular */}
               <button
