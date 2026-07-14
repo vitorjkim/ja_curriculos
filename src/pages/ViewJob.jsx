@@ -111,6 +111,7 @@ const ViewJob = () => {
   // Match com IA - para verificar gaps (ex: localização)
   const [matchGaps, setMatchGaps] = useState([]);
   const [showLocationWarning, setShowLocationWarning] = useState(false);
+  const [pendingResumeId, setPendingResumeId] = useState(null);
   // Logo da empresa (quando disponível)
   const [companyImage, setCompanyImage] = useState(null);
   // Candidaturas da vaga (para empresa/escola)
@@ -454,8 +455,8 @@ const ViewJob = () => {
     });
   };
 
-  // Buscar match e verificar se há gap de localização
-  const checkLocationGapAndProceedWithApply = async (resumeId) => {
+  // Verificar e buscar dados de match para checar gaps de localização
+  const checkLocationGapBeforeApply = async (resumeId) => {
     try {
       const apiUrl = getAPIBaseURL();
       const response = await fetch(`${apiUrl}/jobs/match`, {
@@ -465,29 +466,72 @@ const ViewJob = () => {
       });
 
       if (!response.ok) {
-        // Se falhar, continua mesmo assim (não bloqueia candidatura por erro de IA)
-        console.warn('Falha ao buscar match para verificar gaps de localização');
-        return true; // continua
+        return null; // Se falhar, continua mesmo assim
       }
 
       const match = await response.json();
       const gaps = match.gaps || [];
-      setMatchGaps(gaps);
-
+      
       // Verificar se há gap de Localização
       const hasLocationGap = gaps.some(gap => 
         gap.keyword && gap.keyword.toLowerCase().includes('localização')
       );
 
-      if (hasLocationGap) {
-        setShowLocationWarning(true);
-        return false; // não continua, mostra warning
-      }
-
-      return true; // continua normalmente
+      return hasLocationGap ? { hasGap: true, gaps } : { hasGap: false, gaps };
     } catch (error) {
       console.error('Erro ao verificar gaps:', error);
-      return true; // continua mesmo assim
+      return null;
+    }
+  };
+
+  // Submeter a candidatura após confirmar aviso de localização (se houver)
+  const submitApplicationWithCheck = async (resumeId) => {
+    // Verificar se há gap de localização
+    const gapCheck = await checkLocationGapBeforeApply(resumeId);
+    
+    if (gapCheck && gapCheck.hasGap) {
+      setMatchGaps(gapCheck.gaps);
+      setPendingResumeId(resumeId);
+      setShowLocationWarning(true);
+      return false; // não continua, mostra warning
+    }
+    
+    return true; // continua com candidatura
+  };
+
+  // Finalizar candidatura após usuário confirmar no aviso de localização
+  const finalizePendingApplication = async () => {
+    if (!pendingResumeId) return;
+
+    try {
+      setApplyLoading(true);
+      const applicationData = {
+        job_id: id,
+        resume_id: pendingResumeId,
+        cover_letter: 'Candidatura via plataforma'
+      };
+
+      console.log('📋 Finalizando candidatura após confirmação:', applicationData);
+      await applicationsAPI.create(applicationData);
+
+      toast({
+        title: 'Candidatura enviada!',
+        description: 'Sua candidatura foi enviada com sucesso.',
+      });
+
+      setIsApplied(true);
+      setShowResumeModal(false);
+      setShowLocationWarning(false);
+      setPendingResumeId(null);
+    } catch (error) {
+      console.error('Erro ao candidatar:', error);
+      toast({
+        title: 'Erro ao candidatar',
+        description: error.message || 'Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setApplyLoading(false);
     }
   };
 
@@ -522,12 +566,6 @@ const ViewJob = () => {
         const defaultResume = resumesResponse.resumes.find(r => r.is_default);
         if (defaultResume) {
           setSelectedResumeId(defaultResume.id);
-          // Verificar se há gap de localização antes de prosseguir
-          const canProceed = await checkLocationGapAndProceedWithApply(defaultResume.id);
-          if (!canProceed) {
-            // Modal de warning será mostrado, não abre o modal de candidatura
-            return;
-          }
         }
         setResumeModalMode('apply');
         setShowResumeModal(true);
@@ -819,6 +857,14 @@ const ViewJob = () => {
           title: 'Arquivo carregado',
           description: 'Seu currículo foi carregado com sucesso.',
         });
+      }
+      
+      // Verificar se há gap de localização ANTES de candidatar
+      const canContinue = await submitApplicationWithCheck(resumeId);
+      if (!canContinue) {
+        // Modal de aviso será mostrado automaticamente, não faz a candidatura
+        setApplyLoading(false);
+        return;
       }
       
       // Fazer candidatura
@@ -2154,20 +2200,20 @@ const ViewJob = () => {
 
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
               <button
-                onClick={() => setShowLocationWarning(false)}
+                onClick={() => {
+                  setShowLocationWarning(false);
+                  setPendingResumeId(null);
+                }}
                 className="flex-1 px-4 py-2.5 text-gray-700 font-semibold text-sm rounded-xl border-2 border-gray-200 hover:bg-gray-100 transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onClick={() => {
-                  setShowLocationWarning(false);
-                  setResumeModalMode('apply');
-                  setShowResumeModal(true);
-                }}
-                className="flex-1 px-4 py-2.5 text-white font-semibold text-sm rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 hover:shadow-lg transition-all"
+                onClick={finalizePendingApplication}
+                disabled={applyLoading}
+                className="flex-1 px-4 py-2.5 text-white font-semibold text-sm rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 hover:shadow-lg transition-all disabled:opacity-50"
               >
-                Continuar
+                {applyLoading ? 'Enviando...' : 'Continuar'}
               </button>
             </div>
           </div>
