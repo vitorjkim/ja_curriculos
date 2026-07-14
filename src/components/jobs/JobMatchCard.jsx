@@ -450,7 +450,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
               <div>
                 <div className="rounded-2xl border border-[#e0e7ff] bg-[#f5f7ff] overflow-hidden">
                   {/* Cabeçalho */}
-                  <div className="bg-white border-b border-[#e0e7ff] px-4 py-3">
+                  <div className="bg-white border-b border-[#e0e7ff] px-4 py-3 rounded-t-2xl">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#f5f3ff] border border-[#ddd6fe] flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-[15px] h-[15px] text-[#7c3aed]" />
