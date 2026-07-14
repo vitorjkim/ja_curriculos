@@ -510,7 +510,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
 
                             {/* Badge de ganho */}
                             <span
-                              className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all ${
+                              className={`px-2 py-1 rounded-2xl text-xs font-bold border transition-all ${
                                 isChecked ? 'text-white' : ''
                               }`}
                               style={{
