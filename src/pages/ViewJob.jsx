@@ -6,7 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import { 
   ArrowLeft, MapPin, Briefcase, DollarSign, Building, Calendar, 
   Clock, Users, Eye, Heart, Share2, AlertCircle, FileText, Upload, Check,
-  Copy, MessageCircle, Send, Mail, Linkedin, MessageSquare, Star, Zap, X
+  Copy, MessageCircle, Send, Mail, Linkedin, MessageSquare, Star, Zap, X, AlertTriangle
 } from 'lucide-react';
 import { FaRegHandshake } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
@@ -108,6 +108,9 @@ const ViewJob = () => {
   // Seguir empresa
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  // Match com IA - para verificar gaps (ex: localização)
+  const [matchGaps, setMatchGaps] = useState([]);
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
   // Logo da empresa (quando disponível)
   const [companyImage, setCompanyImage] = useState(null);
   // Candidaturas da vaga (para empresa/escola)
@@ -451,6 +454,43 @@ const ViewJob = () => {
     });
   };
 
+  // Buscar match e verificar se há gap de localização
+  const checkLocationGapAndProceedWithApply = async (resumeId) => {
+    try {
+      const apiUrl = getAPIBaseURL();
+      const response = await fetch(`${apiUrl}/jobs/match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: id, resumeId: resumeId }),
+      });
+
+      if (!response.ok) {
+        // Se falhar, continua mesmo assim (não bloqueia candidatura por erro de IA)
+        console.warn('Falha ao buscar match para verificar gaps de localização');
+        return true; // continua
+      }
+
+      const match = await response.json();
+      const gaps = match.data?.gaps || [];
+      setMatchGaps(gaps);
+
+      // Verificar se há gap de Localização
+      const hasLocationGap = gaps.some(gap => 
+        gap.keyword && gap.keyword.toLowerCase().includes('localização')
+      );
+
+      if (hasLocationGap) {
+        setShowLocationWarning(true);
+        return false; // não continua, mostra warning
+      }
+
+      return true; // continua normalmente
+    } catch (error) {
+      console.error('Erro ao verificar gaps:', error);
+      return true; // continua mesmo assim
+    }
+  };
+
   const handleApply = async () => {
     if (!user) {
       toast({
@@ -482,6 +522,12 @@ const ViewJob = () => {
         const defaultResume = resumesResponse.resumes.find(r => r.is_default);
         if (defaultResume) {
           setSelectedResumeId(defaultResume.id);
+          // Verificar se há gap de localização antes de prosseguir
+          const canProceed = await checkLocationGapAndProceedWithApply(defaultResume.id);
+          if (!canProceed) {
+            // Modal de warning será mostrado, não abre o modal de candidatura
+            return;
+          }
         }
         setResumeModalMode('apply');
         setShowResumeModal(true);
@@ -2075,6 +2121,59 @@ const ViewJob = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Aviso: Gap de Localização */}
+      {showLocationWarning && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={() => setShowLocationWarning(false)}
+        >
+          <div 
+            className="max-w-md w-full bg-white rounded-3xl shadow-2xl border-2 border-gray-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 px-6 py-8 border-b border-orange-200">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Atenção: Problema com Localização</h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    A localização pode ser um impedimento para essa vaga. Tem certeza que deseja continuar com a candidatura?
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-6 space-y-3 bg-white">
+              <p className="text-sm text-gray-600">
+                Se você atender os outros requisitos, você pode tentar mesmo assim. Mas converse com o recrutador sobre a questão da localização.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setShowLocationWarning(false)}
+                className="flex-1 px-4 py-2.5 text-gray-700 font-semibold text-sm rounded-xl border-2 border-gray-200 hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowLocationWarning(false);
+                  setResumeModalMode('apply');
+                  setShowResumeModal(true);
+                }}
+                className="flex-1 px-4 py-2.5 text-white font-semibold text-sm rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 hover:shadow-lg transition-all"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Versão anterior não tinha modal de edição da empresa */}
       {shareOpen && job && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
