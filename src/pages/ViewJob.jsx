@@ -471,7 +471,7 @@ const ViewJob = () => {
       }
 
       const match = await response.json();
-      const gaps = match.data?.gaps || [];
+      const gaps = match.gaps || [];
       setMatchGaps(gaps);
 
       // Verificar se há gap de Localização
