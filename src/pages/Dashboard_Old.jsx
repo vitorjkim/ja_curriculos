@@ -610,43 +610,7 @@ const Dashboard = () => {
               </Card>
             </motion.div>
 
-            {/* Ações rápidas */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.2 }}
-              className="mb-8"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {quickActions.map((action, index) => {
-                  const Icon = action.icon;
-                  return (
-                    <motion.div
-                      key={action.path}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link to={action.path}>
-                        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden h-full">
-                          <CardContent className="p-6">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-r ${action.color} group-hover:scale-110 transition-transform duration-300`}>
-                              <Icon className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                              {action.title}
-                            </h3>
-                            <p className="text-gray-600 text-sm">
-                              {action.description}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
+            {/* Quick Actions removed as requested */}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Currículos recentes */}
