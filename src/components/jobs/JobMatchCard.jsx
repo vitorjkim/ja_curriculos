@@ -256,7 +256,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
       {/* Header clicável */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left outline-none focus:outline-none"
+        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left outline-none focus:outline-none rounded-2xl"
       >
         {/* Score circular compacto */}
         <div className="relative w-14 h-14 flex-shrink-0">
@@ -326,12 +326,12 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
 
               {/* Dificuldade vs Nível */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 text-center">
+                <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200 text-center">
                   <p className="text-xs text-gray-500 mb-1">Nível da Vaga</p>
                   <p className="text-xl font-black text-gray-800">{match.jobDifficulty}<span className="text-sm font-normal text-gray-400">/10</span></p>
                   <p className="text-xs text-gray-600 mt-0.5">{getDifficultyLabel(match.jobDifficulty)}</p>
                 </div>
-                <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-200 text-center">
+                <div className="bg-indigo-50 rounded-2xl p-3 border border-indigo-200 text-center">
                   <p className="text-xs text-indigo-600 mb-1">Seu Nível</p>
                   <p className="text-xl font-black text-indigo-700">{match.candidateLevel}<span className="text-sm font-normal text-indigo-400">/10</span></p>
                   <p className="text-xs text-indigo-600 mt-0.5">{getDifficultyLabel(match.candidateLevel)}</p>
