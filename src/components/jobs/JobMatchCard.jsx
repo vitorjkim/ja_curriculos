@@ -479,13 +479,20 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                         <div key={item.id}>
                           <button
                             onClick={() => toggleChecked(item.id)}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#eef0ff] transition-colors"
+                            className={`w-full flex items-center gap-3 px-4 py-4 transition-all ${
+                              isChecked 
+                                ? 'bg-gradient-to-r from-transparent to-transparent' 
+                                : 'hover:bg-[#fafbff]'
+                            }`}
+                            style={{
+                              backgroundColor: isChecked ? `${item.colorLight}40` : undefined
+                            }}
                           >
                             {/* Checkbox custom */}
                             <div
-                              className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                              className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                                 isChecked
-                                  ? 'border-transparent'
+                                  ? 'border-transparent shadow-sm'
                                   : 'border-[#c7d2fe]'
                               }`}
                               style={{
@@ -493,25 +500,27 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                                 borderColor: isChecked ? item.color : undefined
                               }}
                             >
-                              {isChecked && <Check className="w-[11px] h-[11px] text-white" />}
+                              {isChecked && <Check className="w-[13px] h-[13px] text-white" />}
                             </div>
 
                             {/* Label */}
-                            <span
-                              className={`flex-1 text-left text-sm font-medium transition-colors ${
-                                isChecked ? '' : 'text-gray-700'
-                              }`}
-                              style={{
-                                color: isChecked ? item.color : undefined
-                              }}
-                            >
-                              {item.label}
-                            </span>
+                            <div className="flex-1 text-left">
+                              <span
+                                className={`block text-sm font-semibold transition-all ${
+                                  isChecked ? '' : 'text-gray-800'
+                                }`}
+                                style={{
+                                  color: isChecked ? item.color : undefined
+                                }}
+                              >
+                                {item.label}
+                              </span>
+                            </div>
 
                             {/* Badge de ganho */}
-                            <span
-                              className={`px-2 py-1 rounded-2xl text-xs font-bold border transition-all ${
-                                isChecked ? 'text-white' : ''
+                            <div
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all transform ${
+                                isChecked ? 'text-white scale-105' : ''
                               }`}
                               style={{
                                 backgroundColor: isChecked ? item.color : item.colorLight,
@@ -520,7 +529,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               }}
                             >
                               +{item.gain}%
-                            </span>
+                            </div>
                           </button>
 
                           {/* Link para curso (quando marcado) */}
@@ -529,15 +538,15 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               href={item.course.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 mx-4 mb-3 px-3 py-2 rounded-2xl border text-xs hover:opacity-80 transition-opacity"
+                              className="flex items-center gap-2 mx-4 mb-3 mt-2 px-3 py-2.5 rounded-xl border text-xs hover:shadow-md transition-all transform hover:scale-105"
                               style={{
                                 backgroundColor: item.colorLight,
-                                borderColor: item.colorLight,
+                                borderColor: item.color,
                                 color: item.color
                               }}
                             >
-                              <ExternalLink className="w-[11px] h-[11px] flex-shrink-0" />
-                              <span className="font-medium">{item.course.name}</span>
+                              <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="font-semibold">{item.course.name}</span>
                             </a>
                           )}
                         </div>
