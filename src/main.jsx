@@ -32,6 +32,13 @@ function initHideQuickActions() {
 
 initHideQuickActions();
 
+// Temporarily disable initial animations to avoid page entrance effects on reload
+try {
+  document.documentElement.classList.add('disable-initial-anim');
+  // Remove the class shortly after mount to allow normal interactions/animations afterwards
+  setTimeout(() => document.documentElement.classList.remove('disable-initial-anim'), 800);
+} catch (e) {}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

@@ -398,6 +398,17 @@ body {
 
 /* Dark default: add button micro adjustments */
 .template-default .btn-add { border-radius: 0.75rem !important; }
+
+/* Disable entrance animations while the page mounts (removed shortly after) */
+.disable-initial-anim *,
+.disable-initial-anim *::before,
+.disable-initial-anim *::after {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  will-change: auto !important;
+}
 .template-default .btn-add {
   background: none !important;
   background-color: #21262d !important; /* GitHub btn bg */
