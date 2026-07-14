@@ -492,12 +492,13 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                             <div
                               className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                                 isChecked
-                                  ? 'border-transparent shadow-sm'
-                                  : 'border-[#c7d2fe]'
+                                  ? 'border-transparent shadow-lg'
+                                  : 'border-[#c7d2fe] hover:border-[#a5b4fc]'
                               }`}
                               style={{
                                 backgroundColor: isChecked ? item.color : 'transparent',
-                                borderColor: isChecked ? item.color : undefined
+                                borderColor: isChecked ? item.color : undefined,
+                                boxShadow: isChecked ? `0 4px 12px ${item.color}40` : undefined
                               }}
                             >
                               {isChecked && <Check className="w-[13px] h-[13px] text-white" />}
@@ -538,7 +539,7 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               href={item.course.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 mx-4 mb-3 mt-2 px-3 py-2.5 rounded-xl border text-xs hover:shadow-md transition-all transform hover:scale-105"
+                              className="flex items-center gap-2 mx-4 mb-3 mt-2 px-3 py-2.5 rounded-xl border text-xs transition-colors"
                               style={{
                                 backgroundColor: item.colorLight,
                                 borderColor: item.color,
