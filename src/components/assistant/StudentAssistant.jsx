@@ -448,7 +448,7 @@ function TourOverlay({ stepIndex, onClose, onFinish, onRequestStepChange }){
 
   const steps = React.useMemo(() => ([
     { id: 'dashboard', route: '/dashboard', selector: '[data-tour="dashboard"]', title: 'Dashboard', desc: 'Seu painel principal com atalhos e status.' },
-    { id: 'qa.section', route: '/dashboard', selector: '[data-tour="qa.section"]', title: 'Ações Rápidas', desc: 'Atalhos para ir direto ao que importa.' },
+    { id: 'qa.section', route: '/dashboard', selector: '[data-tour="qa.section"]', title: 'Atalhos', desc: 'Atalhos para ir direto ao que importa.' },
     { id: 'qa.createResume', route: '/dashboard', selector: '[data-tour="qa.createResume"]', title: 'Criar Currículo', desc: 'Monte seu currículo profissional em minutos.' },
     { id: 'resume.form', route: '/create-resume', selector: '[data-tour="resume.form"]', title: 'Montando seu currículo', desc: 'Preencha o título, escolha um template e adicione suas informações.' },
     { id: 'resume.noexp', route: '/create-resume', selector: '[data-tour="resume.noexp"]', title: 'Sem experiência?', desc: 'Marque se você ainda não tem experiência profissional.' },
