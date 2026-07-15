@@ -736,6 +736,10 @@ const ViewCandidates = () => {
                                   return `Aplicou em ${d.toLocaleDateString('pt-BR')}`;
                                 })()}
                               </p>
+                              <div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600">
+                                <FaWhatsapp className="w-3.5 h-3.5" />
+                                <span>WhatsApp disponível</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -755,9 +759,9 @@ const ViewCandidates = () => {
                         {/* Compatibilidade com IA */}
                         <div className="px-4 sm:px-5 pb-3 sm:pb-4">
                           {loadingCompatibilities.has(candidate.id) ? (
-                            <div className="w-full flex items-center gap-2 text-xs text-purple-500">
-                              <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-300 border-t-purple-600 animate-spin" />
-                              <span>Calculando compatibilidade...</span>
+                            <div className="space-y-1">
+                              <div className="h-3 w-36 rounded-full bg-purple-100 animate-pulse" />
+                              <div className="h-3 w-full rounded-full bg-purple-50 animate-pulse" />
                             </div>
                           ) : candidateCompatibilities[candidate.id] && !candidateCompatibilities[candidate.id].error ? (
                             (() => {
@@ -783,13 +787,13 @@ const ViewCandidates = () => {
                                 }
                               }
                               return (
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                   <p className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5">
                                     <Sparkles className={`w-3.5 h-3.5 ${colorClass}`} />
                                     Compatibilidade: <span className={colorClass}>{score}%</span>
                                   </p>
                                   {shortText && (
-                                    <p className="text-xs text-gray-500 line-clamp-2">{shortText}</p>
+                                    <p className="text-xs sm:text-sm leading-5 text-gray-600 line-clamp-2">{shortText}</p>
                                   )}
                                   <button
                                     type="button"
@@ -800,27 +804,17 @@ const ViewCandidates = () => {
                                       });
                                       setFitModalOpen(true);
                                     }}
-                                    className="text-xs text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+                                    className="inline-flex items-center gap-1 rounded-full border border-purple-200 bg-white px-3 py-1 text-[11px] font-medium text-purple-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-800"
                                   >
-                                    (Ver mais sobre a compatibilidade desse candidato)
+                                    Ver mais sobre a compatibilidade desse candidato
                                   </button>
                                 </div>
                               );
                             })()
                           ) : (
-                            <Button
-                              onClick={() => {
-                                setFitModalCandidate({
-                                  id: candidate.id,
-                                  name: candidate.candidate_name,
-                                });
-                                setFitModalOpen(true);
-                              }}
-                              className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              Ver Compatibilidade
-                            </Button>
+                            <div className="rounded-xl border border-dashed border-purple-200 bg-purple-50 px-3 py-2 text-xs text-purple-700">
+                              Compatibilidade sendo calculada.
+                            </div>
                           )}
                         </div>
                         
