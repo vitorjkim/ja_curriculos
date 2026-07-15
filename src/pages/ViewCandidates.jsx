@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
-import { resumes, applications as applicationsAPI, jobs as jobsAPI, favorites as favoritesAPI, interactions as interactionsAPI, chatAPI } from '@/lib/api';
+import { resumes, applications as applicationsAPI, jobs as jobsAPI, favorites as favoritesAPI, interactions as interactionsAPI, chatAPI, aiAPI } from '@/lib/api';
 import CandidateFitModal from '@/components/jobs/CandidateFitModal';
 import {
   AlertDialog,
@@ -38,6 +38,8 @@ const ViewCandidates = () => {
   const [processedApplications, setProcessedApplications] = useState(0);
   const [fitModalOpen, setFitModalOpen] = useState(false);
   const [fitModalCandidate, setFitModalCandidate] = useState(null);
+  const [candidateCompatibilities, setCandidateCompatibilities] = useState({});
+  const [loadingCompatibilities, setLoadingCompatibilities] = useState(new Set());
 
   // Função para navegar para o perfil do candidato
   const goToProfile = (candidateId) => {
@@ -355,6 +357,42 @@ const ViewCandidates = () => {
 
     loadData();
   }, [jobId, user]);
+
+  // Carregar compatibilidades de todos os candidatos
+  useEffect(() => {
+    if (candidates && candidates.length > 0) {
+      const loadCompatibilities = async () => {
+        const compatMap = { ...candidateCompatibilities };
+        
+        // Carregar compatibilidades em paralelo
+        const promises = candidates.map(candidate =>
+          (async () => {
+            if (compatMap[candidate.id]) return; // Já carregado
+            
+            try {
+              setLoadingCompatibilities(prev => new Set([...prev, candidate.id]));
+              const response = await aiAPI.analyzeCandidateFit(candidate.id);
+              compatMap[candidate.id] = response;
+            } catch (err) {
+              console.warn(`Erro ao carregar compatibilidade para ${candidate.id}:`, err);
+              compatMap[candidate.id] = { matchingScore: null, error: true };
+            } finally {
+              setLoadingCompatibilities(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(candidate.id);
+                return newSet;
+              });
+            }
+          })()
+        );
+        
+        await Promise.all(promises);
+        setCandidateCompatibilities(compatMap);
+      };
+      
+      loadCompatibilities();
+    }
+  }, [candidates]);
 
   if (!user || user.type !== 'company') {
     return (
@@ -715,20 +753,108 @@ const ViewCandidates = () => {
                         </div>
 
                         {/* Compatibilidade com IA */}
-                        <div className="px-4 sm:px-5 pb-3 sm:pb-4">
-                          <Button
-                            onClick={() => {
-                              setFitModalCandidate({
-                                id: candidate.id,
-                                name: candidate.candidate_name,
-                              });
-                              setFitModalOpen(true);
-                            }}
-                            className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            Ver Compatibilidade
-                          </Button>
+                        <div className="px-4 sm:px-5 pb-3 sm:pb-4 space-y-2">
+                          {loadingCompatibilities.has(candidate.id) ? (
+                            <div className="w-full bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-xl p-3 flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 rounded-full border-2 border-purple-300 border-t-purple-600 animate-spin" />
+                              <span className="text-xs text-purple-600">Carregando...</span>
+                            </div>
+                          ) : candidateCompatibilities[candidate.id] && !candidateCompatibilities[candidate.id].error ? (
+                            <div className="w-full space-y-2">
+                              {/* Score Compacto */}
+                              <div className={`rounded-xl p-3 flex items-center justify-between border-2 ${
+                                candidateCompatibilities[candidate.id].matchingScore >= 80
+                                  ? 'bg-emerald-50 border-emerald-200'
+                                  : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                  ? 'bg-blue-50 border-blue-200'
+                                  : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                  ? 'bg-amber-50 border-amber-200'
+                                  : 'bg-red-50 border-red-200'
+                              }`}>
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className={`w-4 h-4 ${
+                                    candidateCompatibilities[candidate.id].matchingScore >= 80
+                                      ? 'text-emerald-600'
+                                      : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                      ? 'text-blue-600'
+                                      : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                      ? 'text-amber-600'
+                                      : 'text-red-600'
+                                  }`} />
+                                  <div>
+                                    <p className={`text-xs font-semibold ${
+                                      candidateCompatibilities[candidate.id].matchingScore >= 80
+                                        ? 'text-emerald-900'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                        ? 'text-blue-900'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                        ? 'text-amber-900'
+                                        : 'text-red-900'
+                                    }`}>
+                                      Compatibilidade
+                                    </p>
+                                    <p className={`text-[10px] ${
+                                      candidateCompatibilities[candidate.id].matchingScore >= 80
+                                        ? 'text-emerald-700'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                        ? 'text-blue-700'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                        ? 'text-amber-700'
+                                        : 'text-red-700'
+                                    }`}>
+                                      {candidateCompatibilities[candidate.id].matchingScore >= 80
+                                        ? 'Excelente'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                        ? 'Boa'
+                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                        ? 'Moderada'
+                                        : 'Baixa'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className={`text-2xl font-bold ${
+                                  candidateCompatibilities[candidate.id].matchingScore >= 80
+                                    ? 'text-emerald-700'
+                                    : candidateCompatibilities[candidate.id].matchingScore >= 60
+                                    ? 'text-blue-700'
+                                    : candidateCompatibilities[candidate.id].matchingScore >= 40
+                                    ? 'text-amber-700'
+                                    : 'text-red-700'
+                                }`}>
+                                  {candidateCompatibilities[candidate.id].matchingScore}%
+                                </div>
+                              </div>
+                              
+                              {/* Botão Ver Detalhes */}
+                              <Button
+                                onClick={() => {
+                                  setFitModalCandidate({
+                                    id: candidate.id,
+                                    name: candidate.candidate_name,
+                                  });
+                                  setFitModalOpen(true);
+                                }}
+                                className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs h-8 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                Ver Detalhes
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => {
+                                setFitModalCandidate({
+                                  id: candidate.id,
+                                  name: candidate.candidate_name,
+                                });
+                                setFitModalOpen(true);
+                              }}
+                              className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              Ver Compatibilidade
+                            </Button>
+                          )}
                         </div>
                         
                         {/* Ações rápidas - Adicionar e WhatsApp */}
