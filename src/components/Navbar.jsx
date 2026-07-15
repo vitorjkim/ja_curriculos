@@ -321,22 +321,17 @@ const Navbar = () => {
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
             {/* Logo */}
-            <motion.div 
-              whileHover={{ scale: 1.05 }} 
-              transition={{ type: "spring", stiffness: 300 }}
-              className="flex-shrink-0"
-            >
+            <div className="flex-shrink-0">
               <Link to="/" className="flex items-center h-full group">
-                <motion.img 
+                <img 
                   src="/logo.png" 
                   alt="CurrículoJá" 
-                  className="rounded-xl shadow-sm ring-1 ring-blue-200 group-hover:scale-105 transition-transform duration-300 object-contain" 
-                  animate={{ width: isScrolled ? 36 : 36, height: isScrolled ? 36 : 36 }}
-                  transition={{ duration: 0.5 }}
+                  className="rounded-xl shadow-sm ring-1 ring-blue-200 object-contain" 
+                  style={{ width: 36, height: 36 }}
                   onError={(e)=>{ e.currentTarget.style.display='none'; }} 
                 />
               </Link>
-            </motion.div>
+            </div>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-2">
