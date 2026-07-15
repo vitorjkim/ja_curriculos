@@ -340,7 +340,7 @@ router.post(
   authenticateToken,
   async (req, res) => {
     try {
-      const { applicationId, jobId, resumeId } = req.body;
+      let { applicationId, jobId, resumeId } = req.body;
       const userId = req.user.id;
 
       let application, job, resume;
