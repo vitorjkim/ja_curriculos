@@ -235,7 +235,6 @@ const Navbar = () => {
         ] : []),
         { label: 'Social', path: '/social', icon: Orbit },
         ...(user?.isAgency ? [{ label: 'Portal Agência', path: '/agency-portal', icon: BookOpen }] : []),
-        { label: 'Escolas', path: '/company/schools', icon: GraduationCap },
         { label: 'Perfil', path: `/company/${user.id}`, icon: Building2 },
         { label: 'Mensagens', path: '/company-messages', icon: MessageSquare }
       ];
