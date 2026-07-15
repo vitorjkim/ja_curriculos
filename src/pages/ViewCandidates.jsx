@@ -753,93 +753,60 @@ const ViewCandidates = () => {
                         </div>
 
                         {/* Compatibilidade com IA */}
-                        <div className="px-4 sm:px-5 pb-3 sm:pb-4 space-y-2">
+                        <div className="px-4 sm:px-5 pb-3 sm:pb-4">
                           {loadingCompatibilities.has(candidate.id) ? (
-                            <div className="w-full bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-xl p-3 flex items-center justify-center gap-2">
-                              <div className="w-4 h-4 rounded-full border-2 border-purple-300 border-t-purple-600 animate-spin" />
-                              <span className="text-xs text-purple-600">Carregando...</span>
+                            <div className="w-full flex items-center gap-2 text-xs text-purple-500">
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-purple-300 border-t-purple-600 animate-spin" />
+                              <span>Calculando compatibilidade...</span>
                             </div>
                           ) : candidateCompatibilities[candidate.id] && !candidateCompatibilities[candidate.id].error ? (
-                            <div className="w-full space-y-2">
-                              {/* Score Compacto */}
-                              <div className={`rounded-xl p-3 flex items-center justify-between border-2 ${
-                                candidateCompatibilities[candidate.id].matchingScore >= 80
-                                  ? 'bg-emerald-50 border-emerald-200'
-                                  : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                  ? 'bg-blue-50 border-blue-200'
-                                  : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                  ? 'bg-amber-50 border-amber-200'
-                                  : 'bg-red-50 border-red-200'
-                              }`}>
-                                <div className="flex items-center gap-2">
-                                  <Sparkles className={`w-4 h-4 ${
-                                    candidateCompatibilities[candidate.id].matchingScore >= 80
-                                      ? 'text-emerald-600'
-                                      : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                      ? 'text-blue-600'
-                                      : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                      ? 'text-amber-600'
-                                      : 'text-red-600'
-                                  }`} />
-                                  <div>
-                                    <p className={`text-xs font-semibold ${
-                                      candidateCompatibilities[candidate.id].matchingScore >= 80
-                                        ? 'text-emerald-900'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                        ? 'text-blue-900'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                        ? 'text-amber-900'
-                                        : 'text-red-900'
-                                    }`}>
-                                      Compatibilidade
-                                    </p>
-                                    <p className={`text-[10px] ${
-                                      candidateCompatibilities[candidate.id].matchingScore >= 80
-                                        ? 'text-emerald-700'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                        ? 'text-blue-700'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                        ? 'text-amber-700'
-                                        : 'text-red-700'
-                                    }`}>
-                                      {candidateCompatibilities[candidate.id].matchingScore >= 80
-                                        ? 'Excelente'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                        ? 'Boa'
-                                        : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                        ? 'Moderada'
-                                        : 'Baixa'}
-                                    </p>
-                                  </div>
+                            (() => {
+                              const compat = candidateCompatibilities[candidate.id];
+                              const score = compat.matchingScore;
+                              const colorClass = score >= 80
+                                ? 'text-emerald-700'
+                                : score >= 60
+                                ? 'text-blue-700'
+                                : score >= 40
+                                ? 'text-amber-700'
+                                : 'text-red-700';
+                              const strength = compat.scoreBreakdown?.strengths?.[0]?.keyword;
+                              const gap = compat.scoreBreakdown?.gaps?.[0]?.keyword;
+                              let shortText = compat.summary;
+                              if (!shortText) {
+                                if (strength && gap) {
+                                  shortText = `Ponto forte: ${strength}. Área para desenvolvimento: ${gap}.`;
+                                } else if (strength) {
+                                  shortText = `Ponto forte: ${strength}.`;
+                                } else if (gap) {
+                                  shortText = `Área para desenvolvimento: ${gap}.`;
+                                }
+                              }
+                              return (
+                                <div className="space-y-1">
+                                  <p className="text-xs sm:text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                                    <Sparkles className={`w-3.5 h-3.5 ${colorClass}`} />
+                                    Compatibilidade: <span className={colorClass}>{score}%</span>
+                                  </p>
+                                  {shortText && (
+                                    <p className="text-xs text-gray-500 line-clamp-2">{shortText}</p>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFitModalCandidate({
+                                        id: candidate.id,
+                                        name: candidate.candidate_name,
+                                      });
+                                      setFitModalOpen(true);
+                                    }}
+                                    className="text-xs text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+                                  >
+                                    (Ver mais sobre a compatibilidade desse candidato)
+                                  </button>
                                 </div>
-                                <div className={`text-2xl font-bold ${
-                                  candidateCompatibilities[candidate.id].matchingScore >= 80
-                                    ? 'text-emerald-700'
-                                    : candidateCompatibilities[candidate.id].matchingScore >= 60
-                                    ? 'text-blue-700'
-                                    : candidateCompatibilities[candidate.id].matchingScore >= 40
-                                    ? 'text-amber-700'
-                                    : 'text-red-700'
-                                }`}>
-                                  {candidateCompatibilities[candidate.id].matchingScore}%
-                                </div>
-                              </div>
-                              
-                              {/* Botão Ver Detalhes */}
-                              <Button
-                                onClick={() => {
-                                  setFitModalCandidate({
-                                    id: candidate.id,
-                                    name: candidate.candidate_name,
-                                  });
-                                  setFitModalOpen(true);
-                                }}
-                                className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs h-8 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                Ver Detalhes
-                              </Button>
-                            </div>
+                              );
+                            })()
                           ) : (
                             <Button
                               onClick={() => {
