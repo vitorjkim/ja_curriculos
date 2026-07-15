@@ -1075,6 +1075,15 @@ export const aiAPI = {
       method: 'POST',
       body: jobData
     });
+  },
+
+  // Análise completa de compatibilidade candidato-vaga
+  // Retorna: score, resumo, motivos (strengths/gaps), e possíveis riscos
+  analyzeCandidateFit: async (applicationId) => {
+    return apiRequest('/ai/analyze-candidate-fit', {
+      method: 'POST',
+      body: { applicationId }
+    });
   }
 };
 

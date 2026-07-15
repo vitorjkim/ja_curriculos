@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { Users, Briefcase, Eye, User, Mail, Phone, Calendar, Trash2, Download, Star, ThumbsUp, ThumbsDown, UserCheck, Award, GraduationCap, ChevronDown, ChevronUp, UserPlus, ArrowLeft, LayoutPanelLeft } from 'lucide-react';
+import { Users, Briefcase, Eye, User, Mail, Phone, Calendar, Trash2, Download, Star, ThumbsUp, ThumbsDown, UserCheck, Award, GraduationCap, ChevronDown, ChevronUp, UserPlus, ArrowLeft, LayoutPanelLeft, Sparkles } from 'lucide-react';
 import { FaWhatsapp, FaRegHandshake } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { resumes, applications as applicationsAPI, jobs as jobsAPI, favorites as favoritesAPI, interactions as interactionsAPI, chatAPI } from '@/lib/api';
+import CandidateFitModal from '@/components/jobs/CandidateFitModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,8 @@ const ViewCandidates = () => {
   const [addedContacts, setAddedContacts] = useState(new Set());
   const [totalApplications, setTotalApplications] = useState(0);
   const [processedApplications, setProcessedApplications] = useState(0);
+  const [fitModalOpen, setFitModalOpen] = useState(false);
+  const [fitModalCandidate, setFitModalCandidate] = useState(null);
 
   // Função para navegar para o perfil do candidato
   const goToProfile = (candidateId) => {
@@ -710,8 +713,24 @@ const ViewCandidates = () => {
                             <span>{candidate.candidate_phone || candidate.user?.phone || candidate.phone || 'Não informado'}</span>
                           </div>
                         </div>
+
+                        {/* Compatibilidade com IA */}
+                        <div className="px-4 sm:px-5 pb-3 sm:pb-4">
+                          <Button
+                            onClick={() => {
+                              setFitModalCandidate({
+                                id: candidate.id,
+                                name: candidate.candidate_name,
+                              });
+                              setFitModalOpen(true);
+                            }}
+                            className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-xs sm:text-sm h-8 sm:h-9 flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            Ver Compatibilidade
+                          </Button>
+                        </div>
                         
-                        {/* Currículo */}
                         {/* Ações rápidas - Adicionar e WhatsApp */}
                         <div className="px-4 sm:px-5 pb-3 sm:pb-4">
                           <div className="flex gap-2">
@@ -859,6 +878,18 @@ const ViewCandidates = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Modal de Compatibilidade */}
+      <CandidateFitModal
+        isOpen={fitModalOpen}
+        onClose={() => {
+          setFitModalOpen(false);
+          setFitModalCandidate(null);
+        }}
+        applicationId={fitModalCandidate?.id}
+        candidateName={fitModalCandidate?.name}
+        jobTitle={job?.title}
+      />
     </>
   );
 };
