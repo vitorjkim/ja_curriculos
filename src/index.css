@@ -95,15 +95,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Desativa animacoes em todo o app quando habilitado em main.jsx */
-html.no-animations *,
-html.no-animations *::before,
-html.no-animations *::after {
-  animation: none !important;
-  transition: none !important;
-  scroll-behavior: auto !important;
-}
-
 /* Componentes responsivos específicos */
 .mobile-container {
   padding-left: 1rem;
@@ -1038,13 +1029,6 @@ select option {
 
 .combobox-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
-}
-
-/* Remove animações de entrada no dashboard */
-.dashboard-no-load-anim,
-.dashboard-no-load-anim * {
-  animation: none !important;
-  transition: none !important;
 }
 
 

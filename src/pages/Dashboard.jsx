@@ -535,7 +535,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dashboard-no-load-anim">
+    <div className="min-h-screen bg-gray-50">
       <Helmet>
         <title>Dashboard - CurriculoJá</title>
       </Helmet>
