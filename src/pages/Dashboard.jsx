@@ -428,41 +428,6 @@ const Dashboard = () => {
     return Math.round(completeness);
   };
 
-  const quickActions = [
-    {
-      title: 'Buscar Vagas',
-      description: 'Encontre novas oportunidades',
-      icon: Search,
-      path: '/jobs',
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'from-blue-50 to-blue-100'
-    },
-    {
-      title: 'Criar Currículo',
-      description: 'Monte seu currículo profissional',
-      icon: FileText,
-      path: '/create-resume',
-      color: 'from-green-500 to-green-600',
-      bgColor: 'from-green-50 to-green-100'
-    },
-    {
-      title: 'Meu Perfil',
-      description: 'Gerencie suas informações',
-      icon: User,
-      path: '/profile',
-      color: 'from-yellow-500 to-yellow-600',
-      bgColor: 'from-yellow-50 to-yellow-100'
-    },
-    {
-      title: 'Mensagens',
-      description: 'Converse com empresas',
-      icon: MessageSquare,
-      path: '/my-messages',
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'from-purple-50 to-purple-100'
-    }
-  ];
-
   // Redirect empresas para dashboard específico
   console.log('🎯 Dashboard: Verificando tipo de usuário antes do return');
   console.log('🎯 Dashboard: user?.type =', user?.type);
@@ -570,7 +535,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dashboard-no-load-anim">
       <Helmet>
         <title>Dashboard - CurriculoJá</title>
       </Helmet>
@@ -647,52 +612,6 @@ const Dashboard = () => {
                   </button>
                 );
               })}
-            </motion.div>
-
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <h2 className="text-xl font-bold text-gray-900 mb-5" data-tour="qa.section">Ações <span className="text-blue-600">Rápidas:</span></h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {quickActions.map((action, index) => (
-                  <Card 
-                    key={action.title}
-                    className={`hover:shadow-lg transition-all duration-300 rounded-[24px] border-2 border-gray-200 shadow-md group overflow-hidden cursor-pointer bg-white ${
-                      action.title === 'Buscar Vagas' ? 'hover:border-blue-400' :
-                      action.title === 'Criar Currículo' ? 'hover:border-green-400' :
-                      action.title === 'Meu Perfil' ? 'hover:border-yellow-400' : 'hover:border-purple-400'
-                    }`}
-                  >
-                    <CardContent className="p-6">
-                        <Link to={action.path} className="block" data-tour={
-                          action.title === 'Criar Currículo' ? 'qa.createResume' :
-                          action.title === 'Meu Perfil' ? 'qa.profile' : undefined
-                        }>
-                        <div className="text-center">
-                          <div className={`inline-flex w-14 h-14 rounded-xl items-center justify-center mb-4 shadow-md border-2 border-white group-hover:scale-110 transition-transform duration-300 bg-gradient-to-br ${action.bgColor}`}>
-                            <action.icon className={`w-7 h-7 stroke-[2] ${
-                              action.title === 'Buscar Vagas' ? 'text-blue-600' :
-                              action.title === 'Criar Currículo' ? 'text-green-600' :
-                              action.title === 'Meu Perfil' ? 'text-yellow-600' : 'text-purple-600'
-                            }`} />
-                          </div>
-                          <h3 className={`text-base font-bold mb-1 transition-colors text-gray-900 ${
-                            action.title === 'Buscar Vagas' ? 'group-hover:text-blue-600' :
-                            action.title === 'Criar Currículo' ? 'group-hover:text-green-600' :
-                            action.title === 'Meu Perfil' ? 'group-hover:text-yellow-600' : 'group-hover:text-purple-600'
-                          }`}>
-                            {action.title}
-                          </h3>
-                          <p className="text-sm text-gray-600">{action.description}</p>
-                        </div>
-                        </Link>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
             </motion.div>
 
             {/* Dialog: Seu Progresso (abre ao clicar em Meu Perfil) */}
