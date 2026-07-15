@@ -715,18 +715,18 @@ const CreateJob = () => {
                     </div>
                     <div
                       onClick={() => document.getElementById('keywords')?.focus()}
-                      className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 min-h-[52px] cursor-text focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-400/30 transition-colors"
+                      className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 min-h-[52px] cursor-text focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-400/30 transition-colors"
                     >
                       {keywordsList.map((keyword, index) => (
                         <span
                           key={`${keyword}-${index}`}
-                          className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#1e1b4b] bg-[#fdf2f8] px-3.5 py-1.5 text-sm font-semibold text-[#1e1b4b]"
+                          className="inline-flex items-center gap-1.5 rounded-full border-2 border-purple-600 bg-purple-100 px-3.5 py-1.5 text-sm font-semibold text-purple-700"
                         >
                           {keyword}
                           <button
                             type="button"
                             onClick={() => removeKeyword(index)}
-                            className="text-[#1e1b4b]/60 hover:text-[#1e1b4b] leading-none"
+                            className="text-purple-700/60 hover:text-purple-900 leading-none"
                             aria-label={`Remover ${keyword}`}
                           >
                             ×
