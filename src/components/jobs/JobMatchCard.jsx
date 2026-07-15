@@ -349,7 +349,6 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               <TypewriterText 
                                 text={strength.text}
                                 className="text-xs text-[#166534] mt-2 px-1 text-left leading-relaxed"
-                                speed={15}
                               />
                             )}
                           </button>
@@ -405,7 +404,6 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               <TypewriterText 
                                 text={gap.text}
                                 className="text-xs text-[#991b1b] mt-2 px-1 text-left leading-relaxed"
-                                speed={15}
                               />
                             )}
                           </button>

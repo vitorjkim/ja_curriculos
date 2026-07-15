@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
  * @param {string} className - Classes CSS adicionais
  * @param {number} speed - Velocidade da digitação em ms por caractere (padrão: 20ms)
  */
-const TypewriterText = ({ text = '', className = '', speed = 20 }) => {
+const TypewriterText = ({ text = '', className = '', speed = 10 }) => {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
@@ -39,7 +39,7 @@ const TypewriterText = ({ text = '', className = '', speed = 20 }) => {
       {displayedText}
       {displayedText.length < text.length && (
         <motion.span
-          className="inline-block w-0.5 h-4 bg-current ml-0.5"
+          className="inline-block w-2.5 h-2.5 bg-current ml-1"
           animate={{ opacity: [1, 0] }}
           transition={{ duration: 0.5, repeat: Infinity }}
         />
