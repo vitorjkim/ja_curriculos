@@ -481,6 +481,7 @@ const ensureJobExtraColumns = async () => {
     await pool.query('ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_agency_job BOOLEAN DEFAULT FALSE');
     await pool.query('ALTER TABLE jobs ADD COLUMN IF NOT EXISTS external_url TEXT');
     await pool.query('ALTER TABLE jobs ADD COLUMN IF NOT EXISTS agency_id UUID REFERENCES users(id) ON DELETE SET NULL');
+    await pool.query('ALTER TABLE jobs ADD COLUMN IF NOT EXISTS keywords TEXT');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_jobs_area ON jobs(area)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_jobs_subarea ON jobs(subarea)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_jobs_is_first_job ON jobs(is_first_job)');
@@ -898,6 +899,7 @@ router.post('/', [
   body('experience_level').isIn(['junior', 'pleno', 'senior', 'estagio']).withMessage('Nível de experiência inválido'),
   body('is_first_job').optional().isBoolean().withMessage('is_first_job deve ser um boolean'),
   body('category').optional().isString().withMessage('Categoria deve ser uma string'),
+  body('keywords').optional().isString(),
   body('area').notEmpty().withMessage('Área é obrigatória').custom(v => isValidArea(v)).withMessage('Área inválida'),
   body('subarea').optional().custom((v,{req}) => {
     if (!v) return true; // permitir vaga só com área
@@ -940,14 +942,15 @@ router.post('/', [
       is_first_job,
   category,
   area,
-  subarea
+  subarea,
+  keywords
     } = req.body;
 
     const query = `
       INSERT INTO jobs (
         company_id, title, description, requirements, benefits,
-        salary_min, salary_max, location, work_type, contract_type, experience_level, is_first_job, category, area, subarea, is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        salary_min, salary_max, location, work_type, contract_type, experience_level, is_first_job, category, area, subarea, is_active, keywords
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `;
 
@@ -967,7 +970,8 @@ router.post('/', [
   category || null,
   area,
   subarea || null,
-  true // is_active = true por padrão
+  true, // is_active = true por padrão
+  keywords || null
     ];
 
     console.log('🔍 Executando query:', query);
@@ -1010,6 +1014,7 @@ router.put('/:id', [
   body('experience_level').isIn(['junior', 'pleno', 'senior', 'estagio']).withMessage('Nível de experiência inválido'),
   body('is_first_job').optional().isBoolean().withMessage('is_first_job deve ser um boolean'),
   body('category').optional().isString().withMessage('Categoria deve ser uma string'),
+  body('keywords').optional().isString(),
   body('area').notEmpty().withMessage('Área é obrigatória').custom(v => isValidArea(v)).withMessage('Área inválida'),
   body('subarea').optional().custom((v,{req}) => {
     if (!v) return true;
@@ -1047,7 +1052,8 @@ router.put('/:id', [
       is_first_job,
   category,
   area,
-  subarea
+  subarea,
+  keywords
     } = req.body;
 
     const query = `
@@ -1066,8 +1072,9 @@ router.put('/:id', [
         category = $12,
         area = $13,
         subarea = $14,
+        keywords = $15,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $15 AND company_id = $16
+      WHERE id = $16 AND company_id = $17
       RETURNING *
     `;
 
@@ -1086,6 +1093,7 @@ router.put('/:id', [
   category || null,
   area,
   subarea || null,
+  keywords || null,
   req.params.id,
   req.user.id
     ];
@@ -2052,6 +2060,7 @@ router.post('/match', authenticateToken, async (req, res) => {
       `Localização: ${job.location || ''}`,
       `Descrição: ${(job.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}`,
       job.requirements ? `Requisitos: ${(job.requirements || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}` : '',
+      job.keywords ? `Palavras-chave prioritárias definidas pela empresa (dar peso extra a esses termos na análise de compatibilidade): ${job.keywords}` : '',
     ].filter(Boolean).join('\n');
 
     // Formata texto do currículo

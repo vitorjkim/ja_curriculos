@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { Save, Briefcase, MapPin, Type as TypeIcon, Tags, FileText, ListChecks, Wallet, ArrowDown01, ArrowUp10, BadgeDollarSign, FileSignature, Sparkles, MonitorSmartphone, Gift } from 'lucide-react';
+import { Save, Briefcase, MapPin, Type as TypeIcon, Tags, FileText, ListChecks, Wallet, ArrowDown01, ArrowUp10, BadgeDollarSign, FileSignature, Sparkles, MonitorSmartphone, Gift, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select } from '@/components/ui/select';
-import { jobs as jobsAPI } from '@/lib/api';
+import { jobs as jobsAPI, ai as aiAPI } from '@/lib/api';
 
 // Labels amigáveis para áreas conhecidas + helper
 const AREA_LABELS = { saude:'Saúde', educacao:'Educação', engenharia:'Engenharia', administracao:'Administração', vendas_marketing:'Vendas / Marketing', recursos_humanos:'Recursos Humanos', financas:'Finanças', design:'Design', logistica:'Logística', producao:'Produção', mecanica:'Mecânica', automacao:'Automação', outros:'Outros', tecnologia:'Tecnologia', administrativo:'Administrativo', financeiro:'Financeiro', marketing:'Marketing', vendas:'Vendas', operacional:'Operacional' };
@@ -76,6 +76,7 @@ const CreateJob = () => {
     salary_fixed: '',
     contract_type: 'clt',
     benefits: '',
+    keywords: '',
     area: '', // chave interna da área (ex: 'saude')
     subarea: '', // chave interna da subárea (ex: 'enfermagem')
     is_first_job: false,
@@ -200,6 +201,51 @@ const CreateJob = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+  };
+
+  const [generatingKeywords, setGeneratingKeywords] = useState(false);
+
+  const handleGenerateKeywords = async () => {
+    if (!formData.title && !formData.description) {
+      toast({
+        title: 'Preencha mais informações',
+        description: 'Adicione ao menos o título e a descrição da vaga antes de gerar palavras-chave.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setGeneratingKeywords(true);
+    try {
+      const response = await aiAPI.generateJobKeywords({
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements,
+        benefits: formData.benefits,
+        area: formData.area,
+        subarea: formData.subarea,
+        contract_type: formData.contract_type,
+        experience_level: formData.experience_level,
+        work_type: formData.work_type
+      });
+      const keywords = Array.isArray(response?.keywords) ? response.keywords : [];
+      if (keywords.length === 0) {
+        throw new Error('Nenhuma palavra-chave foi gerada');
+      }
+      setFormData(prev => ({ ...prev, keywords: keywords.join(', ') }));
+      toast({
+        title: 'Palavras-chave geradas!',
+        description: 'Revise e ajuste se necessário antes de publicar a vaga.'
+      });
+    } catch (error) {
+      console.error('Erro ao gerar palavras-chave:', error);
+      toast({
+        title: 'Erro ao gerar palavras-chave',
+        description: error.message || 'Tente novamente em instantes.',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingKeywords(false);
+    }
   };
 
   // Mudança de área reseta subárea
@@ -611,6 +657,40 @@ const CreateJob = () => {
                       rows={3}
                       className="rounded-2xl border-slate-200 bg-slate-50/60 text-sm placeholder:text-slate-400 focus-visible:border-slate-400 focus-visible:ring-slate-400 resize-y"
                     />
+                  </div>
+
+                  <div className="space-y-1.5 pt-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/60 px-4 py-1.5 text-[13px] font-medium text-violet-700">
+                        <Tags className="h-4 w-4" />
+                        <Label htmlFor="keywords" className="cursor-pointer">
+                          Palavras-chave (opcional)
+                        </Label>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateKeywords}
+                        disabled={generatingKeywords}
+                        className="rounded-full border-violet-200 bg-violet-50/60 text-violet-700 hover:bg-violet-100 hover:text-violet-800 text-xs font-semibold h-8 px-3"
+                      >
+                        <Wand2 className="w-3.5 h-3.5 mr-1.5" />
+                        {generatingKeywords ? 'Gerando...' : 'Gerar com IA'}
+                      </Button>
+                    </div>
+                    <Textarea
+                      id="keywords"
+                      name="keywords"
+                      value={formData.keywords}
+                      onChange={handleChange}
+                      placeholder="Ex: Excel avançado, Inglês intermediário, Liderança de equipe..."
+                      rows={2}
+                      className="rounded-2xl border-slate-200 bg-slate-50/60 text-sm placeholder:text-slate-400 focus-visible:border-violet-400 focus-visible:ring-violet-400 resize-y"
+                    />
+                    <p className="text-xs text-slate-500 px-1">
+                      Liste as palavras-chave mais importantes para essa vaga (separadas por vírgula). Elas recebem peso extra na análise de compatibilidade com os currículos dos candidatos.
+                    </p>
                   </div>
                 </CardContent>
               </Card>

@@ -819,8 +819,87 @@ Retorne APENAS JSON válido.`,
   }
 }
 
+/**
+ * Gera sugestões de palavras-chave para uma VAGA, com base no que a empresa já preencheu
+ * (título, descrição, requisitos, área/subárea, nível, contrato, modalidade).
+ * Essas palavras-chave são usadas depois para dar peso extra na análise de compatibilidade
+ * entre a vaga e os currículos dos candidatos.
+ * @param {Object} jobData - Dados parciais da vaga preenchidos até agora
+ * @returns {Promise<Array<String>>} - Lista de palavras-chave sugeridas
+ */
+export async function suggestJobKeywords(jobData = {}) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  const {
+    title = '',
+    description = '',
+    requirements = '',
+    benefits = '',
+    area = '',
+    subarea = '',
+    contract_type = '',
+    experience_level = '',
+    work_type = '',
+  } = jobData;
+
+  const stripHtml = (v) => String(v || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const jobText = [
+    title && `Título: ${title}`,
+    (area || subarea) && `Área: ${area}${subarea ? ' / ' + subarea : ''}`,
+    contract_type && `Tipo de contrato: ${contract_type}`,
+    experience_level && `Nível de experiência: ${experience_level}`,
+    work_type && `Modalidade: ${work_type}`,
+    description && `Descrição: ${stripHtml(description)}`,
+    requirements && `Requisitos: ${stripHtml(requirements)}`,
+    benefits && `Benefícios: ${stripHtml(benefits)}`,
+  ].filter(Boolean).join('\n');
+
+  if (jobText.trim().length < 15) {
+    throw new Error('Preencha ao menos o título e a descrição da vaga antes de gerar palavras-chave');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.3,
+      max_tokens: 300,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um especialista em recrutamento e sistemas de compatibilidade (matching) entre vagas e currículos.
+Com base nas informações da vaga fornecidas, gere de 5 a 12 palavras-chave curtas (1 a 3 palavras cada) que representam os requisitos e competências MAIS IMPORTANTES para essa vaga.
+Essas palavras-chave serão usadas para dar peso extra na análise de compatibilidade com currículos de candidatos.
+Priorize: habilidades técnicas específicas, ferramentas/tecnologias, competências comportamentais essenciais, idiomas exigidos e certificações relevantes.
+Evite termos genéricos demais (ex: "trabalho em equipe" só se for realmente essencial e explícito).
+Retorne APENAS JSON válido no formato: { "keywords": ["palavra1", "palavra2", ...] }`,
+        },
+        {
+          role: 'user',
+          content: `Dados da vaga preenchidos até agora:\n\n${jobText}`,
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+    const parsed = JSON.parse(content);
+    const keywords = Array.isArray(parsed.keywords) ? parsed.keywords : [];
+    return keywords.filter(k => typeof k === 'string' && k.trim().length > 0).map(k => k.trim());
+  } catch (error) {
+    console.error('❌ Erro ao gerar keywords da vaga:', error.message);
+    throw new Error(`Erro ao gerar palavras-chave: ${error.message}`);
+  }
+}
+
 export default {
   analyzeResume,
   rewriteText,
   suggestKeywords,
+  suggestJobKeywords,
 };

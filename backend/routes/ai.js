@@ -8,7 +8,7 @@
 import express from 'express';
 import { param, body, validationResult } from 'express-validator';
 import pool from '../config/database.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireCompany } from '../middleware/auth.js';
 import { requirePremiumPlan } from '../middleware/checkSubscriptionPlan.js';
 import aiService from '../services/aiService.js';
 import matchingService from '../services/matchingService.js';
@@ -592,6 +592,46 @@ router.post(
       res.status(500).json({
         error: 'Failed to calculate matching',
         details: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/ai/generate-job-keywords
+ * Gera sugestões de palavras-chave para uma vaga com base nos dados já preenchidos pela empresa
+ * Usado no formulário de criação/edição de vaga (botão "Gerar palavras-chave com IA")
+ */
+router.post(
+  '/generate-job-keywords',
+  authenticateToken,
+  requireCompany,
+  [
+    body('title').optional().isString(),
+    body('description').optional().isString(),
+    body('requirements').optional().isString(),
+    body('benefits').optional().isString(),
+    body('area').optional().isString(),
+    body('subarea').optional().isString(),
+    body('contract_type').optional().isString(),
+    body('experience_level').optional().isString(),
+    body('work_type').optional().isString(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const keywords = await aiService.suggestJobKeywords(req.body);
+      res.json({ success: true, keywords });
+    } catch (error) {
+      console.error('Erro ao gerar palavras-chave da vaga:', error.message);
+      res.status(500).json({
+        error: 'Falha ao gerar palavras-chave',
+        details: error.message,
+        code: 'JOB_KEYWORDS_FAILED',
       });
     }
   }

@@ -444,7 +444,6 @@ export const jobsAPI = {
   getTaxonomy: async () => {
     return apiRequest('/jobs/taxonomy');
   },
-  // Listar vagas (público)
   list: async (filters = {}) => {
     const query = new URLSearchParams(filters).toString();
     return apiRequest(`/jobs${query ? `?${query}` : ''}`);
@@ -1068,6 +1067,17 @@ export const agencyAPI = {
   }
 };
 
+// API de Inteligência Artificial
+export const aiAPI = {
+  // Gera palavras-chave sugeridas para uma vaga com base nos dados já preenchidos
+  generateJobKeywords: async (jobData) => {
+    return apiRequest('/ai/generate-job-keywords', {
+      method: 'POST',
+      body: jobData
+    });
+  }
+};
+
 // Export principal (compatibilidade)
 export default new ApiService();
 
@@ -1086,5 +1096,6 @@ export {
   chatAPI as chat,
   profileViewsAPI as profileViews,
   externalJobsAPI as externalJobs,
-  agencyAPI as agency
+  agencyAPI as agency,
+  aiAPI as ai
 };
