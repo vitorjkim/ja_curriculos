@@ -766,14 +766,44 @@ router.post(
       const resumeText = formatResumeForAI(resume);
       const jobText = formatJobForAI(job);
 
-      // Calcular matching detalhado via IA
+      // Tenta reaproveitar o cache de matching já calculado para o candidato (garante score
+      // idêntico ao que o candidato vê em "Compatibilidade com a Vaga")
       let detailedAnalysis = null;
       try {
-        detailedAnalysis = await aiService.calculateJobMatch(resumeText, jobText);
-      } catch (aiError) {
-        console.warn('IA analysis fallback:', aiError.message);
-        // Fallback para análise simples se IA falhar
-        detailedAnalysis = null;
+        const cacheResult = await pool.query(
+          `SELECT result FROM job_match_cache WHERE job_id = $1 AND resume_id = $2`,
+          [jobId, resumeId]
+        );
+        if (cacheResult.rows.length > 0) {
+          const cached = cacheResult.rows[0].result;
+          if (cached && Array.isArray(cached.strengths) && Array.isArray(cached.improvementSuggestions)) {
+            detailedAnalysis = cached;
+          }
+        }
+      } catch (cacheError) {
+        console.warn('Aviso: erro ao consultar job_match_cache:', cacheError.message);
+      }
+
+      // Se não houver cache, calcula na hora via IA
+      if (!detailedAnalysis) {
+        try {
+          detailedAnalysis = await aiService.calculateJobMatch(resumeText, jobText);
+
+          // Salva no cache para reaproveitar em consultas futuras (candidato e empresa)
+          try {
+            await pool.query(
+              `INSERT INTO job_match_cache (job_id, resume_id, result, created_at)
+               VALUES ($1, $2, $3, NOW())
+               ON CONFLICT (job_id, resume_id) DO UPDATE SET result = $3, created_at = NOW()`,
+              [jobId, resumeId, JSON.stringify(detailedAnalysis)]
+            );
+          } catch (saveError) {
+            console.warn('Aviso: erro ao salvar job_match_cache:', saveError.message);
+          }
+        } catch (aiError) {
+          console.error('Erro ao calcular matching via IA:', aiError.message);
+          detailedAnalysis = null;
+        }
       }
 
       // Analisar riscos no currículo
@@ -892,27 +922,38 @@ function formatJobForAI(job) {
 
 /**
  * Analisar possíveis riscos no currículo
+ * Tolerante a diferentes formatos de campos (camelCase ou snake_case)
  */
 function analyzeResumesRisks(resume) {
   const risks = [];
 
+  const experience = Array.isArray(resume.experience) ? resume.experience : [];
+  const education = Array.isArray(resume.education) ? resume.education : [];
+  const languages = Array.isArray(resume.languages) ? resume.languages : [];
+
+  const getStart = (exp) => exp.startDate || exp.start_date;
+  const getEnd = (exp) => exp.endDate || exp.end_date;
+
   // Analisar mudanças de emprego frequentes
-  if (resume.experience && resume.experience.length >= 5) {
-    const lastFourYears = resume.experience.filter(exp => {
-      const startDate = new Date(exp.startDate);
+  if (experience.length >= 4) {
+    const validExperiences = experience.filter((exp) => getStart(exp));
+    const lastFourYears = validExperiences.filter((exp) => {
+      const startDate = new Date(getStart(exp));
+      if (Number.isNaN(startDate.getTime())) return false;
       const fourYearsAgo = new Date();
       fourYearsAgo.setFullYear(fourYearsAgo.getFullYear() - 4);
       return startDate >= fourYearsAgo;
     });
-    
+
     if (lastFourYears.length >= 4) {
       const months = lastFourYears.reduce((acc, exp) => {
-        const start = new Date(exp.startDate);
-        const end = new Date(exp.endDate || new Date());
+        const start = new Date(getStart(exp));
+        const end = new Date(getEnd(exp) || new Date());
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return acc;
         return acc + (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
       }, 0);
-      
-      if (months < 48) { // Menos de 4 anos trabalhando em 4+ empregos
+
+      if (months > 0 && months < 48) { // Menos de 4 anos trabalhando em 4+ empregos
         risks.push({
           icon: '⚠️',
           title: 'Rotatividade de Emprego',
@@ -924,15 +965,21 @@ function analyzeResumesRisks(resume) {
   }
 
   // Analisar lacunas no currículo
-  if (resume.experience && resume.experience.length >= 2) {
+  const sortedExperience = experience
+    .filter((exp) => getStart(exp))
+    .slice()
+    .sort((a, b) => new Date(getStart(b)) - new Date(getStart(a)));
+
+  if (sortedExperience.length >= 2) {
     let maxGap = 0;
-    for (let i = 0; i < resume.experience.length - 1; i++) {
-      const end = new Date(resume.experience[i].endDate || new Date());
-      const start = new Date(resume.experience[i + 1].startDate);
+    for (let i = 0; i < sortedExperience.length - 1; i++) {
+      const end = new Date(getEnd(sortedExperience[i]) || new Date());
+      const start = new Date(getStart(sortedExperience[i + 1]));
+      if (Number.isNaN(end.getTime()) || Number.isNaN(start.getTime())) continue;
       const gap = Math.floor((end - start) / (1000 * 60 * 60 * 24 * 30)); // em meses
       if (gap > maxGap) maxGap = gap;
     }
-    
+
     if (maxGap >= 6) {
       risks.push({
         icon: '⏸️',
@@ -944,7 +991,7 @@ function analyzeResumesRisks(resume) {
   }
 
   // Analisar idiomas não informados
-  if (!resume.languages || resume.languages.length === 0) {
+  if (languages.length === 0) {
     risks.push({
       icon: '🌐',
       title: 'Idiomas Não Informados',
@@ -954,7 +1001,7 @@ function analyzeResumesRisks(resume) {
   }
 
   // Analisar educação incompleta
-  if (!resume.education || resume.education.length === 0) {
+  if (education.length === 0) {
     risks.push({
       icon: '🎓',
       title: 'Educação Não Informada',
