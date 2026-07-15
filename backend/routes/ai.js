@@ -669,10 +669,12 @@ router.post(
         const appResult = await pool.query(
           `SELECT a.*, j.id as job_id, j.title, j.description, j.requirements, 
                   j.benefits, j.location, j.work_type, j.contract_type, j.experience_level,
-                  j.area, j.subarea, j.keywords, r.id as resume_id
+                  j.area, j.subarea, j.keywords, r.id as resume_id,
+                  u.name as candidate_name, u.email as candidate_email, u.phone as candidate_phone
            FROM applications a
            JOIN jobs j ON a.job_id = j.id
            JOIN resumes r ON a.resume_id = r.id
+           JOIN users u ON u.id = a.candidate_id
            WHERE a.id = $1 AND j.company_id = $2`,
           [applicationId, userId]
         );
@@ -705,7 +707,13 @@ router.post(
             `SELECT * FROM jobs WHERE id = $1 AND company_id = $2`,
             [jobId, userId]
           ),
-          pool.query(`SELECT * FROM resumes WHERE id = $1`, [resumeId]),
+          pool.query(
+            `SELECT r.*, u.name as candidate_name, u.email as candidate_email, u.phone as candidate_phone
+             FROM resumes r
+             JOIN users u ON u.id = r.user_id
+             WHERE r.id = $1`,
+            [resumeId]
+          ),
         ]);
 
         if (jobResult.rows.length === 0 || resumeResult.rows.length === 0) {
@@ -713,6 +721,7 @@ router.post(
         }
 
         job = jobResult.rows[0];
+        resume = resumeResult.rows[0];
       } else {
         return res.status(400).json({ 
           error: 'Either applicationId or both jobId and resumeId must be provided' 
@@ -722,7 +731,10 @@ router.post(
       // Get resume
       if (!resume) {
         const resumeResult = await pool.query(
-          `SELECT * FROM resumes WHERE id = $1`,
+          `SELECT r.*, u.name as candidate_name, u.email as candidate_email, u.phone as candidate_phone
+           FROM resumes r
+           JOIN users u ON u.id = r.user_id
+           WHERE r.id = $1`,
           [resumeId]
         );
         if (resumeResult.rows.length === 0) {
@@ -730,6 +742,25 @@ router.post(
         }
         resume = resumeResult.rows[0];
       }
+
+      // Parsear campos JSON do currículo (podem vir como string do banco)
+      const parseJSONField = (val, fallback) => {
+        if (!val) return fallback;
+        if (typeof val === 'string') {
+          try { return JSON.parse(val); } catch { return fallback; }
+        }
+        return val;
+      };
+      resume = {
+        ...resume,
+        personal_info: parseJSONField(resume.personal_info, {}),
+        experience: parseJSONField(resume.experience, []),
+        education: parseJSONField(resume.education, []),
+        skills: parseJSONField(resume.skills, []),
+        languages: parseJSONField(resume.languages, []),
+        projects: parseJSONField(resume.projects, []),
+        courses: parseJSONField(resume.courses, []),
+      };
 
       // Formatar dados para análise
       const resumeText = formatResumeForAI(resume);
@@ -788,9 +819,9 @@ router.post(
 function formatResumeForAI(resume) {
   const lines = [];
   
-  if (resume.name) lines.push(`Nome: ${resume.name}`);
-  if (resume.phone) lines.push(`Telefone: ${resume.phone}`);
-  if (resume.email) lines.push(`Email: ${resume.email}`);
+  if (resume.candidate_name) lines.push(`Nome: ${resume.candidate_name}`);
+  if (resume.candidate_phone) lines.push(`Telefone: ${resume.candidate_phone}`);
+  if (resume.candidate_email) lines.push(`Email: ${resume.candidate_email}`);
   
   if (resume.personal_info) {
     const pi = resume.personal_info;
@@ -945,11 +976,11 @@ function generateAutoSummary(job, resume, detailedAnalysis, risks) {
     const score = detailedAnalysis.matchScore || 0;
     
     if (score >= 80) {
-      lines.push(`Excelente compatibilidade (${score}%). ${resume.name} possui a maioria das habilidades e experiências necessárias.`);
+      lines.push(`Excelente compatibilidade (${score}%). ${resume.candidate_name || 'O candidato'} possui a maioria das habilidades e experiências necessárias.`);
     } else if (score >= 60) {
-      lines.push(`Boa compatibilidade (${score}%). ${resume.name} tem várias habilidades relevantes, mas poderia fortalecer algumas áreas.`);
+      lines.push(`Boa compatibilidade (${score}%). ${resume.candidate_name || 'O candidato'} tem várias habilidades relevantes, mas poderia fortalecer algumas áreas.`);
     } else if (score >= 40) {
-      lines.push(`Compatibilidade moderada (${score}%). ${resume.name} tem alguns requisitos, mas precisaria desenvolver novas competências.`);
+      lines.push(`Compatibilidade moderada (${score}%). ${resume.candidate_name || 'O candidato'} tem alguns requisitos, mas precisaria desenvolver novas competências.`);
     } else {
       lines.push(`Compatibilidade baixa (${score}%). Este perfil requer maiores desenvolvimentos para se encaixar na vaga.`);
     }
@@ -964,7 +995,7 @@ function generateAutoSummary(job, resume, detailedAnalysis, risks) {
       lines.push(`Área para desenvolvimento: ${detailedAnalysis.gaps[0].keyword}.`);
     }
   } else {
-    lines.push(`Candidato: ${resume.name}. Vaga: ${job.title}.`);
+    lines.push(`Candidato: ${resume.candidate_name || 'N/A'}. Vaga: ${job.title}.`);
   }
 
   // Mencionar riscos se houver
