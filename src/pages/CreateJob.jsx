@@ -204,6 +204,40 @@ const CreateJob = () => {
   };
 
   const [generatingKeywords, setGeneratingKeywords] = useState(false);
+  const [keywordInput, setKeywordInput] = useState('');
+
+  const keywordsList = formData.keywords
+    ? formData.keywords.split(',').map(k => k.trim()).filter(Boolean)
+    : [];
+
+  const addKeyword = (raw) => {
+    const value = raw.trim();
+    if (!value) return;
+    if (keywordsList.some(k => k.toLowerCase() === value.toLowerCase())) return;
+    setFormData(prev => ({ ...prev, keywords: [...keywordsList, value].join(', ') }));
+  };
+
+  const removeKeyword = (index) => {
+    const next = keywordsList.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, keywords: next.join(', ') }));
+  };
+
+  const handleKeywordInputKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addKeyword(keywordInput);
+      setKeywordInput('');
+    } else if (e.key === 'Backspace' && !keywordInput && keywordsList.length > 0) {
+      removeKeyword(keywordsList.length - 1);
+    }
+  };
+
+  const handleKeywordInputBlur = () => {
+    if (keywordInput.trim()) {
+      addKeyword(keywordInput);
+      setKeywordInput('');
+    }
+  };
 
   const handleGenerateKeywords = async () => {
     if (!formData.title && !formData.description) {
@@ -679,17 +713,38 @@ const CreateJob = () => {
                         {generatingKeywords ? 'Gerando...' : 'Gerar com IA'}
                       </Button>
                     </div>
-                    <Textarea
-                      id="keywords"
-                      name="keywords"
-                      value={formData.keywords}
-                      onChange={handleChange}
-                      placeholder="Ex: Excel avançado, Inglês intermediário, Liderança de equipe..."
-                      rows={2}
-                      className="rounded-2xl border-slate-200 bg-slate-50/60 text-sm placeholder:text-slate-400 focus-visible:border-violet-400 focus-visible:ring-violet-400 resize-y"
-                    />
+                    <div
+                      onClick={() => document.getElementById('keywords')?.focus()}
+                      className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 min-h-[52px] cursor-text focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-400/30 transition-colors"
+                    >
+                      {keywordsList.map((keyword, index) => (
+                        <span
+                          key={`${keyword}-${index}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#1e1b4b] bg-[#fdf2f8] px-3.5 py-1.5 text-sm font-semibold text-[#1e1b4b]"
+                        >
+                          {keyword}
+                          <button
+                            type="button"
+                            onClick={() => removeKeyword(index)}
+                            className="text-[#1e1b4b]/60 hover:text-[#1e1b4b] leading-none"
+                            aria-label={`Remover ${keyword}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        id="keywords"
+                        value={keywordInput}
+                        onChange={(e) => setKeywordInput(e.target.value)}
+                        onKeyDown={handleKeywordInputKeyDown}
+                        onBlur={handleKeywordInputBlur}
+                        placeholder={keywordsList.length === 0 ? 'Ex: Excel avançado, Inglês intermediário...' : 'Adicionar...'}
+                        className="flex-1 min-w-[140px] bg-transparent text-sm placeholder:text-slate-400 outline-none border-none"
+                      />
+                    </div>
                     <p className="text-xs text-slate-500 px-1">
-                      Liste as palavras-chave mais importantes para essa vaga (separadas por vírgula). Elas recebem peso extra na análise de compatibilidade com os currículos dos candidatos.
+                      Digite uma palavra-chave e pressione Enter ou vírgula para adicionar. Elas recebem peso extra na análise de compatibilidade com os currículos dos candidatos.
                     </p>
                   </div>
                 </CardContent>
