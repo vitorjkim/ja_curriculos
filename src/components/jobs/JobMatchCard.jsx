@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle, RefreshCw, Target, Award, CheckCircle2, Sparkles, ExternalLink, Check } from 'lucide-react';
+import TypewriterText from './TypewriterText';
 
 const getApiUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -345,9 +346,11 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               />
                             </div>
                             {isOpen && (
-                              <p className="text-xs text-[#166534] mt-2 px-1 text-left leading-relaxed">
-                                {strength.text}
-                              </p>
+                              <TypewriterText 
+                                text={strength.text}
+                                className="text-xs text-[#166534] mt-2 px-1 text-left leading-relaxed"
+                                speed={15}
+                              />
                             )}
                           </button>
                         );
@@ -399,9 +402,11 @@ export default function JobMatchCard({ jobId, resumeId, resumeScore = 0 }) {
                               />
                             </div>
                             {isOpen && (
-                              <p className="text-xs text-[#991b1b] mt-2 px-1 text-left leading-relaxed">
-                                {gap.text}
-                              </p>
+                              <TypewriterText 
+                                text={gap.text}
+                                className="text-xs text-[#991b1b] mt-2 px-1 text-left leading-relaxed"
+                                speed={15}
+                              />
                             )}
                           </button>
                         );
