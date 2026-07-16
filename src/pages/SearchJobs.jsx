@@ -1517,10 +1517,6 @@ const SearchJobs = () => {
                         <Search className="w-4 h-4" />
                         <span className="ml-1.5">Buscar</span>
                       </Button>
-                      <Button onClick={()=> setFilterDrawerOpen(true)} className="md:hidden relative z-10 shrink-0 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 h-9 text-xs font-semibold whitespace-nowrap shadow-sm">
-                        <Filter className="w-4 h-4" />
-                        <span className="ml-1">Filtros</span>
-                      </Button>
                       <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
                         <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
@@ -1588,7 +1584,7 @@ const SearchJobs = () => {
               </Card>
             </motion.div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-              <div className="lg:col-span-1 order-1">
+              <div className="hidden md:block lg:col-span-1 order-1">
                 <div className="lg:sticky lg:top-[72px]">                
                 <motion.div initial={{opacity:0, x:-20}} animate={{opacity:1, x:0}} transition={{delay:0.2}}>
                   <Card className="shadow-lg border-0 md:border-2 md:border-blue-100 md:hover:border-blue-300 transition-colors !rounded-2xl overflow-hidden text-[13px] !p-0">
@@ -2546,6 +2542,17 @@ const SearchJobs = () => {
           </div>
         </div>
       </Drawer>
+
+      {/* Fixed Mobile Filter Button */}
+      <motion.button
+        onClick={()=> setFilterDrawerOpen(true)}
+        className="md:hidden fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center font-bold text-sm transition-all duration-200 hover:shadow-xl hover:scale-110"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      >
+        <Filter className="w-6 h-6" />
+      </motion.button>
     </>
   );
 };
