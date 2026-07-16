@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Combobox } from '@/components/ui/combobox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Drawer } from '@/components/ui/drawer';
 import { Search, RefreshCw, ExternalLink, Filter, MapPin, Briefcase, Grid, Calendar, Building, ChevronsRight, MessageSquare, Bookmark, Star, Zap, DollarSign, List, Layers, Tag, Award, Share2, Copy, MessageCircle, Send, Mail, Linkedin, Users, Lock, LogIn } from 'lucide-react';
 import { FaRegHandshake } from 'react-icons/fa';
 import { partnershipsApi } from '../services/partnershipsApi';
@@ -269,6 +270,7 @@ const SearchJobs = () => {
   const [savedCandidates, setSavedCandidates] = useState(new Set());
   const [filters, setFilters] = useState({ location:'', contract_type:'Todos', work_type:'Todos', experience_level:'Todos', area:'Todos', subarea:'Todos' });
   const [showFilters, setShowFilters] = useState(false);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [highlightedJobIds, setHighlightedJobIds] = useState([]);
   const [highlightedSchoolJobIds, setHighlightedSchoolJobIds] = useState([]);
@@ -1515,6 +1517,10 @@ const SearchJobs = () => {
                         <Search className="w-4 h-4" />
                         <span className="ml-1.5">Buscar</span>
                       </Button>
+                      <Button onClick={()=> setFilterDrawerOpen(true)} className="md:hidden relative z-10 shrink-0 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 h-9 text-xs font-semibold whitespace-nowrap shadow-sm">
+                        <Filter className="w-4 h-4" />
+                        <span className="ml-1">Filtros</span>
+                      </Button>
                       <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
                         <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
@@ -2488,6 +2494,58 @@ const SearchJobs = () => {
           </div>
         )}
       </div>
+
+      {/* Mobile Filter Drawer */}
+      <Drawer isOpen={filterDrawerOpen} onClose={()=> setFilterDrawerOpen(false)} title="☰ Filtros">
+        <div className="space-y-3.5">
+          <div className="group">
+            <Label htmlFor="drawer-location" className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-blue-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-blue-200 transition-colors"><MapPin className="w-4 h-4 text-blue-600" /></div>Localização</Label>
+            <div className="relative">
+              <Input name="location" id="drawer-location" placeholder="Cidade, estado ou região" value={filters.location} onChange={handleFilterChange} className="pl-3.5 pr-3.5 py-2 h-9 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl bg-white shadow-sm transition-all duration-300 text-[13px]" />
+              {filters.location && (<button onClick={()=> setFilters(p=>({...p, location:''}))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>)}
+            </div>
+          </div>
+
+          <div className="group">
+            <Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-yellow-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-yellow-200 transition-colors"><Briefcase className="w-4 h-4 text-yellow-600" /></div>Área</Label>
+            <Combobox variant="minimal" options={areasList.length? areasList:[{ value:'Todos', label:'Todas as áreas'}]} value={filters.area} onChange={val=> setFilters(p=>({...p, area:val}))} />
+          </div>
+
+          {subareasList.length > 0 && (
+            <div className="group">
+              <Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5">
+                <div className="bg-teal-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-teal-200 transition-colors"><Grid className="w-4 h-4 text-teal-600" /></div>
+                Sub-área
+              </Label>
+              <Combobox
+                variant="minimal"
+                options={subareasList}
+                value={filters.subarea}
+                onChange={val=> setFilters(p=>({...p, subarea:val}))}
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 pt-1">
+            <Button variant="secondary" onClick={()=> setShowAdvancedFilters(s=>!s)} className="w-full py-2 bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl font-medium text-[13px]">{showAdvancedFilters? 'Ocultar filtros avançados':'Mais filtros'}</Button>
+          </div>
+
+          <AnimatePresence>
+            {showAdvancedFilters && (
+              <motion.div initial={{opacity:0, y:-8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} className="space-y-3.5 pt-2 border-t border-gray-200">
+                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-purple-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-purple-200 transition-colors"><Briefcase className="w-4 h-4 text-purple-600" /></div>Contrato</Label><Combobox variant="minimal" options={jobTypes.map(t=>({ value:t, label: CONTRACT_TYPE_LABELS[t]||t }))} value={filters.contract_type} onChange={val=> setFilters(p=>({...p, contract_type:val}))} /></div>
+                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-green-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-green-200 transition-colors"><Calendar className="w-4 h-4 text-green-600" /></div>Modalidade</Label><Combobox variant="minimal" options={workTypes.map(w=>({ value:w, label: WORK_TYPE_LABELS[w]||w }))} value={filters.work_type} onChange={val=> setFilters(p=>({...p, work_type:val}))} /></div>
+                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-orange-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-orange-200 transition-colors"><Award className="w-4 h-4 text-orange-600" /></div>Experiência</Label><Combobox variant="minimal" options={experienceLevels.map(e=>({ value:e, label: EXPERIENCE_LEVEL_LABELS[e]||e }))} value={filters.experience_level} onChange={val=> setFilters(p=>({...p, experience_level:val}))} /></div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="pt-2 border-t border-gray-200 mt-1.5 space-y-2">
+            <Button variant="outline" onClick={()=> setFilters({ location:'', contract_type:'Todos', work_type:'Todos', experience_level:'Todos', area:'Todos', subarea:'Todos' })} className="w-full py-2 border-2 border-gray-300 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-300 rounded-xl font-medium text-[13px]">Limpar filtros</Button>
+            <Button onClick={()=> { const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); setFilterDrawerOpen(false); }} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-[13px]">Aplicar</Button>
+          </div>
+        </div>
+      </Drawer>
     </>
   );
 };
