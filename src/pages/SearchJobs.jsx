@@ -1518,8 +1518,7 @@ const SearchJobs = () => {
                         <span className="ml-1.5">Buscar</span>
                       </Button>
                       <div className="relative flex-1 min-w-0">
-                        <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
-                        <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
+                        <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
                       </div>
                     </div>
                   {/* Chips de filtros ativos */}
