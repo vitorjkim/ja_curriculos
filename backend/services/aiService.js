@@ -897,9 +897,66 @@ Retorne APENAS JSON válido no formato: { "keywords": ["palavra1", "palavra2", .
   }
 }
 
+/**
+ * Gera uma descrição para um projeto/atividade extracurricular do currículo
+ * com base no título e período já preenchidos pelo candidato.
+ * @param {Object} projectData - { title, period }
+ * @returns {Promise<String>} - Descrição gerada
+ */
+export async function generateProjectDescription(projectData = {}) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  const { title = '', period = '' } = projectData;
+
+  if (!title.trim() || !period.trim()) {
+    throw new Error('Preencha o título do projeto e o período antes de gerar a descrição');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      max_tokens: 220,
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um especialista em redação de currículos. Sua tarefa é escrever uma descrição curta e profissional (2 a 4 linhas) para um projeto ou atividade extracurricular, com base apenas no título e no período informados.
+
+Regras:
+1. Seja objetivo e use linguagem profissional
+2. Use verbos de ação (desenvolvi, participei, organizei, criei, etc)
+3. Não invente detalhes muito específicos que não possam ser inferidos do título
+4. Não repita o título literalmente na primeira frase
+5. Retorne APENAS o texto da descrição, sem explicações, aspas ou marcações.`,
+        },
+        {
+          role: 'user',
+          content: `Título do projeto: ${title}\nPeríodo: ${period}\n\nEscreva a descrição.`,
+        },
+      ],
+    });
+
+    const generated = response.choices[0]?.message?.content?.trim();
+    if (!generated) {
+      throw new Error('Resposta vazia da OpenAI');
+    }
+
+    return generated;
+  } catch (error) {
+    console.error('❌ Erro ao gerar descrição do projeto:', error.message);
+    throw new Error(`Erro ao gerar descrição: ${error.message}`);
+  }
+}
+
 export default {
   analyzeResume,
   rewriteText,
   suggestKeywords,
   suggestJobKeywords,
+  generateProjectDescription,
 };

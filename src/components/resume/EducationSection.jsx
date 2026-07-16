@@ -23,7 +23,7 @@ const EducationSection = ({ value, onChange, cardColor = 'blue' }) => {
       <ResumeCard title="Formação" icon={GraduationCap} color={cardColor}>
         <div className="space-y-2">
           <Label htmlFor="education">Descrição da Formação</Label>
-          <Textarea id="education" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Descreva sua formação acadêmica... Exemplo: ensino médio incompleto" rows={4} required className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400 resize-none`} />
+          <Textarea id="education" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Descreva sua formação acadêmica... Exemplo: ensino médio incompleto" rows={4} className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400 resize-none`} />
         </div>
       </ResumeCard>
     </motion.div>

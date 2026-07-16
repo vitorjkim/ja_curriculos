@@ -129,7 +129,6 @@ const ExperienceSection = ({ experiences, onChange, cardColor = 'orange' }) => {
                       onChange={(e) => handleChange(exp.id, 'company', e.target.value)}
                       placeholder="Ex: Tech Solutions"
                       className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400`}
-                      required={!experiences[0]?.isFirstJob}
                     />
                   </div>
                   <div className="space-y-2">
@@ -139,7 +138,6 @@ const ExperienceSection = ({ experiences, onChange, cardColor = 'orange' }) => {
                       onChange={(e) => handleChange(exp.id, 'position', e.target.value)}
                       placeholder="Ex: Desenvolvedor Frontend"
                       className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400`}
-                      required={!experiences[0]?.isFirstJob}
                     />
                   </div>
                 </div>
@@ -150,7 +148,6 @@ const ExperienceSection = ({ experiences, onChange, cardColor = 'orange' }) => {
                     onChange={(e) => handleChange(exp.id, 'period', e.target.value)}
                     placeholder="Ex: Jan 2020 - Dez 2022"
                     className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400`}
-                    required={!experiences[0]?.isFirstJob}
                   />
                 </div>
                 <div className="space-y-2">
@@ -161,7 +158,6 @@ const ExperienceSection = ({ experiences, onChange, cardColor = 'orange' }) => {
                     placeholder="Principais responsabilidades, tecnologias e resultados..."
                     rows={3}
                     className={`border-2 ${accent.inputBorder} ${accent.focusBorder} ${accent.focusRing} rounded-xl px-4 py-3 text-gray-700 placeholder-gray-400 resize-none`}
-                    required={!experiences[0]?.isFirstJob}
                   />
                 </div>
               </motion.div>

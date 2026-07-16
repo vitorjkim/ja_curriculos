@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ResumeCard from './ResumeCard';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Lightbulb } from 'lucide-react';
+import { Plus, Trash2, Lightbulb, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ai as aiAPI } from '@/lib/api';
+import { toast } from '@/components/ui/use-toast';
 
 const ProjectsSection = ({ projects, onChange, cardColor = 'red' }) => {
   // Mapeamento de cores para botões
@@ -57,6 +59,28 @@ const ProjectsSection = ({ projects, onChange, cardColor = 'red' }) => {
 
   const handleChange = (id, field, value) => {
     onChange(projects.map(proj => (proj.id === id ? { ...proj, [field]: value } : proj)));
+  };
+
+  const [generatingId, setGeneratingId] = useState(null);
+
+  const handleGenerateDescription = async (proj) => {
+    if (!proj.title?.trim() || !proj.period?.trim()) return;
+    try {
+      setGeneratingId(proj.id);
+      const response = await aiAPI.generateProjectDescription({ title: proj.title, period: proj.period });
+      if (response?.description) {
+        handleChange(proj.id, 'description', response.description);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar descrição com IA:', error);
+      toast({
+        title: 'Erro ao gerar descrição',
+        description: 'Não foi possível gerar a descrição com IA. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   return (
@@ -121,7 +145,25 @@ const ProjectsSection = ({ projects, onChange, cardColor = 'red' }) => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Descrição</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Descrição</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={!proj.title?.trim() || !proj.period?.trim() || generatingId === proj.id}
+                      onClick={() => handleGenerateDescription(proj)}
+                      className="gap-1.5 h-7 px-2.5 text-xs rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title={(!proj.title?.trim() || !proj.period?.trim()) ? 'Preencha o título do projeto e o período para usar a IA' : 'Gerar descrição com IA'}
+                    >
+                      {generatingId === proj.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3.5 h-3.5" />
+                      )}
+                      Gerar com IA
+                    </Button>
+                  </div>
                   <Textarea
                     value={proj.description}
                     onChange={(e) => handleChange(proj.id, 'description', e.target.value)}

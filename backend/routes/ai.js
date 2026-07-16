@@ -1056,4 +1056,37 @@ function generateAutoSummary(job, resume, detailedAnalysis, risks) {
   return lines.slice(0, 5).join(' '); // Retornar até 5 linhas
 }
 
+/**
+ * POST /api/ai/generate-project-description
+ * Gera uma descrição para um projeto/atividade extracurricular do currículo
+ * com base no título e período já preenchidos pelo candidato.
+ * Usado no formulário de criação de currículo (botão "Gerar descrição com IA")
+ */
+router.post(
+  '/generate-project-description',
+  authenticateToken,
+  [
+    body('title').isString().notEmpty(),
+    body('period').isString().notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const description = await aiService.generateProjectDescription(req.body);
+      res.json({ success: true, description });
+    } catch (error) {
+      console.error('Erro ao gerar descrição do projeto:', error.message);
+      res.status(500).json({
+        error: 'Falha ao gerar descrição',
+        details: error.message,
+        code: 'PROJECT_DESCRIPTION_FAILED',
+      });
+    }
+  }
+);
+
 export default router;

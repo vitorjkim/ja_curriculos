@@ -1084,6 +1084,14 @@ export const aiAPI = {
       method: 'POST',
       body: { applicationId }
     });
+  },
+
+  // Gera descrição de projeto/atividade extracurricular com base no título e período
+  generateProjectDescription: async (projectData) => {
+    return apiRequest('/ai/generate-project-description', {
+      method: 'POST',
+      body: projectData
+    });
   }
 };
 

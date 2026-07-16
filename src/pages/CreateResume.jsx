@@ -688,16 +688,7 @@ const CreateResume = () => {
                       </div>
                     </div>
                     <div className="pt-2">
-                      <label className={`${toggleStyles.public.container}`}>
-                        <input
-                          type="checkbox"
-                          role="switch"
-                          checked={formData.is_public}
-                          onChange={(e) => handleFieldChange('is_public', e.target.checked)}
-                          className={`${toggleStyles.public.input}`}
-                        />
-                        <span className={`${toggleStyles.public.label}`}>Tornar currículo público (visível para empresas)</span>
-                      </label>
+                      {/* Todos os currículos são públicos por padrão; toggle removido da UI */}
                     </div>
                   </div>
                 </ResumeCard>
