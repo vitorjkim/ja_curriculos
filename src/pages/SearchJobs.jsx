@@ -1509,10 +1509,17 @@ const SearchJobs = () => {
             <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay:0.1}} className="mb-4 md:mb-5">
               <Card className="shadow-md border-2 border-gray-200 bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl">
                 <CardContent className="p-3 md:p-3.5">
-                  <div className="relative">
-                    <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
-                    <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
-                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:items-stretch">
+                      <Button onClick={()=> { if(searchTerm.trim()){ setHideHighlights(true); searchExternalExplicit(); } else { setHideHighlights(false); refreshExternalByFilters(); } const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); }} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-9 text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm flex-shrink-0">
+                        <Search className="w-4 h-4" />
+                        <span className="ml-1.5">Buscar</span>
+                      </Button>
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
+                        <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
+                      </div>
+                    </div>
                   {/* Chips de filtros ativos */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {filters.location && (
@@ -1570,125 +1577,6 @@ const SearchJobs = () => {
                       </div>
                     )}
                   </div>
-                  <div className="mt-2.5 flex gap-2 flex-wrap text-xs">
-                    <Button onClick={()=> { if(searchTerm.trim()){ setHideHighlights(true); searchExternalExplicit(); } else { setHideHighlights(false); refreshExternalByFilters(); } const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); }} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-9 text-xs flex-1 sm:flex-none">
-                      <Search className="w-4 h-4" />
-                      <span className="ml-1.5">Buscar</span>
-                    </Button>
-                    <Button onClick={loadExternalRecommended} variant="outline" disabled={loadingExternalRecommended} className="rounded-xl px-3 py-1.5 h-9 text-xs">
-                      {loadingExternalRecommended? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                      <span className="ml-1.5 hidden sm:inline">Atualizar</span>
-                    </Button>
-                    <Button onClick={searchExternalExplicit} variant="outline" disabled={loadingExternal} className="rounded-xl px-3 py-1.5 h-9 text-xs">
-                      {loadingExternal? <RefreshCw className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                      <span className="ml-1.5 hidden sm:inline">Externas</span>
-                    </Button>
-                    <div className="flex items-center">
-                      <div>
-                        <button
-                          ref={typesBtnRef}
-                          onMouseEnter={() => {
-                            if (typesBtnRef.current) {
-                              const r = typesBtnRef.current.getBoundingClientRect();
-                              const POPOVER_WIDTH = 544; // ~34rem
-                              const viewportWidth = (typeof window!== 'undefined' ? window.innerWidth : POPOVER_WIDTH);
-                              const left = Math.min(r.left, viewportWidth - POPOVER_WIDTH);
-                              const top = r.bottom + 8;
-                              setTypesPos({ left, top });
-                            }
-                            setTypesOpen(true);
-                          }}
-                          onMouseLeave={() => setTypesOpen(false)}
-                          type="button"
-                          aria-label="Informações sobre tipos de vagas"
-                          data-tour="jobs.types"
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 bg-white border border-blue-200 hover:border-blue-300 hover:bg-blue-50 rounded-full pl-1.5 pr-3 py-1 shadow-sm transition"
-                        >
-                          <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold leading-none shadow-sm">!</span>
-                          <span className="tracking-tight">Tipos de vagas</span>
-                        </button>
-                        {typesOpen && createPortal(
-                          <div
-                            className="fixed z-[99999]"
-                            style={{ left: typesPos.left, top: typesPos.top }}
-                            onMouseEnter={() => setTypesOpen(true)}
-                            onMouseLeave={() => setTypesOpen(false)}
-                          >
-                            <div className="relative p-4 rounded-3xl border border-blue-200 bg-white shadow-[0_8px_28px_-4px_rgba(30,64,175,0.25)] ring-1 ring-blue-50 text-[11px] leading-relaxed antialiased w-[34rem] max-w-[34rem]">
-                              <div className="absolute -top-2 left-6 w-3 h-3 rotate-45 bg-white border-l border-t border-blue-200 rounded-sm"></div>
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold shadow">!</div>
-                                <p className="font-semibold text-blue-700 text-[12px] tracking-tight">Tipos de vagas no CurrículoJá</p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2.5 mb-3">
-                                <div className="flex items-start gap-2 rounded-2xl border border-blue-100 bg-blue-50/70 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-blue-600/10 text-blue-600 flex items-center justify-center">
-                                    <Building className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-blue-700 mb-0.5">Internas</p>
-                                    <p className="text-blue-700/80">Criadas por empresas parceiras dentro da plataforma.</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-amber-500/15 text-amber-700 flex items-center justify-center">
-                                    <Star className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-amber-800 mb-0.5">Destaque da Escola</p>
-                                    <p className="text-amber-800/80">Recomendadas pela sua escola e/ou turma.</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-2 rounded-2xl border border-blue-200 bg-blue-50/80 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-blue-500/15 text-blue-700 flex items-center justify-center">
-                                    <Zap className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-blue-800 mb-0.5">Destaque da Empresa</p>
-                                    <p className="text-blue-800/80">Impulsionadas diretamente por empresas parceiras.</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-700 flex items-center justify-center">
-                                    <Users className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-emerald-800 mb-0.5">Comunidade</p>
-                                    <p className="text-emerald-800/80">Cadastradas pela equipe (Admin) quando a empresa não possui perfil na plataforma.</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-2 rounded-2xl border border-orange-200 bg-orange-50/80 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-orange-500/15 text-orange-700 flex items-center justify-center">
-                                    <Briefcase className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-orange-800 mb-0.5">Agência</p>
-                                    <p className="text-orange-800/80">Publicadas por agências de estágio parceiras, com link para candidatura externa.</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-start gap-2 rounded-2xl border border-indigo-200 bg-indigo-50/80 p-3">
-                                  <div className="w-8 h-8 rounded-full bg-indigo-500/15 text-indigo-700 flex items-center justify-center flex-shrink-0">
-                                    <ExternalLink className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-[11px] leading-snug pr-1">
-                                    <p className="font-semibold text-indigo-700 mb-0.5">Externas</p>
-                                    <p className="text-indigo-700/80">Importadas de outros sites parceiros.</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-2.5 text-[10.5px] leading-snug text-gray-800">
-                                <p className="[&>strong]:font-semibold tracking-tight">
-                                  <span className="relative inline-block mr-1 font-semibold text-red-700 align-middle">
-                                    <span className="absolute inset-0 bg-red-100 rounded -rotate-1"></span>
-                                    <span className="relative px-1">Atenção:</span>
-                                  </span>
-                                  Vagas externas só consideram <span className="font-semibold text-blue-700 whitespace-nowrap leading-none text-[15px] md:text-[12px]">localização</span> e <strong className="font-semibold">termo digitado</strong>;
-                                </p>
-                              </div>
-                            </div>
-                          </div>, document.body)}
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
