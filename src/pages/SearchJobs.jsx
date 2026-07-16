@@ -1510,12 +1510,12 @@ const SearchJobs = () => {
               <Card className="shadow-md border-2 border-gray-200 bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl">
                 <CardContent className="p-3 md:p-3.5">
                   <div className="flex flex-col gap-2">
-                    <div className="flex flex-col sm:flex-row gap-2 sm:items-stretch">
-                      <Button onClick={()=> { if(searchTerm.trim()){ setHideHighlights(true); searchExternalExplicit(); } else { setHideHighlights(false); refreshExternalByFilters(); } const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); }} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-9 text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm flex-shrink-0">
+                    <div className="flex flex-row gap-2 items-stretch">
+                      <Button onClick={()=> { if(searchTerm.trim()){ setHideHighlights(true); searchExternalExplicit(); } else { setHideHighlights(false); refreshExternalByFilters(); } const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); }} className="relative z-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-9 text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm">
                         <Search className="w-4 h-4" />
                         <span className="ml-1.5">Buscar</span>
                       </Button>
-                      <div className="relative flex-1">
+                      <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 md:w-[18px] h-4 md:h-[18px]" />
                         <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="pl-8 md:pl-9 h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
                       </div>
