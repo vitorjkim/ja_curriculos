@@ -2303,7 +2303,7 @@ const SearchJobs = () => {
                             {/* Contador de fonte removido conforme solicitado */}
                           </p>
                         </div>
-                        <Button variant="outline" size="sm" className="rounded-lg md:rounded-xl h-7 md:h-auto px-2 md:px-3 text-[11px] md:text-xs" onClick={loadExternalRecommended} disabled={loadingExternalRecommended}>{loadingExternalRecommended? <RefreshCw className="w-3.5 md:w-4 h-3.5 md:h-4 animate-spin" />:<RefreshCw className="w-3.5 md:w-4 h-3.5 md:h-4" />}<span className="ml-1 md:ml-2 hidden sm:inline">Atualizar</span></Button>
+                        <Button variant="outline" size="sm" className="rounded-lg md:rounded-xl h-7 md:h-auto px-2 md:px-3 text-[11px] md:text-xs border-0" onClick={loadExternalRecommended} disabled={loadingExternalRecommended}>{loadingExternalRecommended? <RefreshCw className="w-3.5 md:w-4 h-3.5 md:h-4 animate-spin" />:<RefreshCw className="w-3.5 md:w-4 h-3.5 md:h-4" />}<span className="ml-1 md:ml-2 hidden sm:inline">Atualizar</span></Button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5 items-stretch">
                         {paginatedExternal.map((job,i)=>(
