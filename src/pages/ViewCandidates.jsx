@@ -478,12 +478,12 @@ const ViewCandidates = () => {
 
             {/* Recomendações de alunos pelas escolas */}
             {(recsLoading || recommendations.length > 0) && (
-            <Card className="mb-6 sm:mb-8 rounded-[20px] sm:rounded-[24px] border-2 border-emerald-100 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <CardHeader className="border-b border-slate-100 pb-3 sm:pb-4 px-4 sm:px-6">
-                <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <CardTitle className="flex items-center text-sm sm:text-base font-semibold text-emerald-900">
-                      <span className="mr-2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 ring-2 ring-emerald-200">
+            <Card className="mb-5 rounded-2xl border border-emerald-100 bg-white/95 shadow-sm">
+              <CardHeader className="border-b border-slate-100 pb-2.5 px-4 sm:px-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <CardTitle className="flex items-center text-sm sm:text-base font-semibold text-emerald-900 min-w-0">
+                      <span className="mr-2 flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200 flex-shrink-0">
                         <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </span>
                       <span className="hidden xs:inline">Alunos indicados por escolas</span>
@@ -492,7 +492,7 @@ const ViewCandidates = () => {
                     {recsLoading ? (
                       <span className="text-xs text-slate-500">carregando...</span>
                     ) : (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-100">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-100 whitespace-nowrap">
                         {recommendations.length} indicação{recommendations.length === 1 ? '' : 's'}
                       </span>
                     )}
@@ -502,7 +502,7 @@ const ViewCandidates = () => {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setRecsOpen(v => !v)}
-                      className="rounded-full border border-emerald-200 bg-emerald-500/5 px-4 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
+                      className="shrink-0 rounded-full border border-emerald-200 bg-emerald-500/5 px-3.5 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
                     >
                       {recsOpen ? 'Ocultar' : 'Ver indicações'}
                     </Button>
@@ -510,11 +510,11 @@ const ViewCandidates = () => {
                 </div>
               </CardHeader>
               {recsOpen && !recsLoading && (
-                <CardContent className="pt-5">
+                <CardContent className="pt-4 px-4 sm:px-5 pb-4">
                   {recommendations.length === 0 ? (
                     <p className="text-sm text-slate-500">Nenhuma indicação de alunos pelas escolas até o momento.</p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {Object.entries(
                         recommendations.reduce((acc, r) => {
                           const key = `${r.school_id}|${r.school_name}`;
@@ -533,31 +533,31 @@ const ViewCandidates = () => {
                           return (a.student_name || '').localeCompare(b.student_name || '');
                         });
                         return (
-                          <div key={key} className="rounded-2xl border-2 border-emerald-100 bg-white p-4 transition-all hover:-translate-y-[1px] hover:border-emerald-300">
+                          <div key={key} className="rounded-2xl border border-emerald-100 bg-white p-3 sm:p-4 transition-colors hover:border-emerald-300">
                             {/* Header da escola - mesmo design de Parcerias Ativas */}
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center justify-between gap-3 mb-3">
                               <Link to={`/company/schools/${schoolId}`} className="flex items-center gap-3 group cursor-pointer">
                                 {schoolImage ? (
                                   <img 
                                     src={schoolImage} 
                                     alt={schoolName} 
-                                    className="h-11 w-11 rounded-full object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-300 transition-all"
+                                    className="h-10 w-10 rounded-full object-cover ring-1 ring-emerald-100 group-hover:ring-emerald-300 transition-all"
                                   />
                                 ) : (
-                                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500 ring-2 ring-slate-200 group-hover:ring-emerald-300 transition-all">
-                                    <GraduationCap className="w-5 h-5" />
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 ring-1 ring-slate-200 group-hover:ring-emerald-300 transition-all">
+                                    <GraduationCap className="w-4.5 h-4.5" />
                                   </div>
                                 )}
                                 <div>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-sm font-medium text-emerald-900 group-hover:text-emerald-700 transition-colors">{schoolName}</p>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-medium text-emerald-900 group-hover:text-emerald-700 transition-colors leading-tight">{schoolName}</p>
                                     {isPartner && (
                                       <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                                         <FaRegHandshake className="w-3 h-3 mr-1 text-emerald-600" />Parceira
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-[11px] font-medium text-emerald-700/90">
+                                  <p className="text-[11px] font-medium text-emerald-700/90 leading-tight">
                                     {sorted.length} aluno{sorted.length===1?'':'s'} indicado{sorted.length===1?'':'s'}
                                   </p>
                                 </div>
@@ -566,42 +566,42 @@ const ViewCandidates = () => {
                             {/* Lista de alunos */}
                             <div className="space-y-2">
                               {sorted.map((r) => (
-                                <div key={r.id} className="flex items-center justify-between rounded-xl p-3 bg-emerald-50 border border-emerald-100">
-                                  <div className="min-w-0 flex items-center gap-3">
+                                <div key={r.id} className="flex items-center justify-between rounded-xl p-2.5 sm:p-3 bg-emerald-50 border border-emerald-100 gap-3">
+                                  <div className="min-w-0 flex items-center gap-2.5">
                                     {r.student_profile_image ? (
                                       <img 
                                         src={r.student_profile_image} 
                                         alt={r.student_name}
-                                        className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                       />
                                     ) : (
-                                      <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-emerald-700 font-semibold text-sm">
+                                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-emerald-700 font-semibold text-xs">
                                           {r.student_name?.charAt(0)?.toUpperCase() || '?'}
                                         </span>
                                       </div>
                                     )}
                                     <div className="min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <p className="font-medium truncate text-slate-800">{r.student_name}</p>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="font-medium truncate text-slate-800 text-sm">{r.student_name}</p>
                                         {r.is_featured && (
                                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-200/70 px-2 py-0.5 rounded-full">
                                             <Award className="w-3 h-3" /> Destaque
                                           </span>
                                         )}
                                       </div>
-                                      <p className="text-xs text-slate-500">
+                                      <p className="text-[11px] text-slate-500 leading-tight">
                                         {r.class_name ? `Turma: ${r.class_name}` : 'Turma não informada'}
                                         {r.created_at ? ` • ${new Date(r.created_at).toLocaleDateString('pt-BR')}` : ''}
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                                  <div className="flex items-center gap-2 flex-shrink-0">
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={(e) => { e.preventDefault(); handleWhatsApp(r.student_phone, r.student_name); }}
-                                      className="rounded-full border border-green-200 bg-green-500/5 px-3 text-green-700 shadow-sm shadow-green-100 hover:border-green-400 hover:bg-green-500 hover:text-white hover:shadow-md hover:shadow-green-200 transition-all duration-300"
+                                      className="h-8 w-8 rounded-full border border-green-200 bg-green-500/5 p-0 text-green-700 shadow-sm shadow-green-100 hover:border-green-400 hover:bg-green-500 hover:text-white hover:shadow-md hover:shadow-green-200 transition-all duration-300"
                                     >
                                       <FaWhatsapp className="w-4 h-4" />
                                     </Button>
@@ -609,7 +609,7 @@ const ViewCandidates = () => {
                                       <Button 
                                         variant="outline" 
                                         size="sm" 
-                                        className="rounded-full border border-emerald-200 bg-emerald-500/5 px-3.5 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
+                                        className="rounded-full border border-emerald-200 bg-emerald-500/5 px-3 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
                                       >
                                         Ver perfil
                                       </Button>
