@@ -395,7 +395,7 @@ export default function StudentAssistant(){
       <button
         aria-label="Assistente de notificações"
         onClick={()=> setOpen(o=>!o)}
-        className="relative h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-300 hover:shadow-xl"
+        className="relative h-14 w-14 rounded-full shadow-lg bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center transition-all duration-300 hover:shadow-xl"
       >
         {aiLoading ? (
           <Loader2 className="w-6 h-6 animate-spin" />
