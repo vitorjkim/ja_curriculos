@@ -1092,6 +1092,22 @@ export const aiAPI = {
       method: 'POST',
       body: projectData
     });
+  },
+
+  // Gera descrição de experiência profissional com base em empresa, cargo e período
+  generateExperienceDescription: async (experienceData) => {
+    return apiRequest('/ai/generate-experience-description', {
+      method: 'POST',
+      body: experienceData
+    });
+  },
+
+  // Gera descrição de curso com base em nome, instituição e ano
+  generateCourseDescription: async (courseData) => {
+    return apiRequest('/ai/generate-course-description', {
+      method: 'POST',
+      body: courseData
+    });
   }
 };
 

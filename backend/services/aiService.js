@@ -240,7 +240,7 @@ async function tryOpenAIAnalyze(prompt) {
   }
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     temperature: 0.1,
     max_tokens: 2048,
     seed: 12345,
@@ -733,7 +733,7 @@ export async function rewriteText(text) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       temperature: 0.8,
       max_tokens: 500,
       messages: [
@@ -789,7 +789,7 @@ export async function suggestKeywords(text) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       temperature: 0.5,
       max_tokens: 300,
       response_format: { type: 'json_object' },
@@ -866,7 +866,7 @@ export async function suggestJobKeywords(jobData = {}) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       temperature: 0.3,
       max_tokens: 300,
       response_format: { type: 'json_object' },
@@ -919,7 +919,7 @@ export async function generateProjectDescription(projectData = {}) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       temperature: 0.7,
       max_tokens: 220,
       messages: [
@@ -953,10 +953,124 @@ Regras:
   }
 }
 
+/**
+ * Gera uma descrição para uma experiência profissional do currículo
+ * com base na empresa, cargo e período já preenchidos pelo candidato.
+ * @param {Object} experienceData - { company, position, period }
+ * @returns {Promise<String>} - Descrição gerada
+ */
+export async function generateExperienceDescription(experienceData = {}) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  const { company = '', position = '', period = '' } = experienceData;
+
+  if (!company.trim() || !position.trim() || !period.trim()) {
+    throw new Error('Preencha empresa, cargo e período antes de gerar a descrição');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      temperature: 0.7,
+      max_tokens: 220,
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um especialista em redação de currículos. Sua tarefa é escrever uma descrição curta e profissional (2 a 4 linhas) para uma experiência profissional, com base apenas na empresa, cargo e período informados.
+
+Regras:
+1. Seja objetivo e use linguagem profissional
+2. Use verbos de ação (desenvolvi, implementei, liderei, coordenei, etc)
+3. Não invente detalhes muito específicos que não possam ser inferidos do cargo/empresa
+4. Não repita o cargo ou empresa literalmente na primeira frase
+5. Retorne APENAS o texto da descrição, sem explicações, aspas ou marcações.`,
+        },
+        {
+          role: 'user',
+          content: `Empresa: ${company}\nCargo: ${position}\nPeríodo: ${period}\n\nEscreva a descrição.`,
+        },
+      ],
+    });
+
+    const generated = response.choices[0]?.message?.content?.trim();
+    if (!generated) {
+      throw new Error('Resposta vazia da OpenAI');
+    }
+
+    return generated;
+  } catch (error) {
+    console.error('❌ Erro ao gerar descrição da experiência:', error.message);
+    throw new Error(`Erro ao gerar descrição: ${error.message}`);
+  }
+}
+
+/**
+ * Gera uma descrição para um curso do currículo
+ * com base no nome, instituição e ano já preenchidos pelo candidato.
+ * @param {Object} courseData - { name, institution, year }
+ * @returns {Promise<String>} - Descrição gerada
+ */
+export async function generateCourseDescription(courseData = {}) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY não configurada');
+  }
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
+  const { name = '', institution = '', year = '' } = courseData;
+
+  if (!name.trim() || !institution.trim()) {
+    throw new Error('Preencha o nome do curso e a instituição antes de gerar a descrição');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
+      temperature: 0.7,
+      max_tokens: 200,
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um especialista em redação de currículos. Sua tarefa é escrever uma descrição curta e profissional (2 a 3 linhas) para um curso, com base no nome do curso, instituição e ano (se informado).
+
+Regras:
+1. Seja objetivo e use linguagem profissional
+2. Mencione tópicos/competências plausíveis com base no nome do curso
+3. Não invente certificações ou cargas horárias específicas
+4. Não repita o nome do curso literalmente na primeira frase
+5. Retorne APENAS o texto da descrição, sem explicações, aspas ou marcações.`,
+        },
+        {
+          role: 'user',
+          content: `Curso: ${name}\nInstituição: ${institution}${year ? `\nAno: ${year}` : ''}\n\nEscreva a descrição.`,
+        },
+      ],
+    });
+
+    const generated = response.choices[0]?.message?.content?.trim();
+    if (!generated) {
+      throw new Error('Resposta vazia da OpenAI');
+    }
+
+    return generated;
+  } catch (error) {
+    console.error('❌ Erro ao gerar descrição do curso:', error.message);
+    throw new Error(`Erro ao gerar descrição: ${error.message}`);
+  }
+}
+
 export default {
   analyzeResume,
   rewriteText,
   suggestKeywords,
   suggestJobKeywords,
   generateProjectDescription,
+  generateExperienceDescription,
+  generateCourseDescription,
 };

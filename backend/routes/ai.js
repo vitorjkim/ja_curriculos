@@ -1089,4 +1089,70 @@ router.post(
   }
 );
 
+/**
+ * POST /api/ai/generate-experience-description
+ * Gera uma descrição para uma experiência profissional do currículo
+ * com base na empresa, cargo e período já preenchidos pelo candidato.
+ */
+router.post(
+  '/generate-experience-description',
+  authenticateToken,
+  [
+    body('company').isString().notEmpty(),
+    body('position').isString().notEmpty(),
+    body('period').isString().notEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const description = await aiService.generateExperienceDescription(req.body);
+      res.json({ success: true, description });
+    } catch (error) {
+      console.error('Erro ao gerar descrição da experiência:', error.message);
+      res.status(500).json({
+        error: 'Falha ao gerar descrição',
+        details: error.message,
+        code: 'EXPERIENCE_DESCRIPTION_FAILED',
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/ai/generate-course-description
+ * Gera uma descrição para um curso do currículo
+ * com base no nome do curso, instituição e ano já preenchidos pelo candidato.
+ */
+router.post(
+  '/generate-course-description',
+  authenticateToken,
+  [
+    body('name').isString().notEmpty(),
+    body('institution').isString().notEmpty(),
+    body('year').optional().isString(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const description = await aiService.generateCourseDescription(req.body);
+      res.json({ success: true, description });
+    } catch (error) {
+      console.error('Erro ao gerar descrição do curso:', error.message);
+      res.status(500).json({
+        error: 'Falha ao gerar descrição',
+        details: error.message,
+        code: 'COURSE_DESCRIPTION_FAILED',
+      });
+    }
+  }
+);
+
 export default router;
