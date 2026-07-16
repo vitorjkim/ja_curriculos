@@ -2492,7 +2492,7 @@ const SearchJobs = () => {
       </div>
 
       {/* Mobile Filter Drawer */}
-      <Drawer isOpen={filterDrawerOpen} onClose={()=> setFilterDrawerOpen(false)} title="☰ Filtros">
+      <Drawer isOpen={filterDrawerOpen} onClose={()=> setFilterDrawerOpen(false)} title="Filtros">
         <div className="space-y-3.5">
           <div className="group">
             <Label htmlFor="drawer-location" className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-blue-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-blue-200 transition-colors"><MapPin className="w-4 h-4 text-blue-600" /></div>Localização</Label>
@@ -2522,19 +2522,20 @@ const SearchJobs = () => {
             </div>
           )}
 
-          <div className="flex flex-col gap-2 pt-1">
-            <Button variant="secondary" onClick={()=> setShowAdvancedFilters(s=>!s)} className="w-full py-2 bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl font-medium text-[13px]">{showAdvancedFilters? 'Ocultar filtros avançados':'Mais filtros'}</Button>
+          <div className="group">
+            <Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-purple-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-purple-200 transition-colors"><Briefcase className="w-4 h-4 text-purple-600" /></div>Contrato</Label>
+            <Combobox variant="minimal" options={jobTypes.map(t=>({ value:t, label: CONTRACT_TYPE_LABELS[t]||t }))} value={filters.contract_type} onChange={val=> setFilters(p=>({...p, contract_type:val}))} />
           </div>
 
-          <AnimatePresence>
-            {showAdvancedFilters && (
-              <motion.div initial={{opacity:0, y:-8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} className="space-y-3.5 pt-2 border-t border-gray-200">
-                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-purple-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-purple-200 transition-colors"><Briefcase className="w-4 h-4 text-purple-600" /></div>Contrato</Label><Combobox variant="minimal" options={jobTypes.map(t=>({ value:t, label: CONTRACT_TYPE_LABELS[t]||t }))} value={filters.contract_type} onChange={val=> setFilters(p=>({...p, contract_type:val}))} /></div>
-                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-green-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-green-200 transition-colors"><Calendar className="w-4 h-4 text-green-600" /></div>Modalidade</Label><Combobox variant="minimal" options={workTypes.map(w=>({ value:w, label: WORK_TYPE_LABELS[w]||w }))} value={filters.work_type} onChange={val=> setFilters(p=>({...p, work_type:val}))} /></div>
-                <div className="group"><Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-orange-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-orange-200 transition-colors"><Award className="w-4 h-4 text-orange-600" /></div>Experiência</Label><Combobox variant="minimal" options={experienceLevels.map(e=>({ value:e, label: EXPERIENCE_LEVEL_LABELS[e]||e }))} value={filters.experience_level} onChange={val=> setFilters(p=>({...p, experience_level:val}))} /></div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="group">
+            <Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-green-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-green-200 transition-colors"><Calendar className="w-4 h-4 text-green-600" /></div>Modalidade</Label>
+            <Combobox variant="minimal" options={workTypes.map(w=>({ value:w, label: WORK_TYPE_LABELS[w]||w }))} value={filters.work_type} onChange={val=> setFilters(p=>({...p, work_type:val}))} />
+          </div>
+
+          <div className="group">
+            <Label className="flex items-center text-[13px] font-bold text-gray-800 mb-1.5"><div className="bg-orange-100 p-1.5 rounded-xl mr-2.5 group-hover:bg-orange-200 transition-colors"><Award className="w-4 h-4 text-orange-600" /></div>Experiência</Label>
+            <Combobox variant="minimal" options={experienceLevels.map(e=>({ value:e, label: EXPERIENCE_LEVEL_LABELS[e]||e }))} value={filters.experience_level} onChange={val=> setFilters(p=>({...p, experience_level:val}))} />
+          </div>
 
           <div className="pt-2 border-t border-gray-200 mt-1.5 space-y-2">
             <Button variant="outline" onClick={()=> setFilters({ location:'', contract_type:'Todos', work_type:'Todos', experience_level:'Todos', area:'Todos', subarea:'Todos' })} className="w-full py-2 border-2 border-gray-300 hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-300 rounded-xl font-medium text-[13px]">Limpar filtros</Button>

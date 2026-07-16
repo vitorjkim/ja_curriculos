@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Filter } from 'lucide-react';
 import { Button } from './button';
 
 export function Drawer({ 
@@ -10,6 +10,18 @@ export function Drawer({
   title = null,
   className = '',
 }) {
+  // Prevent body scroll when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -33,13 +45,16 @@ export function Drawer({
           >
             {/* Header */}
             {title && (
-              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+              <div className="sticky top-0 bg-blue-600 p-4 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-white" />
+                  <h2 className="text-lg font-bold text-white">{title}</h2>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 hover:bg-blue-700 text-white"
                 >
                   <X className="h-5 w-5" />
                 </Button>
