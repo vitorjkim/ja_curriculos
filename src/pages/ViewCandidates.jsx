@@ -476,43 +476,40 @@ const ViewCandidates = () => {
               </div>
             </div>
 
-            {/* Recomendações de alunos pelas escolas */}
-            <Card className="mb-6 sm:mb-8 rounded-[20px] sm:rounded-[24px] border-2 border-emerald-100 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
-              <CardHeader className="border-b border-slate-100 pb-3 sm:pb-4 px-4 sm:px-6">
-                <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <CardTitle className="flex items-center text-sm sm:text-base font-semibold text-emerald-900">
-                      <span className="mr-2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 ring-2 ring-emerald-200">
-                        <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </span>
-                      <span className="hidden xs:inline">Alunos indicados por escolas</span>
-                      <span className="xs:hidden">Indicações</span>
-                    </CardTitle>
-                    {recsLoading ? (
-                      <span className="text-xs text-slate-500">carregando...</span>
-                    ) : (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-100">
-                        {recommendations.length} indicação{recommendations.length === 1 ? '' : 's'}
-                      </span>
+            {(recsLoading || recommendations.length > 0) && (
+              <Card className="mb-6 sm:mb-8 rounded-[20px] sm:rounded-[24px] border-2 border-emerald-100 bg-white/95 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+                <CardHeader className="border-b border-slate-100 pb-3 sm:pb-4 px-4 sm:px-6">
+                  <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <CardTitle className="flex items-center text-sm sm:text-base font-semibold text-emerald-900">
+                        <span className="mr-2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-50 text-emerald-600 ring-2 ring-emerald-200">
+                          <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </span>
+                        <span className="hidden xs:inline">Alunos indicados por escolas</span>
+                        <span className="xs:hidden">Indicações</span>
+                      </CardTitle>
+                      {recsLoading ? (
+                        <span className="text-xs text-slate-500">carregando...</span>
+                      ) : (
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-100">
+                          {recommendations.length} indicação{recommendations.length === 1 ? '' : 's'}
+                        </span>
+                      )}
+                    </div>
+                    {recommendations.length > 0 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setRecsOpen(v => !v)}
+                        className="rounded-full border border-emerald-200 bg-emerald-500/5 px-4 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
+                      >
+                        {recsOpen ? 'Ocultar' : 'Ver indicações'}
+                      </Button>
                     )}
                   </div>
-                  {recommendations.length > 0 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setRecsOpen(v => !v)}
-                      className="rounded-full border border-emerald-200 bg-emerald-500/5 px-4 text-[11px] font-bold text-emerald-700 shadow-sm shadow-emerald-100 hover:border-emerald-400 hover:bg-emerald-500 hover:text-white hover:shadow-md hover:shadow-emerald-200 transition-all duration-300"
-                    >
-                      {recsOpen ? 'Ocultar' : 'Ver indicações'}
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              {recsOpen && !recsLoading && (
-                <CardContent className="pt-5">
-                  {recommendations.length === 0 ? (
-                    <p className="text-sm text-slate-500">Nenhuma indicação de alunos pelas escolas até o momento.</p>
-                  ) : (
+                </CardHeader>
+                {recsOpen && !recsLoading && (
+                  <CardContent className="pt-5">
                     <div className="space-y-4">
                       {Object.entries(
                         recommendations.reduce((acc, r) => {
@@ -541,12 +538,12 @@ const ViewCandidates = () => {
                                     src={schoolImage} 
                                     alt={schoolName} 
                                     className="h-11 w-11 rounded-full object-cover ring-2 ring-emerald-100 group-hover:ring-emerald-300 transition-all"
-                                  />
-                                ) : (
-                                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500 ring-2 ring-slate-200 group-hover:ring-emerald-300 transition-all">
-                                    <GraduationCap className="w-5 h-5" />
-                                  </div>
-                                )}
+                                  })
+                                </div>
+                              </CardContent>
+                            )}
+                          </Card>
+                        )}
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <p className="text-sm font-medium text-emerald-900 group-hover:text-emerald-700 transition-colors">{schoolName}</p>
