@@ -235,12 +235,12 @@ export default function StudentAssistant(){
       {/* Painel */}
       {open && (
         <div className="mb-3 w-72 max-w-[90vw] rounded-2xl shadow-lg border border-gray-200 bg-white overflow-hidden self-end">
-          <div className="px-3 py-2.5 bg-blue-600 text-white flex items-center justify-between rounded-t-xl">
+          <div className="px-3 py-2.5 bg-purple-600 text-white flex items-center justify-between rounded-t-xl">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><Bot className="w-4 h-4"/></div>
               <div className="leading-tight">
                 <div className="text-xs font-bold">{assistantName}</div>
-                <div className="text-[10px] text-blue-100">Seu assistente</div>
+                <div className="text-[10px] text-purple-100">Seu assistente</div>
               </div>
             </div>
             <button onClick={()=> setOpen(false)} className="p-1.5 rounded-lg hover:bg-white/20 transition-all duration-300"><X className="w-3.5 h-3.5"/></button>

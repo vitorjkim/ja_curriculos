@@ -2546,12 +2546,12 @@ const SearchJobs = () => {
       {/* Fixed Mobile Filter Button */}
       <motion.button
         onClick={()=> setFilterDrawerOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center font-bold text-sm transition-all duration-200 hover:shadow-xl hover:scale-110"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-40 h-12 px-3 rounded-r-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center font-bold text-sm transition-all duration-200 hover:shadow-xl"
+        initial={{ x: -40, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
-        <Filter className="w-6 h-6" />
+        <Filter className="w-5 h-5" />
       </motion.button>
     </>
   );
