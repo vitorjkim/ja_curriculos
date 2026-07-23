@@ -833,13 +833,13 @@ const SearchJobs = () => {
   }, [taxonomy, filters.area]);
 
   // Apply internal filters
-  useEffect(()=>{ let results=jobs; if(searchTerm){ const q=searchTerm.toLowerCase(); results=results.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)); } if(filters.location) results=results.filter(j=> j.location?.toLowerCase().includes(filters.location.toLowerCase())); if(filters.contract_type!=='Todos') results=results.filter(j=> j.contract_type===filters.contract_type); if(filters.work_type!=='Todos') results=results.filter(j=> j.work_type===filters.work_type); if(filters.experience_level!=='Todos') results=results.filter(j=> j.experience_level===filters.experience_level); if(filters.area!=='Todos') results=results.filter(j=> j.area===filters.area); if(filters.subarea && filters.subarea!=='Todos') results=results.filter(j=> j.subarea===filters.subarea); if(isCandidate && highlightedJobIds.length){ results=[...results].sort((a,b)=>{ const A=highlightedJobIds.includes(a.id); const B=highlightedJobIds.includes(b.id); if(A&&!B) return -1; if(B&&!A) return 1; return 0; }); } setFilteredJobs(results); }, [searchTerm, filters, jobs, highlightedJobIds, isCandidate]);
+  useEffect(()=>{ let results=jobs; if(searchTerm){ const q=searchTerm.toLowerCase(); results=results.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)|| j.contract_type?.toLowerCase().includes(q)|| j.location?.toLowerCase().includes(q)|| j.area?.toLowerCase().includes(q)); } if(filters.location) results=results.filter(j=> j.location?.toLowerCase().includes(filters.location.toLowerCase())); if(filters.contract_type!=='Todos') results=results.filter(j=> j.contract_type===filters.contract_type); if(filters.work_type!=='Todos') results=results.filter(j=> j.work_type===filters.work_type); if(filters.experience_level!=='Todos') results=results.filter(j=> j.experience_level===filters.experience_level); if(filters.area!=='Todos') results=results.filter(j=> j.area===filters.area); if(filters.subarea && filters.subarea!=='Todos') results=results.filter(j=> j.subarea===filters.subarea); if(isCandidate && highlightedJobIds.length){ results=[...results].sort((a,b)=>{ const A=highlightedJobIds.includes(a.id); const B=highlightedJobIds.includes(b.id); if(A&&!B) return -1; if(B&&!A) return 1; return 0; }); } setFilteredJobs(results); }, [searchTerm, filters, jobs, highlightedJobIds, isCandidate]);
 
   // Filtrar destaques da escola conforme filtros atuais
   useEffect(()=>{
     if(!isSchool){ setFilteredSchoolHighlights([]); return; }
     let list = schoolHighlights || [];
-    if(searchTerm){ const q=searchTerm.toLowerCase(); list=list.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)); }
+    if(searchTerm){ const q=searchTerm.toLowerCase(); list=list.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)|| j.contract_type?.toLowerCase().includes(q)|| j.location?.toLowerCase().includes(q)|| j.area?.toLowerCase().includes(q)); }
     if(filters.location) list=list.filter(j=> j.location?.toLowerCase().includes(filters.location.toLowerCase()));
     if(filters.contract_type!=='Todos') list=list.filter(j=> j.contract_type===filters.contract_type);
     if(filters.work_type!=='Todos') list=list.filter(j=> j.work_type===filters.work_type);
@@ -854,7 +854,7 @@ const SearchJobs = () => {
   useEffect(()=>{
     if(!isSchool){ setFilteredSchoolCompanyHighlights([]); return; }
     let list = schoolCompanyHighlights || [];
-    if(searchTerm){ const q=searchTerm.toLowerCase(); list=list.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)); }
+    if(searchTerm){ const q=searchTerm.toLowerCase(); list=list.filter(j=> j.title?.toLowerCase().includes(q)|| j.company_name?.toLowerCase().includes(q)|| j.contract_type?.toLowerCase().includes(q)|| j.location?.toLowerCase().includes(q)|| j.area?.toLowerCase().includes(q)); }
     if(filters.location) list=list.filter(j=> j.location?.toLowerCase().includes(filters.location.toLowerCase()));
     if(filters.contract_type!=='Todos') list=list.filter(j=> j.contract_type===filters.contract_type);
     if(filters.work_type!=='Todos') list=list.filter(j=> j.work_type===filters.work_type);
