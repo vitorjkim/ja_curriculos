@@ -1513,13 +1513,13 @@ const SearchJobs = () => {
                 <CardContent className="p-3 md:p-3.5">
                   <div className="flex flex-col gap-2">
                     <div className="flex flex-row gap-2 items-stretch">
+                      <div className="relative flex-1 min-w-0">
+                        <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
+                      </div>
                       <Button onClick={()=> { if(searchTerm.trim()){ setHideHighlights(true); searchExternalExplicit(); } else { setHideHighlights(false); refreshExternalByFilters(); } const el=document.getElementById('job-results-top'); if(el) el.scrollIntoView({behavior:'smooth'}); }} className="relative z-10 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 h-9 text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm">
                         <Search className="w-4 h-4" />
                         <span className="ml-1.5">Buscar</span>
                       </Button>
-                      <div className="relative flex-1 min-w-0">
-                        <Input placeholder="Buscar cargo, empresa..." value={searchTerm} onChange={(e)=> setSearchTerm(e.target.value)} className="h-9 md:h-10 text-[13px] md:text-[14.5px] border-2 border-gray-200 focus:border-blue-500 rounded-xl md:rounded-2xl" />
-                      </div>
                     </div>
                   {/* Chips de filtros ativos */}
                   <div className="mt-2 flex flex-wrap gap-1.5">
